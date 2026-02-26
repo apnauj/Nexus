@@ -3,6 +3,7 @@ package Main;
 import java.util.UUID;
 
 public abstract class Producto {
+
 	protected UUID id;
 	protected String nombre;
 	protected String descripcion;
@@ -90,6 +91,7 @@ public abstract class Producto {
 		return precioBase +(precioBase*tiempoGarantia*0.15)-(precioBase*descuento);
 	}
 	
+
 	 abstract void asignarDescuento(); 
-	
-}
+
+	}
