@@ -2,7 +2,8 @@ package Main;
 
 import java.util.UUID;
 
-public class Producto {
+public abstract class Producto {
+
 	protected UUID id;
 	protected String nombre;
 	protected String descripcion;
@@ -90,8 +91,7 @@ public class Producto {
 		return precioBase +(precioBase*tiempoGarantia*0.15)-(precioBase*descuento);
 	}
 	
-	public void asignarDescuento() {
-		
+
+	 abstract void asignarDescuento(); 
+
 	}
-	
-}
