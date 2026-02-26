@@ -1,6 +1,67 @@
 package Main;
 
 public class Cliente {
+    private TipoDocumento tipoDoc;
+    private String numDoc;
+    private String nombre;
+    private String apellido;
+    private String email;
+    private Orden[] historial;
+
+    Cliente(TipoDocumento tipoDoc, String numDoc, String nombre, String apellido, String email) {
+        this.tipoDoc = tipoDoc;
+        this.numDoc = numDoc;
+        this.nombre = nombre;
+        this.apellido = apellido;
+        this.email = email;
+    }
+
+
+
+    public TipoDocumento getTipoDoc(){
+        return tipoDoc;
+    }
+    public void setTipoDoc(TipoDocumento tipoDoc){
+        this.tipoDoc = tipoDoc;
+    }
+    public String getNumDoc(){
+        return numDoc;
+    }
+    public void setNumDoc(String numDoc){
+        this.numDoc = numDoc;
+    }
+
+    public String getNombre() {
+        return nombre;
+    }
+
+    public void setNombre(String nombre) {
+        this.nombre = nombre;
+    }
+
+    public String getApellido() {
+        return apellido;
+    }
+
+    public void setApellido(String apellido) {
+        this.apellido = apellido;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public Orden[] getHistorial() {
+        return historial;
+    }
+
+    public void setHistorial(Orden[] historial) {
+        this.historial = historial;
+    }
 
     
 }
