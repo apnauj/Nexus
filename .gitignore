@@ -28,3 +28,16 @@ bin/
 
 ### Mac OS ###
 .DS_Store
+
+# IDEs y Editores
+.idea/
+.metadata/
+.settings/
+
+# Artefactos de compilación
+build/
+*.class
+
+# Archivos de sistema/temporales
+*.log
+*.lock
