@@ -1,4 +1,4 @@
-package Main;
+package com.nexus.model.entities;
 
 public class OrdenItem {
     private Producto producto;

@@ -1,4 +1,6 @@
-package Main;
+package com.nexus.model.entities;
+
+import java.util.UUID;
 
 public class Usuario {
     private UUID id;

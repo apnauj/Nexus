@@ -1,7 +1,8 @@
-package Main;
+package com.nexus.model.entities;
 // Importa Enums
-import Main.enumOrden.Estado;
-import Main.enumOrden.MetodoPago;
+
+import com.nexus.model.enums.Estado;
+import com.nexus.model.enums.MetodoPago;
 
 import java.util.Arrays;
 import java.util.UUID;

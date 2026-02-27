@@ -5,7 +5,6 @@ import com.nexus.exceptions.EOrdenNoEncontrada;
 import com.nexus.exceptions.EProductoNoEncontrado;
 import com.nexus.exceptions.EUsuarioNoEncontrado;
 import com.nexus.model.entities.*;
-import com.nexus.model.entities.TipoDocumento;
 import com.nexus.model.enums.*;
 import java.util.Arrays;
 import java.util.Date;

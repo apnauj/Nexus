@@ -1,4 +1,6 @@
-package Main;
+package com.nexus.model.entities;
+
+import com.nexus.model.enums.TipoDocumento;
 
 public class Cliente {
     private TipoDocumento tipoDoc;
