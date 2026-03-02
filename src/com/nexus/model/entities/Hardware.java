@@ -13,6 +13,7 @@ public class Hardware extends Producto {
 
         this.consumo = consumo;
         this.fabricante = fabricante;
+        asignarDescuento();
     }
     public float getConsumo() {
         return consumo;

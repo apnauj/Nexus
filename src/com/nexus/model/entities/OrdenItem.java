@@ -1,12 +1,15 @@
 package com.nexus.model.entities;
 
+import com.nexus.exceptions.ECantidadNegativa;
+import com.nexus.exceptions.EStockInsuficiente;
+
 public class OrdenItem {
     private final Producto producto;
     private int cantidad;
 
     public OrdenItem(Producto producto, int cantidad) throws EStockInsuficiente, ECantidadNegativa {
         this.producto = producto;
-        if(cantidad < 0){
+        if(cantidad <= 0){
             throw new ECantidadNegativa("Cantidad inválida solo se aceptan cantidades positivas");
         } else if(producto.getStock() < cantidad){
             throw new EStockInsuficiente(producto);
@@ -15,16 +18,22 @@ public class OrdenItem {
         }
         producto.setStock(producto.getStock() - cantidad);
     }
-    //Por ahora get cantidad no se usa !!!
+    public Producto getProducto() {
+        return producto;
+    }
+
     public int getCantidad(){
         return cantidad;
     }
 
-    public void setCantidad(int a){
+    public void setCantidad(int a) {
+        if (a <= 0) {
+            throw new ECantidadNegativa("La cantidad debe ser positiva");
+        }
         this.cantidad = a;
     }
 
     public double calcularSubtotal(){
-        return producto.getPreciobase()*cantidad;
+        return producto.calcularPrecio()*cantidad;
     }
 }

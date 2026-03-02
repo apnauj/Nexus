@@ -44,11 +44,22 @@ public class StoreController {
 
     // --- Métodos de add (Añadir) ---
 
-    public Orden addOrden(TipoDocumento tipoDoc, String numDoc, MetodoPago metodoPago) {
-        DateTimeFormatter formateador = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-        String fecha = (LocalDate.now()).format(formateador);
+    /*
+        Crear una nueva orden, se necesita por parte del Usuario el tipo de documento del cliente, numero de documento del cliente y como va a pagar
+        Se busca un cliente en el arreglo de clientes. Este Metodo puede devolver una excepción: EClienteNoEncontrado (Si no se encuentra el cliente)
+        Se pone la fecha en formato dd/MM/yyyy que es con el que se manejaran todas las fechas del sistema
+        Para esto se llama a la fecha actual y se formatea con el formato que se pasa
+        Ahora, ya teniendo el cliente podemos crear una nueva orden con los parametros de su constructor. La orden tiene un estado de PENDIENTE por defecto.
+        Añadimos la orden al arreglo de historialOrdenes
+        Añadimos la orden al arreglo de historialOrdenes del cliente
+        Devolvemos la el UUID en caso de haber completado el flujo exitosamente (para así reutilizar este UUID en otras operaciones de la interfaz mientras estamos trabjando con ella), de lo contrario se habría lanzado una excepción
+    */
+
+    public UUID addOrden(TipoDocumento tipoDoc, String numDoc, MetodoPago metodoPago) {
         try {
             Cliente cliente = searchCliente(tipoDoc,numDoc);
+            DateTimeFormatter formateador = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+            String fecha = (LocalDate.now()).format(formateador);
             Orden o = new Orden(cliente, fecha, metodoPago);
             historialOrdenes = Arrays.copyOf(historialOrdenes, historialOrdenes.length + 1);
             historialOrdenes[historialOrdenes.length-1] = o;
@@ -56,21 +67,29 @@ public class StoreController {
             cliente.setHistorial(Arrays.copyOf(cliente.getHistorial(), cliente.getHistorial().length + 1));
             cliente.getHistorial()[cliente.getHistorial().length-1] = o;
 
-            return o;
+            return o.getIdPedido();
         } catch (EClienteNoEncontrado e){
             System.out.println(e.getMessage());
             return null;
         }
     }
 
+    /*
+    Añadir un item a una orden, recibimos el UUID, que deberíamos de tener en una variable temporal producida por la creación de la orden
+    También el nombre del producto para así buscarlo en nuestro arreglo de productos
+    Verificamos que la orden este en estado pendiente, pues de no ser así no podemos añadir productos
+    Capturamos las posibles excepciones que puede producir añadir un item con
+    */
+
     public void addItemToOrden(UUID idOrden, String producto, int cantidad){
         try{
            Orden o = searchOrden(idOrden);
            Producto p = searchProducto(producto);
-           OrdenItem oi = new OrdenItem(p, cantidad);
+
             if (o.getEstado() != Estado.Pendiente) {
                 throw new IllegalStateException("Solo se pueden agregar items a órdenes pendientes");
             } else {
+                OrdenItem oi = new OrdenItem(p, cantidad);
                 o.addItemOrden(oi);
             }
         } catch (EOrdenNoEncontrada | EProductoNoEncontrado | EStockInsuficiente | ECantidadNegativa | IllegalStateException e){
@@ -237,6 +256,70 @@ public class StoreController {
         }
         this.usuarios = nuevoArreglo;
         System.out.println("Usuario eliminado correctamente.");
+    }
+
+    public void removeItemOrden(UUID idOrden, String nombre) {
+        try {
+            Orden orden = searchOrden(idOrden);
+            Producto producto = searchProducto(nombre);
+
+            if (orden.getEstado() != Estado.Pendiente) {
+                throw new IllegalStateException("Solo se pueden quitar items de órdenes pendientes");
+            }
+
+            OrdenItem[] items = orden.getItems();
+            int index = -1;
+            int i = 0;
+            while (i < items.length) {
+                if (items[i].getProducto().getId().equals(producto.getId())) {
+                    index = i;
+                    break;
+                }
+                i++;
+            }
+
+            if (index == -1) {
+                System.out.println("El producto '" + nombre + "' no está en la orden.");
+                return;
+            }
+
+            OrdenItem removed = orden.removeItemAt(index);
+            Producto p = removed.getProducto();
+            p.setStock(p.getStock() + removed.getCantidad());
+            System.out.println("Item eliminado correctamente. Stock restaurado.");
+        } catch (EOrdenNoEncontrada | EProductoNoEncontrado | IllegalStateException e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
+    //Méto do para validar orden
+    public void verificarPago(UUID idOrden, boolean pago){
+        try {
+            Orden orden =  searchOrden(idOrden);
+            if (pago) {
+                if (orden.getItems() == null || orden.getItems().length == 0) {
+                    throw new IllegalStateException("No se puede aprobar una orden sin items");
+                }
+                orden.setEstado(Estado.Aprobado);
+            } else {
+
+                if (orden.getEstado() == Estado.Pendiente) {
+                    for (OrdenItem item : orden.getItems()) {
+                        Producto p = item.getProducto();
+                        p.setStock(p.getStock() + item.getCantidad());
+                    }
+                }
+                orden.setEstado(Estado.Rechazado);
+            }
+        } catch (EOrdenNoEncontrada | IllegalStateException e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
+    //Métodos de login
+
+    public Usuario getCurrentUser(){
+        return currentUser;
     }
 
 }

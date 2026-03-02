@@ -20,6 +20,7 @@ public class Videojuego extends Producto {
         this.fechaLanzamiento = fechaLanzamiento;
         this.plataforma = plataforma;
         this.tamano = tamano;
+        asignarDescuento();
     }
 
     public String[] getDesarrolladores() {
@@ -83,17 +84,22 @@ public class Videojuego extends Producto {
     
     @Override
     void asignarDescuento() {
-        long hoy = System.currentTimeMillis();
-        long lanzamiento = fechaLanzamiento.getTime();
+        if(fechaLanzamiento != null){
+            long hoy = System.currentTimeMillis();
+            long lanzamiento = fechaLanzamiento.getTime();
 
-        long diferencia = hoy - lanzamiento;
+            long diferencia = hoy - lanzamiento;
 
-        long anos = diferencia / (1000L * 60 * 60 * 24 * 365);
+            long anos = diferencia / (1000L * 60 * 60 * 24 * 365);
 
-        if (anos >= 2) {
-            descuento = 0.20; // 20%
+            if (anos >= 2) {
+                descuento = 0.20; // 20%
+            } else {
+                descuento = 0.05; // 5%
+            }
         } else {
-            descuento = 0.05; // 5%
+            descuento = 0.05;
         }
+
     }
 }

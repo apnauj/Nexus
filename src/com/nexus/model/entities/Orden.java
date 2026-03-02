@@ -58,10 +58,6 @@ public class Orden {
         return items;
     }
 
-    public void setItems(OrdenItem items) {
-        this.items = new OrdenItem[]{items};
-    }
-
     public String getFecha(){
         return fecha;
     }
@@ -70,7 +66,7 @@ public class Orden {
         return cliente;
     }
 
-    public String addItemOrden(OrdenItem a){
+    public String  addItemOrden(OrdenItem a){
         //Valida que la orden no sea aprobada ni rechazada
         if (this.estado != Estado.Pendiente) {
             throw new IllegalStateException("Solo se pueden agregar items a órdenes en estado Pendiente");
@@ -92,5 +88,24 @@ public class Orden {
             total+=i.calcularSubtotal();
         }
         return total;
+    }
+
+
+    public OrdenItem removeItemAt(int index) {
+        if (this.estado != Estado.Pendiente) {
+            throw new IllegalStateException("Solo se pueden quitar items de órdenes en estado Pendiente");
+        }
+        if (index < 0 || index >= items.length) {
+            throw new IndexOutOfBoundsException("Índice inválido: " + index);
+        }
+        OrdenItem removed = items[index];
+        OrdenItem[] newItems = new OrdenItem[items.length - 1];
+        for (int i = 0, j = 0; i < items.length; i++) {
+            if (i != index) {
+                newItems[j++] = items[i];
+            }
+        }
+        items = newItems;
+        return removed;
     }
 }
