@@ -1,12 +1,16 @@
-package Main;
+package com.nexus.model.entities;
+
+import com.nexus.model.enums.Rol;
+
+import java.util.UUID;
 
 public class Usuario {
-    private UUID id;
+    private final UUID id;
     private String username;
     private String password;
-    private String rol;
+    private Rol rol;
 
-    Usuario(String username, String password, String rol) {
+    public Usuario(String username, String password, Rol rol) {
         this.id = UUID.randomUUID();
         this.username = username;
         this.password = password;
@@ -33,11 +37,11 @@ public class Usuario {
         this.password = password;
     }
 
-    public String getRol() {
+    public Rol getRol() {
         return rol;
     }
 
-    public void setRol(String rol) {
+    public void setRol(Rol rol) {
         this.rol = rol;
     }
 }

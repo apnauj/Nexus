@@ -1,4 +1,4 @@
-package Main;
+package com.nexus.model.entities;
 
 import java.util.Date;
 
@@ -9,9 +9,9 @@ public class Videojuego extends Producto {
     private boolean multijugador;
     private Date fechaLanzamiento;
     private String plataforma;
-    private double tamaño;  // GB
+    private double tamano;  // GB
 
-    public Videojuego(String nombre, String descripcion,String categoria,int tiempoGarantia,double precioBase,int stock,String[] desarrolladores,String[] generos,boolean multijugador,Date fechaLanzamiento,String plataforma,double tamaño) {	
+    public Videojuego(String nombre, String descripcion,String categoria,int tiempoGarantia,double precioBase,int stock,String[] desarrolladores,String[] generos,boolean multijugador,Date fechaLanzamiento,String plataforma,double tamano) {
         super(nombre, descripcion, categoria, tiempoGarantia, precioBase, stock);
 
         this.desarrolladores = desarrolladores;
@@ -19,7 +19,7 @@ public class Videojuego extends Producto {
         this.multijugador = multijugador;
         this.fechaLanzamiento = fechaLanzamiento;
         this.plataforma = plataforma;
-        this.tamaño = tamaño;
+        this.tamano = tamano;
     }
 
     public String[] getDesarrolladores() {
@@ -42,8 +42,8 @@ public class Videojuego extends Producto {
         return plataforma;
     }
 
-    public double getTamaño() {
-        return tamaño;
+    public double getTamano() {
+        return tamano;
     }
 
     public void setGeneros(String[] generos) {
@@ -61,8 +61,8 @@ public class Videojuego extends Producto {
         this.plataforma = plataforma;
     }
 
-    public void setTamaño(double tamaño) {
-        this.tamaño = tamaño;
+    public void setTamano(double tamano) {
+        this.tamano = tamano;
     }
 
     
@@ -88,9 +88,9 @@ public class Videojuego extends Producto {
 
         long diferencia = hoy - lanzamiento;
 
-        long años = diferencia / (1000L * 60 * 60 * 24 * 365);
+        long anos = diferencia / (1000L * 60 * 60 * 24 * 365);
 
-        if (años >= 2) {
+        if (anos >= 2) {
             descuento = 0.20; // 20%
         } else {
             descuento = 0.05; // 5%

@@ -1,10 +1,10 @@
-package Main;
+package com.nexus.model.entities;
 
 import java.util.UUID;
 
 public abstract class Producto {
 
-	protected UUID id;
+	protected final UUID id;
 	protected String nombre;
 	protected String descripcion;
 	protected String categoria;

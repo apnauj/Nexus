@@ -1,12 +1,12 @@
 package com.nexus.controller;
 
-import com.nexus.exceptions.EClienteNoEncontrado;
-import com.nexus.exceptions.EOrdenNoEncontrada;
-import com.nexus.exceptions.EProductoNoEncontrado;
-import com.nexus.exceptions.EUsuarioNoEncontrado;
+import com.nexus.exceptions.*;
 import com.nexus.model.entities.*;
 import com.nexus.model.entities.TipoDocumento;
 import com.nexus.model.enums.*;
+
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.UUID;
@@ -45,6 +45,39 @@ public class StoreController {
 
     // --- Métodos de add (Añadir) ---
 
+    public Orden addOrden(TipoDocumento tipoDoc, String numDoc, MetodoPago metodoPago) {
+        DateTimeFormatter formateador = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+        String fecha = (LocalDate.now()).format(formateador);
+        try {
+            Cliente cliente = searchCliente(tipoDoc,numDoc);
+            Orden o = new Orden(cliente, fecha, metodoPago);
+            historialOrdenes = Arrays.copyOf(historialOrdenes, historialOrdenes.length + 1);
+            historialOrdenes[historialOrdenes.length-1] = o;
+
+            cliente.setHistorial(Arrays.copyOf(cliente.getHistorial(), cliente.getHistorial().length + 1));
+            cliente.getHistorial()[cliente.getHistorial().length-1] = o;
+
+            return o;
+        } catch (EClienteNoEncontrado e){
+            System.out.println(e.getMessage());
+            return null;
+        }
+    }
+
+    public void addItemToOrden(UUID idOrden, String producto, int cantidad){
+        try{
+           Orden o = searchOrden(idOrden);
+           Producto p = searchProducto(producto);
+           OrdenItem oi = new OrdenItem(p, cantidad);
+            if (o.getEstado() != Estado.Pendiente) {
+                throw new IllegalStateException("Solo se pueden agregar items a órdenes pendientes");
+            } else {
+                o.addItemOrden(oi);
+            }
+        } catch (EOrdenNoEncontrada | EProductoNoEncontrado | EStockInsuficiente | ECantidadNegativa | IllegalStateException e){
+            System.out.println(e.getMessage());
+        }
+    }
 
     public void addCliente(TipoDocumento tipoDoc, String numDoc, String nombre, String apellido, String email) {
         try {
@@ -112,7 +145,7 @@ public class StoreController {
 
     // --- Métodos de Búsqueda (Search) ---
 
-    public Orden searchOrder(UUID id) throws EOrdenNoEncontrada {
+    public Orden searchOrden(UUID id) throws EOrdenNoEncontrada {
         int i = 0;
         while (i < historialOrdenes.length) {
             if (historialOrdenes[i].getIdPedido().equals(id)) {

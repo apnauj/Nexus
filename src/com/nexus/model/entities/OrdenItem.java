@@ -1,12 +1,22 @@
-package Main;
+package com.nexus.model.entities;
+
+import com.nexus.exceptions.ECantidadNegativa;
+import com.nexus.exceptions.EStockInsuficiente;
 
 public class OrdenItem {
-    private Producto producto;
+    private final Producto producto;
     private int cantidad;
 
-    public OrdenItem(Producto producto, int cantidad) {
+    public OrdenItem(Producto producto, int cantidad) throws EStockInsuficiente, ECantidadNegativa {
         this.producto = producto;
-        this.cantidad = cantidad;
+        if(cantidad < 0){
+            throw new ECantidadNegativa("Cantidad inválida solo se aceptan cantidades positivas");
+        } else if(producto.getStock() < cantidad){
+            throw new EStockInsuficiente(producto);
+        } else {
+            this.cantidad = cantidad;
+        }
+        producto.setStock(producto.getStock() - cantidad);
     }
     //Por ahora get cantidad no se usa !!!
     public int getCantidad(){
