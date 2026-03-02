@@ -1,4 +1,4 @@
-package com.nexus.model.entities;
+package Main;
 
 public enum TipoDocumento {
     CC, CE, PPT, PEP, PP, NIT

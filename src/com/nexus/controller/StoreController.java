@@ -2,7 +2,6 @@ package com.nexus.controller;
 
 import com.nexus.exceptions.*;
 import com.nexus.model.entities.*;
-import com.nexus.model.entities.TipoDocumento;
 import com.nexus.model.enums.*;
 
 import java.time.LocalDate;

@@ -1,5 +1,6 @@
 package com.nexus.model.entities;
 // Importa Enums
+
 import com.nexus.model.enums.Estado;
 import com.nexus.model.enums.MetodoPago;
 

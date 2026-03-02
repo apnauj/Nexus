@@ -1,8 +1,5 @@
 package com.nexus.model.entities;
 
-import com.nexus.exceptions.ECantidadNegativa;
-import com.nexus.exceptions.EStockInsuficiente;
-
 public class OrdenItem {
     private final Producto producto;
     private int cantidad;

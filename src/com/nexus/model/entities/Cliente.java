@@ -1,7 +1,6 @@
 package com.nexus.model.entities;
-import com.nexus.model.entities.TipoDocumento;
 
-import java.util.UUID;
+import com.nexus.model.enums.TipoDocumento;
 
 public class Cliente {
     private final UUID id;
