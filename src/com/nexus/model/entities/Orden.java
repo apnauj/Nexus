@@ -80,7 +80,7 @@ public class Orden {
             throw new IllegalStateException("Solo se pueden agregar items a órdenes en estado Pendiente");
         }
         //Valida si existe la OrdenxItem
-        if (a==null){
+        if (a == null){
             return "No existe la Orden X Item";
         } else {
             //Crea un espacio en el arreglo y agrega el producto
@@ -99,12 +99,16 @@ public class Orden {
         }
         OrdenItem removed = items[index];
         OrdenItem[] newItems = new OrdenItem[items.length - 1];
-        for (int i = 0, j = 0; i < items.length; i++) {
+        int j = 0;
+        for (int i = 0; i < items.length; i++) {
             if (i != index) {
-                newItems[j++] = items[i];
+                newItems[j] = items[i];
+                j++;
             }
         }
 		return removed;
 
     }
+
+    //TODO: modificar la cantidad exclusivamente de un OrdenItem
 }

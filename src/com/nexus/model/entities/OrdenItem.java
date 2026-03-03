@@ -23,6 +23,7 @@ public class OrdenItem {
         } else {
             this.cantidad = cantidad;
         }
+        //Cuando creamos un OrdenItem
         producto.setStock(producto.getStock() - cantidad);
     }
     public Producto getProducto() {

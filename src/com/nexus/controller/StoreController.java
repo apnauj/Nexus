@@ -52,10 +52,10 @@ public class StoreController {
     public void createOrden(Cliente cliente,String fecha, Estado estado, MetodoPago metodoPago) {
     	Orden o= new Orden(cliente,fecha,metodoPago);
     	Cliente c=searchCliente(cliente.getTipoDoc(), cliente.getNumDoc());
-    	
+
     	historialOrdenes=Arrays.copyOf(historialOrdenes,historialOrdenes.length+1);
     	historialOrdenes[historialOrdenes.length-1]=o;
-    	
+
     	c.AgregarCompras(o);
     }
 
@@ -65,7 +65,7 @@ public class StoreController {
         Se pone la fecha en formato dd/MM/yyyy que es con el que se manejaran todas las fechas del sistema
         Para esto se llama a la fecha actual y se formatea con el formato que se pasa
         Ahora, ya teniendo el cliente podemos crear una nueva orden con los parametros de su constructor. La orden tiene un estado de PENDIENTE por defecto.
-        Añadimos la orden al arreglo de historialOrdenes
+        Añadimos la orden al atrreglo de historialOrdenes
         Añadimos la orden al arreglo de historialOrdenes del cliente
         Devolvemos la el UUID en caso de haber completado el flujo exitosamente (para así reutilizar este UUID en otras operaciones de la interfaz mientras estamos trabjando con ella), de lo contrario se habría lanzado una excepción
     */
@@ -228,10 +228,12 @@ public class StoreController {
 
     public void deleteProducto(String nombre) throws EHistorialOrden {
         // 1. Validamos que exista (esto lanza la excepción si no lo encuentra)
+        //TODO: try catch
+        //TODO: Hacer validación de si el producto esta siendo usado en una orden o ordenes
         Producto p = searchProducto(nombre);
-        
+
         int i=0;
-        
+
 
         while (i < historialOrdenes.length) {
 
@@ -250,8 +252,8 @@ public class StoreController {
 
             i++;
         }
-        
-        
+
+
         // 2. Creamos el nuevo arreglo
         Producto[] nuevoArreglo = new Producto[this.productos.length - 1];
         int j = 0;
@@ -259,33 +261,27 @@ public class StoreController {
         // 3. Copiamos all excepto el que queremos borrar
         for (Producto prod : this.productos) {
             if (!prod.getNombre().equals(nombre)) {
-                nuevoArreglo[j++] = prod;
+                nuevoArreglo[j] = prod;
+                j++;
             }
         }
         this.productos = nuevoArreglo;
         System.out.println("Producto eliminado correctamente.");
     }
 
-    public void deleteCliente(TipoDocumento tipoDoc, String numDoc) throws EHistorialOrden{
+    public void deleteCliente(TipoDocumento tipoDoc, String numDoc) {
+        //TODO: try catch
+        //TODO: Hacer validación de si el cliente esta siendo usado en una orden o ordenes
         Cliente c = searchCliente(tipoDoc, numDoc);
-        
-        //Validar si no se cumple
-        int i=0;
-        while(i<historialOrdenes.length && ! historialOrdenes[i].getCliente().equals(c)) {
-        	i++;
-        } 
-        if(i<historialOrdenes.length) {
-        	throw new EHistorialOrden("No se puede eliminar el cliente, ya que tiene ordenes asociadas");
-        }
-        
-        //validar si se cumple
+
         Cliente[] nuevoArreglo = new Cliente[this.clientes.length - 1];
         int j = 0;
 
         for (Cliente cli : this.clientes) {
             // Comparamos identificadores únicos
             if (!(cli.getTipoDoc().equals(tipoDoc) && cli.getNumDoc().equals(numDoc))) {
-                nuevoArreglo[j++] = cli;
+                nuevoArreglo[j] = cli;
+                j++;
             }
         }
         this.clientes = nuevoArreglo;
@@ -293,6 +289,7 @@ public class StoreController {
     }
 
     public void deleteUsuario(String username) {
+        //TODO: try catch
         Usuario u = searchUsuario(username);
 
         Usuario[] nuevoArreglo = new Usuario[this.usuarios.length - 1];
@@ -300,14 +297,15 @@ public class StoreController {
 
         for (Usuario user : this.usuarios) {
             if (!user.getUsername().equals(username)) {
-                nuevoArreglo[j++] = user;
+                nuevoArreglo[j] = user;
+                j++;
             }
         }
         this.usuarios = nuevoArreglo;
         System.out.println("Usuario eliminado correctamente.");
     }
 
-    public void removeItemOrden(UUID idOrden, String nombre) throws EValorNegativo {
+    public void removeItemOrden(UUID idOrden, String nombre) {
         try {
             Orden orden = searchOrden(idOrden);
             Producto producto = searchProducto(nombre);
@@ -334,7 +332,13 @@ public class StoreController {
 
             OrdenItem removed = orden.removeItemAt(index);
             Producto p = removed.getProducto();
-            p.setStock(p.getStock() + removed.getCantidad());
+            //Reestablecer el stock que se había usado
+            try{
+                p.setStock(p.getStock() + removed.getCantidad());
+            } catch (EValorNegativo e){
+                System.out.println(e.getMessage());
+            }
+
             System.out.println("Item eliminado correctamente. Stock restaurado.");
         } catch (EOrdenNoEncontrada | EProductoNoEncontrado | IllegalStateException e) {
             System.out.println(e.getMessage());
@@ -351,7 +355,6 @@ public class StoreController {
                 }
                 orden.setEstado(Estado.Aprobado);
             } else {
-
                 if (orden.getEstado() == Estado.Pendiente) {
                     for (OrdenItem item : orden.getItems()) {
                         Producto p = item.getProducto();
@@ -365,122 +368,13 @@ public class StoreController {
         }
     }
 
-    //Métodos de login
+    //TODO: Métodos de login y logout
 
     public Usuario getCurrentUser(){
         return currentUser;
     }
 
-    private void validarRol(Rol rolNecesario) {
-    if (currentUser == null) {
-        throw new IllegalStateException("No hay usuario autenticado");
-    }
-
-    if (currentUser.getRol() != rolNecesario) {
-        throw new IllegalStateException("No tienes permisos para esta acción");
-    }
-}
-
-public void cancelarOrden(UUID idOrden) throws EValorNegativo {
-    try {
-        Orden orden = searchOrden(idOrden);
-
-        if (orden.getEstado() != Estado.Pendiente) {
-            throw new IllegalStateException("Solo se pueden cancelar órdenes pendientes");
-        }
-
-        OrdenItem[] items = orden.getItems();
-
-        for (int i = 0; i < items.length; i++) {
-            OrdenItem item = items[i];
-            Producto p = item.getProducto();
-            p.setStock(p.getStock() + item.getCantidad());
-        }
-        orden.setEstado(Estado.Rechazado);
-        System.out.println("Orden cancelada y stock restaurado correctamente.");
-    } catch (EOrdenNoEncontrada | IllegalStateException e) {
-        System.out.println(e.getMessage());
-    }
-}
-    
-
-public void updateStock(String nombreProducto, int nuevoStock) {
-    try {
-        validarRol(Rol.GESTOR_INVENTARIO);
-
-        Producto p = searchProducto(nombreProducto);
-
-        if (nuevoStock < 0) {
-            throw new IllegalArgumentException("El stock no puede ser negativo");
-        }
-        p.setStock(nuevoStock);
-        System.out.println("Stock actualizado correctamente.");
-    } catch (Exception e) {
-        System.out.println(e.getMessage());
-    }
-}
-
-public void updateProducto(String nombre, double nuevoPrecio) {
-    try {
-        validarRol(Rol.GESTOR_INVENTARIO);
-
-        Producto p = searchProducto(nombre);
-
-        if (nuevoPrecio <= 0) {
-            throw new IllegalArgumentException("El precio debe ser mayor a 0");
-        }
-
-        p.setPrecioBase(nuevoPrecio);
-
-        System.out.println("Producto actualizado correctamente.");
-
-    } catch (Exception e) {
-        System.out.println(e.getMessage());
-    }
-}
-
-public void updateCliente(TipoDocumento tipoDoc, String numDoc, String nuevoEmail) {
-    try {
-        Cliente c = searchCliente(tipoDoc, numDoc);
-
-        c.setEmail(nuevoEmail);
-
-        System.out.println("Cliente actualizado correctamente.");
-
-    } catch (EClienteNoEncontrado e) {
-        System.out.println(e.getMessage());
-    }
-}
-
-public void updateUsuario(String username, String nuevaPassword) {
-    try {
-        validarRol(Rol.ADMIN);
-
-        Usuario u = searchUsuario(username);
-
-        u.setPassword(nuevaPassword);
-
-        System.out.println("Usuario actualizado correctamente.");
-
-    } catch (Exception e) {
-        System.out.println(e.getMessage());
-    }
-}
-
-public Orden[] getOrdenesPorEstado(Estado estado) {
-
-    Orden[] resultado = new Orden[0];
-
-    for (int i = 0; i < historialOrdenes.length; i++) {
-    Orden o = historialOrdenes[i];
-        if (o.getEstado() == estado) {
-
-            resultado = Arrays.copyOf(resultado, resultado.length + 1);
-            resultado[resultado.length - 1] = o;
-        }
-    }
-
-    return resultado;
-}
+    //TODO: generar reportes
+    //método que pase por el historial y con el uso de la fecha filtre
 
 }
