@@ -26,8 +26,6 @@ public class Orden {
         this.items = new OrdenItem[0];
     }
 
-
-
     public void setCliente(Cliente cliente) {
         this.cliente = cliente;
     }
@@ -60,6 +58,22 @@ public class Orden {
         return cliente;
     }
 
+    public double calcularTotal(){
+        double total = 0;
+        for(OrdenItem i:items){
+            total+=i.calcularSubtotal();
+        }
+        return total;
+    }
+
+    public UUID getIdPedido() {
+    	return this.idPedido;
+    }
+    
+    public OrdenItem[] getItems() {
+    	return this.items;
+    }
+
     public String  addItemOrden(OrdenItem a){
         //Valida que la orden no sea aprobada ni rechazada
         if (this.estado != Estado.Pendiente) {
@@ -75,24 +89,6 @@ public class Orden {
             return "Se agregó correctamente el producto";
         }
     }
-
-    public double calcularTotal(){
-        double total = 0;
-        for(OrdenItem i:items){
-            total+=i.calcularSubtotal();
-        }
-        return total;
-    }
-
-    
-    public UUID getIdPedido() {
-    	return this.idPedido;
-    }
-    
-    public OrdenItem[] getItems() {
-    	return this.items;
-    }
-
 
     public OrdenItem removeItemAt(int index) {
         if (this.estado != Estado.Pendiente) {

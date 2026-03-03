@@ -35,7 +35,7 @@ public class StoreController {
         return this.historialOrdenes;
     }
 
-    public Producto[] getProductos() {
+    public static Producto[] getProductos() {
         return this.productos;
     }
 
