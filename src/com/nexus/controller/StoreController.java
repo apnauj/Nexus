@@ -50,7 +50,7 @@ public class StoreController {
         Se pone la fecha en formato dd/MM/yyyy que es con el que se manejaran todas las fechas del sistema
         Para esto se llama a la fecha actual y se formatea con el formato que se pasa
         Ahora, ya teniendo el cliente podemos crear una nueva orden con los parametros de su constructor. La orden tiene un estado de PENDIENTE por defecto.
-        Añadimos la orden al arreglo de historialOrdenes
+        Añadimos la orden al atrreglo de historialOrdenes
         Añadimos la orden al arreglo de historialOrdenes del cliente
         Devolvemos la el UUID en caso de haber completado el flujo exitosamente (para así reutilizar este UUID en otras operaciones de la interfaz mientras estamos trabjando con ella), de lo contrario se habría lanzado una excepción
     */
@@ -78,7 +78,7 @@ public class StoreController {
     Añadir un item a una orden, recibimos el UUID, que deberíamos de tener en una variable temporal producida por la creación de la orden
     También el nombre del producto para así buscarlo en nuestro arreglo de productos
     Verificamos que la orden este en estado pendiente, pues de no ser así no podemos añadir productos
-    Capturamos las posibles excepciones que puede producir añadir un item con
+    Capturamos las posibles excepciones que puede producir añadir un item
     */
 
     public void addItemToOrden(UUID idOrden, String producto, int cantidad){
@@ -211,6 +211,8 @@ public class StoreController {
 
     public void deleteProducto(String nombre) {
         // 1. Validamos que exista (esto lanza la excepción si no lo encuentra)
+        //TODO: try catch
+        //TODO: Hacer validación de si el producto esta siendo usado en una orden o ordenes
         Producto p = searchProducto(nombre);
 
         // 2. Creamos el nuevo arreglo
@@ -220,7 +222,8 @@ public class StoreController {
         // 3. Copiamos all excepto el que queremos borrar
         for (Producto prod : this.productos) {
             if (!prod.getNombre().equals(nombre)) {
-                nuevoArreglo[j++] = prod;
+                nuevoArreglo[j] = prod;
+                j++;
             }
         }
         this.productos = nuevoArreglo;
@@ -228,6 +231,8 @@ public class StoreController {
     }
 
     public void deleteCliente(TipoDocumento tipoDoc, String numDoc) {
+        //TODO: try catch
+        //TODO: Hacer validación de si el cliente esta siendo usado en una orden o ordenes
         Cliente c = searchCliente(tipoDoc, numDoc);
 
         Cliente[] nuevoArreglo = new Cliente[this.clientes.length - 1];
@@ -236,7 +241,8 @@ public class StoreController {
         for (Cliente cli : this.clientes) {
             // Comparamos identificadores únicos
             if (!(cli.getTipoDoc().equals(tipoDoc) && cli.getNumDoc().equals(numDoc))) {
-                nuevoArreglo[j++] = cli;
+                nuevoArreglo[j] = cli;
+                j++;
             }
         }
         this.clientes = nuevoArreglo;
@@ -244,6 +250,7 @@ public class StoreController {
     }
 
     public void deleteUsuario(String username) {
+        //TODO: try catch
         Usuario u = searchUsuario(username);
 
         Usuario[] nuevoArreglo = new Usuario[this.usuarios.length - 1];
@@ -251,7 +258,8 @@ public class StoreController {
 
         for (Usuario user : this.usuarios) {
             if (!user.getUsername().equals(username)) {
-                nuevoArreglo[j++] = user;
+                nuevoArreglo[j] = user;
+                j++;
             }
         }
         this.usuarios = nuevoArreglo;
@@ -285,6 +293,7 @@ public class StoreController {
 
             OrdenItem removed = orden.removeItemAt(index);
             Producto p = removed.getProducto();
+            //Reestablecer el stock que se había usado
             p.setStock(p.getStock() + removed.getCantidad());
             System.out.println("Item eliminado correctamente. Stock restaurado.");
         } catch (EOrdenNoEncontrada | EProductoNoEncontrado | IllegalStateException e) {
@@ -302,7 +311,6 @@ public class StoreController {
                 }
                 orden.setEstado(Estado.Aprobado);
             } else {
-
                 if (orden.getEstado() == Estado.Pendiente) {
                     for (OrdenItem item : orden.getItems()) {
                         Producto p = item.getProducto();
@@ -316,10 +324,13 @@ public class StoreController {
         }
     }
 
-    //Métodos de login
+    //TODO: Métodos de login y logout
 
     public Usuario getCurrentUser(){
         return currentUser;
     }
+
+    //TODO: generar reportes
+    //método que pase por el historial y con el uso de la fecha filtre
 
 }
