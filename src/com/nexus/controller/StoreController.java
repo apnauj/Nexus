@@ -322,4 +322,116 @@ public class StoreController {
         return currentUser;
     }
 
+    private void validarRol(Rol rolNecesario) {
+    if (currentUser == null) {
+        throw new IllegalStateException("No hay usuario autenticado");
+    }
+
+    if (currentUser.getRol() != rolNecesario) {
+        throw new IllegalStateException("No tienes permisos para esta acción");
+    }
+}
+
+public void cancelarOrden(UUID idOrden) {
+    try {
+        Orden orden = searchOrden(idOrden);
+
+        if (orden.getEstado() != Estado.Pendiente) {
+            throw new IllegalStateException("Solo se pueden cancelar órdenes pendientes");
+        }
+
+        OrdenItem[] items = orden.getItems();
+
+        for (int i = 0; i < items.length; i++) {
+            OrdenItem item = items[i];
+            Producto p = item.getProducto();
+            p.setStock(p.getStock() + item.getCantidad());
+        }
+        orden.setEstado(Estado.Cancelado);
+        System.out.println("Orden cancelada y stock restaurado correctamente.");
+    } catch (EOrdenNoEncontrada | IllegalStateException e) {
+        System.out.println(e.getMessage());
+    }
+}
+    
+
+public void updateStock(String nombreProducto, int nuevoStock) {
+    try {
+        validarRol(Rol.GESTOR_INVENTARIO);
+
+        Producto p = searchProducto(nombreProducto);
+
+        if (nuevoStock < 0) {
+            throw new IllegalArgumentException("El stock no puede ser negativo");
+        }
+        p.setStock(nuevoStock);
+        System.out.println("Stock actualizado correctamente.");
+    } catch (Exception e) {
+        System.out.println(e.getMessage());
+    }
+}
+
+public void updateProducto(String nombre, double nuevoPrecio) {
+    try {
+        validarRol(Rol.GESTOR_INVENTARIO);
+
+        Producto p = searchProducto(nombre);
+
+        if (nuevoPrecio <= 0) {
+            throw new IllegalArgumentException("El precio debe ser mayor a 0");
+        }
+
+        p.setPrecioBase(nuevoPrecio);
+
+        System.out.println("Producto actualizado correctamente.");
+
+    } catch (Exception e) {
+        System.out.println(e.getMessage());
+    }
+}
+
+public void updateCliente(TipoDocumento tipoDoc, String numDoc, String nuevoEmail) {
+    try {
+        Cliente c = searchCliente(tipoDoc, numDoc);
+
+        c.setEmail(nuevoEmail);
+
+        System.out.println("Cliente actualizado correctamente.");
+
+    } catch (EClienteNoEncontrado e) {
+        System.out.println(e.getMessage());
+    }
+}
+
+public void updateUsuario(String username, String nuevaPassword) {
+    try {
+        validarRol(Rol.ADMIN);
+
+        Usuario u = searchUsuario(username);
+
+        u.setPassword(nuevaPassword);
+
+        System.out.println("Usuario actualizado correctamente.");
+
+    } catch (Exception e) {
+        System.out.println(e.getMessage());
+    }
+}
+
+public Orden[] getOrdenesPorEstado(Estado estado) {
+
+    Orden[] resultado = new Orden[0];
+
+    for (int i = 0; i < historialOrdenes.length; i++) {
+    Orden o = historialOrdenes[i];
+        if (o.getEstado() == estado) {
+
+            resultado = Arrays.copyOf(resultado, resultado.length + 1);
+            resultado[resultado.length - 1] = o;
+        }
+    }
+
+    return resultado;
+}
+
 }
