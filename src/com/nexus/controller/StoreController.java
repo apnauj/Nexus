@@ -1,5 +1,10 @@
 package com.nexus.controller;
-
+import com.nexus.exceptions.EClienteNoEncontrado;
+import com.nexus.exceptions.EHistorialOrden;
+import com.nexus.exceptions.EOrdenNoEncontrada;
+import com.nexus.exceptions.EProductoNoEncontrado;
+import com.nexus.exceptions.EUsuarioNoEncontrado;
+import com.nexus.exceptions.EValorNegativo;
 import com.nexus.exceptions.*;
 import com.nexus.model.entities.*;
 import com.nexus.model.enums.*;
@@ -44,6 +49,16 @@ public class StoreController {
 
     // --- Métodos de add (Añadir) ---
 
+    public void createOrden(Cliente cliente,String fecha, Estado estado, MetodoPago metodoPago) {
+    	Orden o= new Orden(cliente,fecha,metodoPago);
+    	Cliente c=searchCliente(cliente.getTipoDoc(), cliente.getNumDoc());
+
+    	historialOrdenes=Arrays.copyOf(historialOrdenes,historialOrdenes.length+1);
+    	historialOrdenes[historialOrdenes.length-1]=o;
+
+    	c.AgregarCompras(o);
+    }
+
     /*
         Crear una nueva orden, se necesita por parte del Usuario el tipo de documento del cliente, numero de documento del cliente y como va a pagar
         Se busca un cliente en el arreglo de clientes. Este Metodo puede devolver una excepción: EClienteNoEncontrado (Si no se encuentra el cliente)
@@ -60,7 +75,7 @@ public class StoreController {
             Cliente cliente = searchCliente(tipoDoc,numDoc);
             DateTimeFormatter formateador = DateTimeFormatter.ofPattern("dd/MM/yyyy");
             String fecha = (LocalDate.now()).format(formateador);
-            Orden o = new Orden(cliente, fecha, metodoPago);
+            Orden o = new Orden(cliente, fecha,metodoPago);
             historialOrdenes = Arrays.copyOf(historialOrdenes, historialOrdenes.length + 1);
             historialOrdenes[historialOrdenes.length-1] = o;
 
@@ -78,10 +93,10 @@ public class StoreController {
     Añadir un item a una orden, recibimos el UUID, que deberíamos de tener en una variable temporal producida por la creación de la orden
     También el nombre del producto para así buscarlo en nuestro arreglo de productos
     Verificamos que la orden este en estado pendiente, pues de no ser así no podemos añadir productos
-    Capturamos las posibles excepciones que puede producir añadir un item
+    Capturamos las posibles excepciones que puede producir añadir un item con
     */
 
-    public void addItemToOrden(UUID idOrden, String producto, int cantidad){
+    public void addItemToOrden(UUID idOrden, String producto, int cantidad) throws EValorNegativo{
         try{
            Orden o = searchOrden(idOrden);
            Producto p = searchProducto(producto);
@@ -95,6 +110,7 @@ public class StoreController {
         } catch (EOrdenNoEncontrada | EProductoNoEncontrado | EStockInsuficiente | ECantidadNegativa | IllegalStateException e){
             System.out.println(e.getMessage());
         }
+
     }
 
     public void addCliente(TipoDocumento tipoDoc, String numDoc, String nombre, String apellido, String email) {
@@ -128,7 +144,7 @@ public class StoreController {
         System.out.println("Usuario agregado exitosamente.");
     }
 
-    public void addHardware(String nombre, String descripcion, String categoria, int tiempoGarantia, double precioBase, int stock, float consumo, String fabricante) {
+    public void addHardware(String nombre, String descripcion, String categoria, int tiempoGarantia, double precioBase, int stock, float consumo, String fabricante) throws EValorNegativo {
         try {
             searchProducto(nombre);
             System.out.println("Error: Ya existe un producto llamado '" + nombre + "'.");
@@ -144,7 +160,7 @@ public class StoreController {
     }
 
     // Para Videojuego la lógica es idéntica
-    public void addVideojuego(String nombre, String descripcion, String categoria, int tiempoGarantia, double precioBase, int stock, String[] desarrolladores, String[] generos, boolean multijugador, Date fechaLanzamiento, String plataforma, double tamano) {
+    public void addVideojuego(String nombre, String descripcion, String categoria, int tiempoGarantia, double precioBase, int stock, String[] desarrolladores, String[] generos, boolean multijugador, Date fechaLanzamiento, String plataforma, double tamano) throws EValorNegativo {
         try {
             searchProducto(nombre);
             System.out.println("Error: Ya existe un producto llamado '" + nombre + "'.");
@@ -159,6 +175,7 @@ public class StoreController {
         System.out.println("Videojuego agregado exitosamente.");
     }
 
+    //Para las ordenes
 
 
     // --- Métodos de Búsqueda (Search) ---
@@ -209,11 +226,33 @@ public class StoreController {
 
     // --- Métodos de Eliminación (Delete) ---
 
-    public void deleteProducto(String nombre) {
+    public void deleteProducto(String nombre) throws EHistorialOrden {
         // 1. Validamos que exista (esto lanza la excepción si no lo encuentra)
         //TODO: try catch
         //TODO: Hacer validación de si el producto esta siendo usado en una orden o ordenes
         Producto p = searchProducto(nombre);
+
+        int i=0;
+
+
+        while (i < historialOrdenes.length) {
+
+            OrdenItem[] items = historialOrdenes[i].getItems();
+
+            int j = 0; // 🔹 Se reinicia para cada orden
+
+            while (items != null && j < items.length) {
+                if (items[j].getProducto().equals(p)) {
+                    throw new EHistorialOrden(
+                        "No se puede eliminar el producto porque está asociado a una orden."
+                    );
+                }
+                j++;
+            }
+
+            i++;
+        }
+
 
         // 2. Creamos el nuevo arreglo
         Producto[] nuevoArreglo = new Producto[this.productos.length - 1];
@@ -302,7 +341,7 @@ public class StoreController {
     }
 
     //Méto do para validar orden
-    public void verificarPago(UUID idOrden, boolean pago){
+    public void verificarPago(UUID idOrden, boolean pago) throws EValorNegativo{
         try {
             Orden orden =  searchOrden(idOrden);
             if (pago) {

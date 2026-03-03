@@ -1,6 +1,5 @@
 package com.nexus.exceptions;
 
-
 import com.nexus.model.enums.TipoDocumento;
 
 public class EClienteNoEncontrado extends RuntimeException {

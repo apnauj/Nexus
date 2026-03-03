@@ -1,5 +1,7 @@
 package com.nexus.model.entities;
 
+import java.util.Arrays;
+
 import com.nexus.model.enums.TipoDocumento;
 
 import java.util.UUID;
@@ -61,7 +63,14 @@ public class Cliente {
     public void setHistorial(Orden[] historial) {
         this.historial = historial;
     }
+    
+    public void AgregarCompras(Orden o) {
+    	historial=Arrays.copyOf(historial,historial.length+1);
+    	historial[historial.length-1]=o;
+    }
+
     public UUID getId() { return id; }
+
 
     
 }

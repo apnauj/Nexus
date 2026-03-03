@@ -4,6 +4,8 @@ import com.nexus.model.enums.Rol;
 
 import java.util.UUID;
 
+import com.nexus.model.enums.Rol;
+
 public class Usuario {
     private final UUID id;
     private String username;

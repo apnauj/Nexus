@@ -2,6 +2,8 @@ package com.nexus.model.entities;
 
 import java.util.Date;
 
+import com.nexus.exceptions.EValorNegativo;
+
 public class Videojuego extends Producto {
 
     private String[] desarrolladores;
@@ -11,7 +13,9 @@ public class Videojuego extends Producto {
     private String plataforma;
     private double tamano;  // GB
 
-    public Videojuego(String nombre, String descripcion,String categoria,int tiempoGarantia,double precioBase,int stock,String[] desarrolladores,String[] generos,boolean multijugador,Date fechaLanzamiento,String plataforma,double tamano) {
+
+    public Videojuego(String nombre, String descripcion,String categoria,int tiempoGarantia,double precioBase,int stock,String[] desarrolladores,String[] generos,boolean multijugador,Date fechaLanzamiento,String plataforma,double tamaño) throws EValorNegativo {	
+
         super(nombre, descripcion, categoria, tiempoGarantia, precioBase, stock);
 
         this.desarrolladores = desarrolladores;
@@ -74,7 +78,7 @@ public class Videojuego extends Producto {
     }
 
     //actualiza stock del producto, setStock se hereda de la clase padre
-    public void actualizarStock(int nuevoStock) {
+    public void actualizarStock(int nuevoStock) throws EValorNegativo {
         setStock(nuevoStock);
     }
 

@@ -2,13 +2,15 @@ package com.nexus.model.entities;
 
 import java.util.Date;
 
+import com.nexus.exceptions.EValorNegativo;
+
 
 public class Hardware extends Producto {
 
     private float consumo;
     private String fabricante;
 
-    public Hardware(String nombre,String descripcion,String categoria,int tiempoGarantia,double precioBase,int stock,float consumo,String fabricante) {
+    public Hardware(String nombre,String descripcion,String categoria,int tiempoGarantia,double precioBase,int stock,float consumo,String fabricante) throws EValorNegativo {
         super(nombre, descripcion, categoria, tiempoGarantia, precioBase, stock);
 
         this.consumo = consumo;
@@ -27,7 +29,7 @@ public class Hardware extends Producto {
     public void setConsumo(float consumo) {
         this.consumo = consumo;
     }
-    public void actualizarStock(int nuevoStock) {
+    public void actualizarStock(int nuevoStock) throws EValorNegativo {
         setStock(nuevoStock);
     }
     public boolean verificarDisponibilidad() {
@@ -35,7 +37,7 @@ public class Hardware extends Producto {
     }
 
     @Override
-    void asignarDescuento() {
+    public void asignarDescuento() {
         if (consumo < 100) { //mas consumo, menor descuento
             descuento = 0.12;  // 12%
         } else {

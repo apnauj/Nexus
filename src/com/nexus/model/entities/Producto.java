@@ -2,6 +2,8 @@ package com.nexus.model.entities;
 
 import java.util.UUID;
 
+import com.nexus.exceptions.EValorNegativo;
+
 public abstract class Producto {
 
 	protected final UUID id;
@@ -15,7 +17,16 @@ public abstract class Producto {
 	
 	
 	
-	public Producto(String nombre, String descripcion, String categoria, int tiempoGarantia, double precioBase,int stock) {
+	public Producto(String nombre, String descripcion, String categoria, int tiempoGarantia, double precioBase,int stock) throws EValorNegativo {
+		if(precioBase<=0) {
+			throw new EValorNegativo("El precio base no puede ser negativo, usted registro: "+precioBase);	
+		}else if(stock<=0){
+			throw new EValorNegativo("El stock no puede ser negativo, el stock registrado fue: "+stock);
+		}else if (tiempoGarantia <=0) {
+			throw new EValorNegativo("El tiempo de garantia no puede ser negativo, el valor registrado del tiempo de garantia es: "+tiempoGarantia);
+		
+		}else{
+			
 		this.id=UUID.randomUUID();
 		this.nombre = nombre;
 		this.descripcion = descripcion;
@@ -23,6 +34,7 @@ public abstract class Producto {
 		this.tiempoGarantia = tiempoGarantia;
 		this.precioBase = precioBase;
 		this.stock = stock;
+		}
 	}
 	
 	public UUID getId() {
@@ -57,24 +69,37 @@ public abstract class Producto {
 		return precioBase;
 	}
 	
-	public void setPrecioBase(double precioBase) {
-		this.precioBase = precioBase;
+	public void setPrecioBase(double precioBase)throws EValorNegativo {
+		if(precioBase <=0) {
+			throw new EValorNegativo("El valor del precio base no puede ser negativo o cero, el valor registrado fue: "+precioBase);
+		}else {
+			this.precioBase = precioBase;	
+		}
 	}
 	
 	public double getDescuento() {
 		return descuento;
 	}
 	
-	public void setDescuento(double descuento) {
-		this.descuento = descuento;
+	public void setDescuento(double descuento)throws EValorNegativo {
+		if(descuento <=0 ) {
+			throw new EValorNegativo("El valor del descuento no puede ser negativo o cero");
+		}else {
+			this.descuento = descuento;	
+		}
 	}
 	
 	public int getStock() {
 		return stock;
 	}
 	
-	public void setStock(int stock) {
-		this.stock = stock;
+	public void setStock(int stock) throws EValorNegativo {
+		if(descuento <=0) {
+			throw new EValorNegativo("El valor del stock no puede ser negativo o cero, el valor ingresado fue: "+stock);
+		}else {
+			this.stock = stock;	
+		}
+		
 	}
 	
 	public String getCategoria() {

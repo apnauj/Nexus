@@ -2,12 +2,13 @@ package com.nexus.model.entities;
 
 import com.nexus.exceptions.ECantidadNegativa;
 import com.nexus.exceptions.EStockInsuficiente;
+import com.nexus.exceptions.EValorNegativo;
 
 public class OrdenItem {
     private final Producto producto;
     private int cantidad;
 
-    public OrdenItem(Producto producto, int cantidad) throws EStockInsuficiente, ECantidadNegativa {
+    public OrdenItem(Producto producto, int cantidad) throws EStockInsuficiente, ECantidadNegativa, EValorNegativo{
         this.producto = producto;
         if(cantidad <= 0){
             throw new ECantidadNegativa("Cantidad inválida solo se aceptan cantidades positivas");
@@ -33,8 +34,12 @@ public class OrdenItem {
         }
         this.cantidad = a;
     }
+    
+
 
     public double calcularSubtotal(){
         return producto.calcularPrecio()*cantidad;
     }
+
+
 }

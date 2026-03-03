@@ -26,9 +26,7 @@ public class Orden {
         this.items = new OrdenItem[0];
     }
 
-    public UUID getIdPedido() {
-        return idPedido;
-    }
+
 
     public void setCliente(Cliente cliente) {
         this.cliente = cliente;
@@ -52,10 +50,6 @@ public class Orden {
 
     public void setMetodoPago(MetodoPago metodoPago) {
         this.metodoPago = metodoPago;
-    }
-
-    public OrdenItem[] getItems() {
-        return items;
     }
 
     public String getFecha(){
@@ -90,6 +84,15 @@ public class Orden {
         return total;
     }
 
+    
+    public UUID getIdPedido() {
+    	return this.idPedido;
+    }
+    
+    public OrdenItem[] getItems() {
+    	return this.items;
+    }
+
 
     public OrdenItem removeItemAt(int index) {
         if (this.estado != Estado.Pendiente) {
@@ -107,8 +110,8 @@ public class Orden {
                 j++;
             }
         }
-        items = newItems;
-        return removed;
+		return removed;
+
     }
 
     //TODO: modificar la cantidad exclusivamente de un OrdenItem
