@@ -6,7 +6,7 @@ import com.nexus.exceptions.EValorNegativo;
 
 public abstract class Producto {
 
-	protected UUID id;
+	protected final UUID id;
 	protected String nombre;
 	protected String descripcion;
 	protected String categoria;

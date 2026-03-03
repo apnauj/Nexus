@@ -1,11 +1,13 @@
 package com.nexus.model.entities;
 
+import com.nexus.model.enums.Rol;
+
 import java.util.UUID;
 
 import com.nexus.model.enums.Rol;
 
 public class Usuario {
-    private UUID id;
+    private final UUID id;
     private String username;
     private String password;
     private Rol rol;

@@ -1,13 +1,16 @@
 package com.nexus.controller;
-
 import com.nexus.exceptions.EClienteNoEncontrado;
 import com.nexus.exceptions.EHistorialOrden;
 import com.nexus.exceptions.EOrdenNoEncontrada;
 import com.nexus.exceptions.EProductoNoEncontrado;
 import com.nexus.exceptions.EUsuarioNoEncontrado;
 import com.nexus.exceptions.EValorNegativo;
+import com.nexus.exceptions.*;
 import com.nexus.model.entities.*;
 import com.nexus.model.enums.*;
+
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.UUID;
@@ -45,15 +48,69 @@ public class StoreController {
     }
 
     // --- Métodos de add (Añadir) ---
+
     public void createOrden(Cliente cliente,String fecha, Estado estado, MetodoPago metodoPago) {
-    	Orden o= new Orden(cliente,fecha,estado,metodoPago);
+    	Orden o= new Orden(cliente,fecha,metodoPago);
     	Cliente c=searchCliente(cliente.getTipoDoc(), cliente.getNumDoc());
     	
     	historialOrdenes=Arrays.copyOf(historialOrdenes,historialOrdenes.length+1);
     	historialOrdenes[historialOrdenes.length-1]=o;
     	
     	c.AgregarCompras(o);
-    	
+    }
+
+    /*
+        Crear una nueva orden, se necesita por parte del Usuario el tipo de documento del cliente, numero de documento del cliente y como va a pagar
+        Se busca un cliente en el arreglo de clientes. Este Metodo puede devolver una excepción: EClienteNoEncontrado (Si no se encuentra el cliente)
+        Se pone la fecha en formato dd/MM/yyyy que es con el que se manejaran todas las fechas del sistema
+        Para esto se llama a la fecha actual y se formatea con el formato que se pasa
+        Ahora, ya teniendo el cliente podemos crear una nueva orden con los parametros de su constructor. La orden tiene un estado de PENDIENTE por defecto.
+        Añadimos la orden al arreglo de historialOrdenes
+        Añadimos la orden al arreglo de historialOrdenes del cliente
+        Devolvemos la el UUID en caso de haber completado el flujo exitosamente (para así reutilizar este UUID en otras operaciones de la interfaz mientras estamos trabjando con ella), de lo contrario se habría lanzado una excepción
+    */
+
+    public UUID addOrden(TipoDocumento tipoDoc, String numDoc, MetodoPago metodoPago) {
+        try {
+            Cliente cliente = searchCliente(tipoDoc,numDoc);
+            DateTimeFormatter formateador = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+            String fecha = (LocalDate.now()).format(formateador);
+            Orden o = new Orden(cliente, fecha,metodoPago);
+            historialOrdenes = Arrays.copyOf(historialOrdenes, historialOrdenes.length + 1);
+            historialOrdenes[historialOrdenes.length-1] = o;
+
+            cliente.setHistorial(Arrays.copyOf(cliente.getHistorial(), cliente.getHistorial().length + 1));
+            cliente.getHistorial()[cliente.getHistorial().length-1] = o;
+
+            return o.getIdPedido();
+        } catch (EClienteNoEncontrado e){
+            System.out.println(e.getMessage());
+            return null;
+        }
+    }
+
+    /*
+    Añadir un item a una orden, recibimos el UUID, que deberíamos de tener en una variable temporal producida por la creación de la orden
+    También el nombre del producto para así buscarlo en nuestro arreglo de productos
+    Verificamos que la orden este en estado pendiente, pues de no ser así no podemos añadir productos
+    Capturamos las posibles excepciones que puede producir añadir un item con
+    */
+
+    public void addItemToOrden(UUID idOrden, String producto, int cantidad) throws EValorNegativo{
+        try{
+           Orden o = searchOrden(idOrden);
+           Producto p = searchProducto(producto);
+
+            if (o.getEstado() != Estado.Pendiente) {
+                throw new IllegalStateException("Solo se pueden agregar items a órdenes pendientes");
+            } else {
+                OrdenItem oi = new OrdenItem(p, cantidad);
+                o.addItemOrden(oi);
+            }
+        } catch (EOrdenNoEncontrada | EProductoNoEncontrado | EStockInsuficiente | ECantidadNegativa | IllegalStateException e){
+            System.out.println(e.getMessage());
+        }
+
     }
 
     public void addCliente(TipoDocumento tipoDoc, String numDoc, String nombre, String apellido, String email) {
@@ -123,7 +180,7 @@ public class StoreController {
 
     // --- Métodos de Búsqueda (Search) ---
 
-    public Orden searchOrder(UUID id) throws EOrdenNoEncontrada {
+    public Orden searchOrden(UUID id) throws EOrdenNoEncontrada {
         int i = 0;
         while (i < historialOrdenes.length) {
             if (historialOrdenes[i].getIdPedido().equals(id)) {
@@ -249,5 +306,181 @@ public class StoreController {
         this.usuarios = nuevoArreglo;
         System.out.println("Usuario eliminado correctamente.");
     }
+
+    public void removeItemOrden(UUID idOrden, String nombre) throws EValorNegativo {
+        try {
+            Orden orden = searchOrden(idOrden);
+            Producto producto = searchProducto(nombre);
+
+            if (orden.getEstado() != Estado.Pendiente) {
+                throw new IllegalStateException("Solo se pueden quitar items de órdenes pendientes");
+            }
+
+            OrdenItem[] items = orden.getItems();
+            int index = -1;
+            int i = 0;
+            while (i < items.length) {
+                if (items[i].getProducto().getId().equals(producto.getId())) {
+                    index = i;
+                    break;
+                }
+                i++;
+            }
+
+            if (index == -1) {
+                System.out.println("El producto '" + nombre + "' no está en la orden.");
+                return;
+            }
+
+            OrdenItem removed = orden.removeItemAt(index);
+            Producto p = removed.getProducto();
+            p.setStock(p.getStock() + removed.getCantidad());
+            System.out.println("Item eliminado correctamente. Stock restaurado.");
+        } catch (EOrdenNoEncontrada | EProductoNoEncontrado | IllegalStateException e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
+    //Méto do para validar orden
+    public void verificarPago(UUID idOrden, boolean pago) throws EValorNegativo{
+        try {
+            Orden orden =  searchOrden(idOrden);
+            if (pago) {
+                if (orden.getItems() == null || orden.getItems().length == 0) {
+                    throw new IllegalStateException("No se puede aprobar una orden sin items");
+                }
+                orden.setEstado(Estado.Aprobado);
+            } else {
+
+                if (orden.getEstado() == Estado.Pendiente) {
+                    for (OrdenItem item : orden.getItems()) {
+                        Producto p = item.getProducto();
+                        p.setStock(p.getStock() + item.getCantidad());
+                    }
+                }
+                orden.setEstado(Estado.Rechazado);
+            }
+        } catch (EOrdenNoEncontrada | IllegalStateException e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
+    //Métodos de login
+
+    public Usuario getCurrentUser(){
+        return currentUser;
+    }
+
+    private void validarRol(Rol rolNecesario) {
+    if (currentUser == null) {
+        throw new IllegalStateException("No hay usuario autenticado");
+    }
+
+    if (currentUser.getRol() != rolNecesario) {
+        throw new IllegalStateException("No tienes permisos para esta acción");
+    }
+}
+
+public void cancelarOrden(UUID idOrden) throws EValorNegativo {
+    try {
+        Orden orden = searchOrden(idOrden);
+
+        if (orden.getEstado() != Estado.Pendiente) {
+            throw new IllegalStateException("Solo se pueden cancelar órdenes pendientes");
+        }
+
+        OrdenItem[] items = orden.getItems();
+
+        for (int i = 0; i < items.length; i++) {
+            OrdenItem item = items[i];
+            Producto p = item.getProducto();
+            p.setStock(p.getStock() + item.getCantidad());
+        }
+        orden.setEstado(Estado.Rechazado);
+        System.out.println("Orden cancelada y stock restaurado correctamente.");
+    } catch (EOrdenNoEncontrada | IllegalStateException e) {
+        System.out.println(e.getMessage());
+    }
+}
+    
+
+public void updateStock(String nombreProducto, int nuevoStock) {
+    try {
+        validarRol(Rol.GESTOR_INVENTARIO);
+
+        Producto p = searchProducto(nombreProducto);
+
+        if (nuevoStock < 0) {
+            throw new IllegalArgumentException("El stock no puede ser negativo");
+        }
+        p.setStock(nuevoStock);
+        System.out.println("Stock actualizado correctamente.");
+    } catch (Exception e) {
+        System.out.println(e.getMessage());
+    }
+}
+
+public void updateProducto(String nombre, double nuevoPrecio) {
+    try {
+        validarRol(Rol.GESTOR_INVENTARIO);
+
+        Producto p = searchProducto(nombre);
+
+        if (nuevoPrecio <= 0) {
+            throw new IllegalArgumentException("El precio debe ser mayor a 0");
+        }
+
+        p.setPrecioBase(nuevoPrecio);
+
+        System.out.println("Producto actualizado correctamente.");
+
+    } catch (Exception e) {
+        System.out.println(e.getMessage());
+    }
+}
+
+public void updateCliente(TipoDocumento tipoDoc, String numDoc, String nuevoEmail) {
+    try {
+        Cliente c = searchCliente(tipoDoc, numDoc);
+
+        c.setEmail(nuevoEmail);
+
+        System.out.println("Cliente actualizado correctamente.");
+
+    } catch (EClienteNoEncontrado e) {
+        System.out.println(e.getMessage());
+    }
+}
+
+public void updateUsuario(String username, String nuevaPassword) {
+    try {
+        validarRol(Rol.ADMIN);
+
+        Usuario u = searchUsuario(username);
+
+        u.setPassword(nuevaPassword);
+
+        System.out.println("Usuario actualizado correctamente.");
+
+    } catch (Exception e) {
+        System.out.println(e.getMessage());
+    }
+}
+
+public Orden[] getOrdenesPorEstado(Estado estado) {
+
+    Orden[] resultado = new Orden[0];
+
+    for (int i = 0; i < historialOrdenes.length; i++) {
+    Orden o = historialOrdenes[i];
+        if (o.getEstado() == estado) {
+
+            resultado = Arrays.copyOf(resultado, resultado.length + 1);
+            resultado[resultado.length - 1] = o;
+        }
+    }
+
+    return resultado;
+}
 
 }
