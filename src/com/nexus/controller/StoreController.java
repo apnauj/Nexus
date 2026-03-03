@@ -333,7 +333,12 @@ public class StoreController {
             OrdenItem removed = orden.removeItemAt(index);
             Producto p = removed.getProducto();
             //Reestablecer el stock que se había usado
-            p.setStock(p.getStock() + removed.getCantidad());
+            try{
+                p.setStock(p.getStock() + removed.getCantidad());
+            } catch (EValorNegativo e){
+                System.out.println(e.getMessage());
+            }
+
             System.out.println("Item eliminado correctamente. Stock restaurado.");
         } catch (EOrdenNoEncontrada | EProductoNoEncontrado | IllegalStateException e) {
             System.out.println(e.getMessage());
