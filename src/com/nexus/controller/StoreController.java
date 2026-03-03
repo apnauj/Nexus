@@ -1,9 +1,11 @@
 package com.nexus.controller;
 
 import com.nexus.exceptions.EClienteNoEncontrado;
+import com.nexus.exceptions.EHistorialOrden;
 import com.nexus.exceptions.EOrdenNoEncontrada;
 import com.nexus.exceptions.EProductoNoEncontrado;
 import com.nexus.exceptions.EUsuarioNoEncontrado;
+import com.nexus.exceptions.EValorNegativo;
 import com.nexus.model.entities.*;
 import com.nexus.model.enums.*;
 import java.util.Arrays;
@@ -43,7 +45,16 @@ public class StoreController {
     }
 
     // --- Métodos de add (Añadir) ---
-
+    public void createOrden(Cliente cliente,String fecha, Estado estado, MetodoPago metodoPago) {
+    	Orden o= new Orden(cliente,fecha,estado,metodoPago);
+    	Cliente c=searchCliente(cliente.getTipoDoc(), cliente.getNumDoc());
+    	
+    	historialOrdenes=Arrays.copyOf(historialOrdenes,historialOrdenes.length+1);
+    	historialOrdenes[historialOrdenes.length-1]=o;
+    	
+    	c.AgregarCompras(o);
+    	
+    }
 
     public void addCliente(TipoDocumento tipoDoc, String numDoc, String nombre, String apellido, String email) {
         try {
@@ -76,7 +87,7 @@ public class StoreController {
         System.out.println("Usuario agregado exitosamente.");
     }
 
-    public void addHardware(String nombre, String descripcion, String categoria, int tiempoGarantia, double precioBase, int stock, float consumo, String fabricante) {
+    public void addHardware(String nombre, String descripcion, String categoria, int tiempoGarantia, double precioBase, int stock, float consumo, String fabricante) throws EValorNegativo {
         try {
             searchProducto(nombre);
             System.out.println("Error: Ya existe un producto llamado '" + nombre + "'.");
@@ -92,7 +103,7 @@ public class StoreController {
     }
 
     // Para Videojuego la lógica es idéntica
-    public void addVideojuego(String nombre, String descripcion, String categoria, int tiempoGarantia, double precioBase, int stock, String[] desarrolladores, String[] generos, boolean multijugador, Date fechaLanzamiento, String plataforma, double tamano) {
+    public void addVideojuego(String nombre, String descripcion, String categoria, int tiempoGarantia, double precioBase, int stock, String[] desarrolladores, String[] generos, boolean multijugador, Date fechaLanzamiento, String plataforma, double tamano) throws EValorNegativo {
         try {
             searchProducto(nombre);
             System.out.println("Error: Ya existe un producto llamado '" + nombre + "'.");
@@ -107,6 +118,7 @@ public class StoreController {
         System.out.println("Videojuego agregado exitosamente.");
     }
 
+    //Para las ordenes
 
 
     // --- Métodos de Búsqueda (Search) ---
@@ -157,10 +169,32 @@ public class StoreController {
 
     // --- Métodos de Eliminación (Delete) ---
 
-    public void deleteProducto(String nombre) {
+    public void deleteProducto(String nombre) throws EHistorialOrden {
         // 1. Validamos que exista (esto lanza la excepción si no lo encuentra)
         Producto p = searchProducto(nombre);
+        
+        int i=0;
+        
 
+        while (i < historialOrdenes.length) {
+
+            OrdenItem[] items = historialOrdenes[i].getItems();
+
+            int j = 0; // 🔹 Se reinicia para cada orden
+
+            while (items != null && j < items.length) {
+                if (items[j].getProducto().equals(p)) {
+                    throw new EHistorialOrden(
+                        "No se puede eliminar el producto porque está asociado a una orden."
+                    );
+                }
+                j++;
+            }
+
+            i++;
+        }
+        
+        
         // 2. Creamos el nuevo arreglo
         Producto[] nuevoArreglo = new Producto[this.productos.length - 1];
         int j = 0;
@@ -175,9 +209,19 @@ public class StoreController {
         System.out.println("Producto eliminado correctamente.");
     }
 
-    public void deleteCliente(TipoDocumento tipoDoc, String numDoc) {
+    public void deleteCliente(TipoDocumento tipoDoc, String numDoc) throws EHistorialOrden{
         Cliente c = searchCliente(tipoDoc, numDoc);
-
+        
+        //Validar si no se cumple
+        int i=0;
+        while(i<historialOrdenes.length && ! historialOrdenes[i].getCliente().equals(c)) {
+        	i++;
+        } 
+        if(i<historialOrdenes.length) {
+        	throw new EHistorialOrden("No se puede eliminar el cliente, ya que tiene ordenes asociadas");
+        }
+        
+        //validar si se cumple
         Cliente[] nuevoArreglo = new Cliente[this.clientes.length - 1];
         int j = 0;
 

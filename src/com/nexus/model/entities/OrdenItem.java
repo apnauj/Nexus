@@ -16,8 +16,16 @@ public class OrdenItem {
     public void setCantidad(int a){
         this.cantidad = a;
     }
+    
+    public void agregarProducto(Producto p) {
+    	this.producto=p;
+    }
 
     public double calcularSubtotal(){
-        return producto.getPreciobase()*cantidad;
+        return producto.calcularPrecio()*cantidad;
     }
+    public Producto getProducto() {
+    	return this.producto;
+    }
+
 }

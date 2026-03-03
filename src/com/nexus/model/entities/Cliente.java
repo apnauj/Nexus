@@ -1,5 +1,7 @@
 package com.nexus.model.entities;
 
+import java.util.Arrays;
+
 import com.nexus.model.enums.TipoDocumento;
 
 public class Cliente {
@@ -10,7 +12,7 @@ public class Cliente {
     private String email;
     private Orden[] historial;
 
-    Cliente(TipoDocumento tipoDoc, String numDoc, String nombre, String apellido, String email) {
+    public Cliente(TipoDocumento tipoDoc, String numDoc, String nombre, String apellido, String email) {
         this.tipoDoc = tipoDoc;
         this.numDoc = numDoc;
         this.nombre = nombre;
@@ -63,6 +65,11 @@ public class Cliente {
 
     public void setHistorial(Orden[] historial) {
         this.historial = historial;
+    }
+    
+    public void AgregarCompras(Orden o) {
+    	historial=Arrays.copyOf(historial,historial.length+1);
+    	historial[historial.length-1]=o;
     }
 
     

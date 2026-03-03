@@ -52,4 +52,12 @@ public class Orden {
         }
         return total;
     }
+    
+    public UUID getIdPedido() {
+    	return this.idPedido;
+    }
+    
+    public OrdenItem[] getItems() {
+    	return this.items;
+    }
 }
