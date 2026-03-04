@@ -1,16 +1,15 @@
 package com.nexus.model.entities;
 
+import com.nexus.exceptions.EParametroNulo;
+
 import java.util.Date;
-
-import com.nexus.exceptions.EValorNegativo;
-
 
 public class Hardware extends Producto {
 
     private float consumo;
     private String fabricante;
 
-    public Hardware(String nombre,String descripcion,String categoria,int tiempoGarantia,double precioBase,int stock,float consumo,String fabricante) throws EValorNegativo {
+    public Hardware(String nombre, String descripcion, String categoria, int tiempoGarantia, double precioBase, int stock, float consumo, String fabricante) throws EParametroNulo {
         super(nombre, descripcion, categoria, tiempoGarantia, precioBase, stock);
 
         this.consumo = consumo;
@@ -29,7 +28,7 @@ public class Hardware extends Producto {
     public void setConsumo(float consumo) {
         this.consumo = consumo;
     }
-    public void actualizarStock(int nuevoStock) throws EValorNegativo {
+    public void actualizarStock(int nuevoStock) {
         setStock(nuevoStock);
     }
     public boolean verificarDisponibilidad() {

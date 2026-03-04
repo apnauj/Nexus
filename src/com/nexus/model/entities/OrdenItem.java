@@ -35,7 +35,7 @@ public class OrdenItem {
         return cantidad;
     }
 
-    public void setCantidad(int a) {
+    public void setCantidad(int a) throws ECantidadNegativa {
         if (a <= 0) {
             throw new ECantidadNegativa("La cantidad debe ser positiva");
         }

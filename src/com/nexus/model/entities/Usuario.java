@@ -1,10 +1,9 @@
 package com.nexus.model.entities;
 
+import com.nexus.exceptions.EParametroNulo;
 import com.nexus.model.enums.Rol;
 
 import java.util.UUID;
-
-import com.nexus.model.enums.Rol;
 
 public class Usuario {
     private final UUID id;
@@ -12,7 +11,16 @@ public class Usuario {
     private String password;
     private Rol rol;
 
-    public Usuario(String username, String password, Rol rol) {
+    public Usuario(String username, String password, Rol rol) throws EParametroNulo{
+        if (username == null || username.isBlank()) {
+            throw new EParametroNulo("username");
+        }
+        if (password == null) {
+            throw new EParametroNulo("password");
+        }
+        if (rol == null) {
+            throw new EParametroNulo("rol");
+        }
         this.id = UUID.randomUUID();
         this.username = username;
         this.password = password;

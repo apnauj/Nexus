@@ -3,6 +3,11 @@ out/
 !**/src/main/**/out/
 !**/src/test/**/out/
 .kotlin
+bin/
+.classpath
+.project
+Nexus.eml
+Nexus.userlibraries
 
 ### Eclipse ###
 .apt_generated
@@ -41,3 +46,4 @@ build/
 # Archivos de sistema/temporales
 *.log
 *.lock
+Pruebas.java

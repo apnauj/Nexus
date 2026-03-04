@@ -1,5 +1,4 @@
 package com.nexus.model.entities;
-// Importa Enums
 
 import com.nexus.exceptions.EValorNegativo;
 import com.nexus.model.enums.Estado;
@@ -19,13 +18,20 @@ public class Orden {
     private double total;
     private OrdenItem items[];
 
-    //Constructor
-    public Orden(Cliente cliente, String fecha,MetodoPago metodoPago) {
-        //Genera automaticamente el id unico
+    public Orden(Cliente cliente, String fecha, MetodoPago metodoPago) throws EParametroNulo {
+        if (cliente == null) {
+            throw new EParametroNulo("cliente");
+        }
+        if (fecha == null || fecha.isBlank()) {
+            throw new EParametroNulo("fecha");
+        }
+        if (metodoPago == null) {
+            throw new EParametroNulo("metodoPago");
+        }
         this.idPedido = UUID.randomUUID();
         this.cliente = cliente;
         this.fecha = fecha;
-        this.estado = Estado.Pendiente;
+        this.estado = Estado.PENDIENTE;
         this.metodoPago = metodoPago;
         this.valorPagado = 0;
         this.cambio = 0;
@@ -99,7 +105,7 @@ public class Orden {
     }
 
     public OrdenItem removeItemAt(int index) {
-        if (this.estado != Estado.Pendiente) {
+        if (this.estado != Estado.PENDIENTE) {
             throw new IllegalStateException("Solo se pueden quitar items de órdenes en estado Pendiente");
         }
         if (index < 0 || index >= items.length) {
@@ -114,7 +120,8 @@ public class Orden {
                 j++;
             }
         }
-		return removed;
+        items = newItems;
+        return removed;
 
     }
 
