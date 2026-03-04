@@ -91,7 +91,7 @@ public class StoreController {
            Orden o = searchOrden(idOrden);
            Producto p = searchProducto(producto);
 
-            if (o.getEstado() != Estado.Pendiente) {
+            if (o.getEstado() != Estado.PENDIENTE) {
                 throw new IllegalStateException("Solo se pueden agregar items a órdenes pendientes");
             } else {
                 OrdenItem oi = new OrdenItem(p, cantidad);
@@ -300,7 +300,7 @@ public class StoreController {
             Orden orden = searchOrden(idOrden);
             Producto producto = searchProducto(nombre);
 
-            if (orden.getEstado() != Estado.Pendiente) {
+            if (orden.getEstado() != Estado.PENDIENTE) {
                 throw new IllegalStateException("Solo se pueden quitar items de órdenes pendientes");
             }
 
@@ -343,15 +343,15 @@ public class StoreController {
                 if (orden.getItems() == null || orden.getItems().length == 0) {
                     throw new IllegalStateException("No se puede aprobar una orden sin items");
                 }
-                orden.setEstado(Estado.Aprobado);
+                orden.setEstado(Estado.APROBADO);
             } else {
-                if (orden.getEstado() == Estado.Pendiente) {
+                if (orden.getEstado() == Estado.PENDIENTE) {
                     for (OrdenItem item : orden.getItems()) {
                         Producto p = item.getProducto();
                         p.setStock(p.getStock() + item.getCantidad());
                     }
                 }
-                orden.setEstado(Estado.Rechazado);
+                orden.setEstado(Estado.RECHAZADO);
             }
         } catch (EOrdenNoEncontrada | IllegalStateException e) {
             System.out.println(e.getMessage());
