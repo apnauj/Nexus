@@ -148,10 +148,12 @@ public class StoreController {
 
 
     // --- Métodos auxiliares de existencia ---
+    //TODO: cambiar todo esto por whiles
 
     private boolean existeCliente(TipoDocumento tipoDoc, String numDoc) {
-        for (Cliente c : clientes) {
-            if (c.getTipoDoc().equals(tipoDoc) && c.getNumDoc().equals(numDoc)) {
+        int i = 0;
+        while (i < this.clientes.length) {
+            if(this.clientes[i].getNumDoc().equals(numDoc) && this.clientes[i].getTipoDoc().equals(tipoDoc)) {
                 return true;
             }
         }
@@ -159,8 +161,9 @@ public class StoreController {
     }
 
     private boolean existeUsuario(String username) {
-        for (Usuario u : usuarios) {
-            if (u.getUsername().equals(username)) {
+        int i = 0;
+        while (i < this.usuarios.length) {
+            if(this.usuarios[i].getUsername().equals(username)) {
                 return true;
             }
         }
@@ -168,8 +171,9 @@ public class StoreController {
     }
 
     private boolean existeProducto(String nombre) {
-        for (Producto p : productos) {
-            if (p.getNombre().equals(nombre)) {
+        int i = 0;
+        while (i < this.productos.length) {
+            if(this.productos[i].getNombre().equals(nombre)) {
                 return true;
             }
         }

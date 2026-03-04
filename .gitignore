@@ -6,6 +6,8 @@ out/
 bin/
 .classpath
 .project
+Nexus.eml
+Nexus.userlibraries
 
 ### Eclipse ###
 .apt_generated
