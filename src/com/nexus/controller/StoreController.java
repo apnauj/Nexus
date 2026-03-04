@@ -41,10 +41,6 @@ public class StoreController {
         return this.historialOrdenes;
     }
 
-    public static Producto[] getProductos() {
-        return this.productos;
-    }
-
     public Cliente[] getClientes() {
         return this.clientes;
     }
@@ -150,7 +146,7 @@ public class StoreController {
     // --- Métodos auxiliares de existencia ---
     //TODO: cambiar todo esto por whiles
 
-    private boolean existeCliente(TipoDocumento tipoDoc, String numDoc) {
+    public boolean existeCliente(TipoDocumento tipoDoc, String numDoc) {
         int i = 0;
         while (i < this.clientes.length) {
             if(this.clientes[i].getNumDoc().equals(numDoc) && this.clientes[i].getTipoDoc().equals(tipoDoc)) {
@@ -160,7 +156,7 @@ public class StoreController {
         return false;
     }
 
-    private boolean existeUsuario(String username) {
+    public boolean existeUsuario(String username) {
         int i = 0;
         while (i < this.usuarios.length) {
             if(this.usuarios[i].getUsername().equals(username)) {
@@ -170,10 +166,10 @@ public class StoreController {
         return false;
     }
 
-    private boolean existeProducto(String nombre) {
+    public boolean existeProducto(String nombre) {
         int i = 0;
         while (i < this.productos.length) {
-            if(this.productos[i].getNombre().equals(nombre)) {
+            if(this.productos[i].getNombre().equalsIgnoreCase(nombre)) {
                 return true;
             }
         }
