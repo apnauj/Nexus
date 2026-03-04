@@ -1,7 +1,10 @@
 package com.nexus.exceptions;
 
-public class EValorNegativo extends Exception{
-	public EValorNegativo(String s) {
-		super(s);
-	}
+/**
+ * Se lanza cuando un valor numérico es negativo o cero cuando debe ser positivo.
+ */
+public class EValorNegativo extends RuntimeException {
+    public EValorNegativo(String mensaje) {
+        super(mensaje);
+    }
 }

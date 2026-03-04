@@ -1,11 +1,17 @@
 package com.nexus.controller;
+
+import com.nexus.exceptions.ECantidadNegativa;
 import com.nexus.exceptions.EClienteNoEncontrado;
+import com.nexus.exceptions.EClienteYaExiste;
 import com.nexus.exceptions.EHistorialOrden;
 import com.nexus.exceptions.EOrdenNoEncontrada;
+import com.nexus.exceptions.EParametroNulo;
 import com.nexus.exceptions.EProductoNoEncontrado;
+import com.nexus.exceptions.EProductoYaExiste;
+import com.nexus.exceptions.EStockInsuficiente;
 import com.nexus.exceptions.EUsuarioNoEncontrado;
+import com.nexus.exceptions.EUsuarioYaExiste;
 import com.nexus.exceptions.EValorNegativo;
-import com.nexus.exceptions.*;
 import com.nexus.model.entities.*;
 import com.nexus.model.enums.*;
 
@@ -61,22 +67,18 @@ public class StoreController {
         Devolvemos la el UUID en caso de haber completado el flujo exitosamente (para así reutilizar este UUID en otras operaciones de la interfaz mientras estamos trabjando con ella), de lo contrario se habría lanzado una excepción
     */
 
-    public UUID addOrden(TipoDocumento tipoDoc, String numDoc, MetodoPago metodoPago) {
-        try {
-            Cliente cliente = searchCliente(tipoDoc,numDoc);
-            DateTimeFormatter formateador = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-            String fecha = (LocalDate.now()).format(formateador);
-            Orden o = new Orden(cliente, fecha,metodoPago);
-            historialOrdenes = Arrays.copyOf(historialOrdenes, historialOrdenes.length + 1);
-            historialOrdenes[historialOrdenes.length-1] = o;
-
-            cliente.AgregarCompras(o);
-
-            return o.getIdPedido();
-        } catch (EClienteNoEncontrado e){
-            System.out.println(e.getMessage());
-            return null;
-        }
+    public UUID addOrden(TipoDocumento tipoDoc, String numDoc, MetodoPago metodoPago) throws EClienteNoEncontrado, EParametroNulo {
+        if (tipoDoc == null) throw new EParametroNulo("tipoDoc");
+        if (numDoc == null || numDoc.isBlank()) throw new EParametroNulo("numDoc");
+        if (metodoPago == null) throw new EParametroNulo("metodoPago");
+        Cliente cliente = searchCliente(tipoDoc, numDoc);
+        DateTimeFormatter formateador = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+        String fecha = (LocalDate.now()).format(formateador);
+        Orden o = new Orden(cliente, fecha, metodoPago);
+        historialOrdenes = Arrays.copyOf(historialOrdenes, historialOrdenes.length + 1);
+        historialOrdenes[historialOrdenes.length - 1] = o;
+        cliente.AgregarCompras(o);
+        return o.getIdPedido();
     }
 
     /*
@@ -86,91 +88,98 @@ public class StoreController {
     Capturamos las posibles excepciones que puede producir añadir un item con
     */
 
-    public void addItemToOrden(UUID idOrden, String producto, int cantidad) throws EValorNegativo{
-        try{
-           Orden o = searchOrden(idOrden);
-           Producto p = searchProducto(producto);
-
-            if (o.getEstado() != Estado.PENDIENTE) {
-                throw new IllegalStateException("Solo se pueden agregar items a órdenes pendientes");
-            } else {
-                OrdenItem oi = new OrdenItem(p, cantidad);
-                o.addItemOrden(oi);
-            }
-        } catch (EOrdenNoEncontrada | EProductoNoEncontrado | EStockInsuficiente | ECantidadNegativa | IllegalStateException e){
-            System.out.println(e.getMessage());
+    public void addItemToOrden(UUID idOrden, String producto, int cantidad) throws EOrdenNoEncontrada, EProductoNoEncontrado, EStockInsuficiente, EParametroNulo, ECantidadNegativa {
+        if (idOrden == null) throw new EParametroNulo("idOrden");
+        if (producto == null || producto.isBlank()) throw new EParametroNulo("producto");
+        Orden o = searchOrden(idOrden);
+        Producto p = searchProducto(producto);
+        if (o.getEstado() != Estado.PENDIENTE) {
+            throw new IllegalStateException("Solo se pueden agregar items a órdenes pendientes");
         }
-
+        OrdenItem oi = new OrdenItem(p, cantidad);
+        o.addItemOrden(oi);
     }
 
-    public void addCliente(TipoDocumento tipoDoc, String numDoc, String nombre, String apellido, String email) {
-        try {
-            // Intentamos buscarlo primero. Si lo encuentra, ¡no podemos agregarlo!
-            searchCliente(tipoDoc, numDoc);
-            System.out.println("Error: El cliente con documento " + numDoc + " ya existe.");
-            return;
-        } catch (EClienteNoEncontrado e) {
-            // Si entra aquí, es porque NO existe. ¡Perfecto para agregar!
+    public void addCliente(TipoDocumento tipoDoc, String numDoc, String nombre, String apellido, String email) throws EClienteYaExiste, EParametroNulo {
+        if (tipoDoc == null) throw new EParametroNulo("tipoDoc");
+        if (numDoc == null || numDoc.isBlank()) throw new EParametroNulo("numDoc");
+        if (nombre == null || nombre.isBlank()) throw new EParametroNulo("nombre");
+        if (existeCliente(tipoDoc, numDoc)) {
+            throw new EClienteYaExiste(tipoDoc, numDoc);
         }
-
         Cliente nuevoCliente = new Cliente(tipoDoc, numDoc, nombre, apellido, email);
         this.clientes = Arrays.copyOf(this.clientes, this.clientes.length + 1);
         this.clientes[this.clientes.length - 1] = nuevoCliente;
-        System.out.println("Cliente agregado exitosamente.");
     }
 
-    public void addUsuario(String username, String password, Rol rol) {
-        try {
-            searchUsuario(username);
-            System.out.println("Error: El nombre de usuario '" + username + "' ya está ocupado.");
-            return;
-        } catch (EUsuarioNoEncontrado e) {
-            // Si no existe, procedemos
+    public void addUsuario(String username, String password, Rol rol) throws EUsuarioYaExiste, EParametroNulo {
+        if (username == null || username.isBlank()) throw new EParametroNulo("username");
+        if (password == null) throw new EParametroNulo("password");
+        if (rol == null) throw new EParametroNulo("rol");
+        if (existeUsuario(username)) {
+            throw new EUsuarioYaExiste(username);
         }
-
         Usuario nuevoUsuario = new Usuario(username, password, rol);
         this.usuarios = Arrays.copyOf(this.usuarios, this.usuarios.length + 1);
         this.usuarios[this.usuarios.length - 1] = nuevoUsuario;
-        System.out.println("Usuario agregado exitosamente.");
     }
 
-    public void addHardware(String nombre, String descripcion, String categoria, int tiempoGarantia, double precioBase, int stock, float consumo, String fabricante) throws EValorNegativo {
-        try {
-            searchProducto(nombre);
-            System.out.println("Error: Ya existe un producto llamado '" + nombre + "'.");
-            return;
-        } catch (EProductoNoEncontrado e) {
-            // Si no existe, procedemos
+    public void addHardware(String nombre, String descripcion, String categoria, int tiempoGarantia, double precioBase, int stock, float consumo, String fabricante) throws EProductoYaExiste, EParametroNulo {
+        if (nombre == null || nombre.isBlank()) throw new EParametroNulo("nombre");
+        if (existeProducto(nombre)) {
+            throw new EProductoYaExiste(nombre);
         }
-
         Producto nuevoHardware = new Hardware(nombre, descripcion, categoria, tiempoGarantia, precioBase, stock, consumo, fabricante);
         this.productos = Arrays.copyOf(this.productos, this.productos.length + 1);
         this.productos[this.productos.length - 1] = nuevoHardware;
-        System.out.println("Hardware agregado exitosamente.");
     }
 
-    // Para Videojuego la lógica es idéntica
-    public void addVideojuego(String nombre, String descripcion, String categoria, int tiempoGarantia, double precioBase, int stock, String[] desarrolladores, String[] generos, boolean multijugador, Date fechaLanzamiento, String plataforma, double tamano) throws EValorNegativo {
-        try {
-            searchProducto(nombre);
-            System.out.println("Error: Ya existe un producto llamado '" + nombre + "'.");
-            return;
-        } catch (EProductoNoEncontrado e) {
-            // Si no existe, procedemos
+    public void addVideojuego(String nombre, String descripcion, String categoria, int tiempoGarantia, double precioBase, int stock, String[] desarrolladores, String[] generos, boolean multijugador, Date fechaLanzamiento, String plataforma, double tamano) throws EProductoYaExiste, EParametroNulo {
+        if (nombre == null || nombre.isBlank()) throw new EParametroNulo("nombre");
+        if (existeProducto(nombre)) {
+            throw new EProductoYaExiste(nombre);
         }
-
         Producto nuevoVideojuego = new Videojuego(nombre, descripcion, categoria, tiempoGarantia, precioBase, stock, desarrolladores, generos, multijugador, fechaLanzamiento, plataforma, tamano);
         this.productos = Arrays.copyOf(this.productos, this.productos.length + 1);
         this.productos[this.productos.length - 1] = nuevoVideojuego;
-        System.out.println("Videojuego agregado exitosamente.");
     }
 
     //Para las ordenes
 
 
+    // --- Métodos auxiliares de existencia ---
+
+    private boolean existeCliente(TipoDocumento tipoDoc, String numDoc) {
+        for (Cliente c : clientes) {
+            if (c.getTipoDoc().equals(tipoDoc) && c.getNumDoc().equals(numDoc)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean existeUsuario(String username) {
+        for (Usuario u : usuarios) {
+            if (u.getUsername().equals(username)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean existeProducto(String nombre) {
+        for (Producto p : productos) {
+            if (p.getNombre().equals(nombre)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     // --- Métodos de Búsqueda (Search) ---
 
-    public Orden searchOrden(UUID id) throws EOrdenNoEncontrada {
+    public Orden searchOrden(UUID id) throws EOrdenNoEncontrada, EParametroNulo {
+        if (id == null) throw new EParametroNulo("id");
         int i = 0;
         while (i < historialOrdenes.length) {
             if (historialOrdenes[i].getIdPedido().equals(id)) {
@@ -181,7 +190,8 @@ public class StoreController {
         throw new EOrdenNoEncontrada(id);
     }
 
-    public Producto searchProducto(String nombre) throws EProductoNoEncontrado{
+    public Producto searchProducto(String nombre) throws EProductoNoEncontrado, EParametroNulo {
+        if (nombre == null || nombre.isBlank()) throw new EParametroNulo("nombre");
         int i = 0;
         while (i < productos.length) {
             if (productos[i].getNombre().equals(nombre)) {
@@ -192,7 +202,9 @@ public class StoreController {
         throw new EProductoNoEncontrado(nombre);
     }
 
-    public Cliente searchCliente(TipoDocumento tipoDoc, String numDoc) throws EClienteNoEncontrado {
+    public Cliente searchCliente(TipoDocumento tipoDoc, String numDoc) throws EClienteNoEncontrado, EParametroNulo {
+        if (tipoDoc == null) throw new EParametroNulo("tipoDoc");
+        if (numDoc == null || numDoc.isBlank()) throw new EParametroNulo("numDoc");
         int i = 0;
         while (i < clientes.length) {
             if (clientes[i].getNumDoc().equals(numDoc) && clientes[i].getTipoDoc().equals(tipoDoc)) {
@@ -203,7 +215,8 @@ public class StoreController {
         throw new EClienteNoEncontrado(tipoDoc, numDoc);
     }
 
-    public Usuario searchUsuario(String username) throws EUsuarioNoEncontrado {
+    public Usuario searchUsuario(String username) throws EUsuarioNoEncontrado, EParametroNulo {
+        if (username == null || username.isBlank()) throw new EParametroNulo("username");
         int i = 0;
         while (i < usuarios.length) {
             if (usuarios[i].getUsername().equals(username)) {
@@ -216,13 +229,10 @@ public class StoreController {
 
     // --- Métodos de Eliminación (Delete) ---
 
-    public void deleteProducto(String nombre) throws EHistorialOrden {
-        // 1. Validamos que exista (esto lanza la excepción si no lo encuentra)
-        //TODO: try catch
-        //TODO: Hacer validación de si el producto esta siendo usado en una orden o ordenes
+    public void deleteProducto(String nombre) throws EProductoNoEncontrado, EHistorialOrden, EParametroNulo {
+        if (nombre == null || nombre.isBlank()) throw new EParametroNulo("nombre");
         Producto p = searchProducto(nombre);
-
-        int i=0;
+        int i = 0;
 
 
         while (i < historialOrdenes.length) {
@@ -232,7 +242,7 @@ public class StoreController {
             int j = 0; // 🔹 Se reinicia para cada orden
 
             while (items != null && j < items.length) {
-                if (items[j].getProducto().equals(p)) {
+                if (items[j].getProducto().getId().equals(p.getId())) {
                     throw new EHistorialOrden(
                         "No se puede eliminar el producto porque está asociado a una orden."
                     );
@@ -256,13 +266,17 @@ public class StoreController {
             }
         }
         this.productos = nuevoArreglo;
-        System.out.println("Producto eliminado correctamente.");
     }
 
-    public void deleteCliente(TipoDocumento tipoDoc, String numDoc) {
-        //TODO: try catch
-        //TODO: Hacer validación de si el cliente esta siendo usado en una orden o ordenes
+    public void deleteCliente(TipoDocumento tipoDoc, String numDoc) throws EClienteNoEncontrado, EHistorialOrden, EParametroNulo {
+        if (tipoDoc == null) throw new EParametroNulo("tipoDoc");
+        if (numDoc == null || numDoc.isBlank()) throw new EParametroNulo("numDoc");
         Cliente c = searchCliente(tipoDoc, numDoc);
+        for (Orden ord : historialOrdenes) {
+            if (ord.getCliente() != null && ord.getCliente().getId().equals(c.getId())) {
+                throw new EHistorialOrden("No se puede eliminar el cliente porque tiene órdenes asociadas.");
+            }
+        }
 
         Cliente[] nuevoArreglo = new Cliente[this.clientes.length - 1];
         int j = 0;
@@ -275,13 +289,11 @@ public class StoreController {
             }
         }
         this.clientes = nuevoArreglo;
-        System.out.println("Cliente eliminado correctamente.");
     }
 
-    public void deleteUsuario(String username) {
-        //TODO: try catch
+    public void deleteUsuario(String username) throws EUsuarioNoEncontrado, EParametroNulo {
+        if (username == null || username.isBlank()) throw new EParametroNulo("username");
         Usuario u = searchUsuario(username);
-
         Usuario[] nuevoArreglo = new Usuario[this.usuarios.length - 1];
         int j = 0;
 
@@ -292,69 +304,53 @@ public class StoreController {
             }
         }
         this.usuarios = nuevoArreglo;
-        System.out.println("Usuario eliminado correctamente.");
     }
 
-    public void removeItemOrden(UUID idOrden, String nombre) {
-        try {
-            Orden orden = searchOrden(idOrden);
-            Producto producto = searchProducto(nombre);
-
-            if (orden.getEstado() != Estado.PENDIENTE) {
-                throw new IllegalStateException("Solo se pueden quitar items de órdenes pendientes");
-            }
-
-            OrdenItem[] items = orden.getItems();
-            int index = -1;
-            int i = 0;
-            while (i < items.length) {
-                if (items[i].getProducto().getId().equals(producto.getId())) {
-                    index = i;
-                    break;
-                }
-                i++;
-            }
-
-            if (index == -1) {
-                System.out.println("El producto '" + nombre + "' no está en la orden.");
-                return;
-            }
-
-            OrdenItem removed = orden.removeItemAt(index);
-            Producto p = removed.getProducto();
-            //Reestablecer el stock que se había usado
-            try{
-                p.setStock(p.getStock() + removed.getCantidad());
-            } catch (EValorNegativo e){
-                System.out.println(e.getMessage());
-            }
-
-            System.out.println("Item eliminado correctamente. Stock restaurado.");
-        } catch (EOrdenNoEncontrada | EProductoNoEncontrado | IllegalStateException e) {
-            System.out.println(e.getMessage());
+    public void removeItemOrden(UUID idOrden, String nombre) throws EOrdenNoEncontrada, EProductoNoEncontrado, EValorNegativo, EParametroNulo {
+        if (idOrden == null) throw new EParametroNulo("idOrden");
+        if (nombre == null || nombre.isBlank()) throw new EParametroNulo("nombre");
+        Orden orden = searchOrden(idOrden);
+        Producto producto = searchProducto(nombre);
+        if (orden.getEstado() != Estado.PENDIENTE) {
+            throw new IllegalStateException("Solo se pueden quitar items de órdenes pendientes");
         }
+        OrdenItem[] items = orden.getItems();
+        if (items == null) {
+            throw new IllegalStateException("La orden no tiene items.");
+        }
+        int index = -1;
+        int i = 0;
+        while (i < items.length) {
+            if (items[i].getProducto().getId().equals(producto.getId())) {
+                index = i;
+                break;
+            }
+            i++;
+        }
+        if (index == -1) {
+            throw new IllegalStateException("El producto '" + nombre + "' no está en la orden.");
+        }
+        OrdenItem removed = orden.removeItemAt(index);
+        Producto p = removed.getProducto();
+        p.setStock(p.getStock() + removed.getCantidad());
     }
 
-    //Méto do para validar orden
-    public void verificarPago(UUID idOrden, boolean pago) throws EValorNegativo{
-        try {
-            Orden orden =  searchOrden(idOrden);
-            if (pago) {
-                if (orden.getItems() == null || orden.getItems().length == 0) {
-                    throw new IllegalStateException("No se puede aprobar una orden sin items");
-                }
-                orden.setEstado(Estado.APROBADO);
-            } else {
-                if (orden.getEstado() == Estado.PENDIENTE) {
-                    for (OrdenItem item : orden.getItems()) {
-                        Producto p = item.getProducto();
-                        p.setStock(p.getStock() + item.getCantidad());
-                    }
-                }
-                orden.setEstado(Estado.RECHAZADO);
+    public void verificarPago(UUID idOrden, boolean pago) throws EOrdenNoEncontrada, EParametroNulo {
+        if (idOrden == null) throw new EParametroNulo("idOrden");
+        Orden orden = searchOrden(idOrden);
+        if (pago) {
+            if (orden.getItems() == null || orden.getItems().length == 0) {
+                throw new IllegalStateException("No se puede aprobar una orden sin items");
             }
-        } catch (EOrdenNoEncontrada | IllegalStateException e) {
-            System.out.println(e.getMessage());
+            orden.setEstado(Estado.APROBADO);
+        } else {
+            if (orden.getEstado() == Estado.PENDIENTE) {
+                for (OrdenItem item : orden.getItems()) {
+                    Producto p = item.getProducto();
+                    p.setStock(p.getStock() + item.getCantidad());
+                }
+            }
+            orden.setEstado(Estado.RECHAZADO);
         }
     }
 

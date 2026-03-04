@@ -1,7 +1,10 @@
 package com.nexus.exceptions;
 
-public class EHistorialOrden extends Exception{
-	public EHistorialOrden(String s) {
-		super(s);
-	}
+/**
+ * Se lanza cuando se intenta eliminar una entidad que está asociada a órdenes.
+ */
+public class EHistorialOrden extends Exception {
+    public EHistorialOrden(String mensaje) {
+        super(mensaje);
+    }
 }

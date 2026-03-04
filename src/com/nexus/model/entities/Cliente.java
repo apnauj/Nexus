@@ -1,10 +1,10 @@
 package com.nexus.model.entities;
 
 import java.util.Arrays;
-
-import com.nexus.model.enums.TipoDocumento;
-
 import java.util.UUID;
+
+import com.nexus.exceptions.EParametroNulo;
+import com.nexus.model.enums.TipoDocumento;
 
 public class Cliente {
     private final UUID id;
@@ -15,7 +15,16 @@ public class Cliente {
     private String email;
     private Orden[] historial;
 
-    public Cliente(TipoDocumento tipoDoc, String numDoc, String nombre, String apellido, String email) {
+    public Cliente(TipoDocumento tipoDoc, String numDoc, String nombre, String apellido, String email) throws EParametroNulo {
+        if (tipoDoc == null) {
+            throw new EParametroNulo("tipoDoc");
+        }
+        if (numDoc == null || numDoc.isBlank()) {
+            throw new EParametroNulo("numDoc", "El número de documento no puede ser null o vacío.");
+        }
+        if (nombre == null || nombre.isBlank()) {
+            throw new EParametroNulo("nombre", "El nombre no puede ser null o vacío.");
+        }
         this.id = UUID.randomUUID();
         this.tipoDoc = tipoDoc;
         this.numDoc = numDoc;
@@ -69,9 +78,12 @@ public class Cliente {
     de un cliente
     */
     
-    public void AgregarCompras(Orden o) {
-    	historial=Arrays.copyOf(historial,historial.length+1);
-    	historial[historial.length-1]=o;
+    public void AgregarCompras(Orden o) throws EParametroNulo{
+        if (o == null) {
+            throw new EParametroNulo("orden");
+        }
+        historial = Arrays.copyOf(historial, historial.length + 1);
+        historial[historial.length - 1] = o;
     }
 
     public UUID getId() { return id; }

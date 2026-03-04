@@ -1,6 +1,7 @@
 package com.nexus.model.entities;
 
 import com.nexus.exceptions.ECantidadNegativa;
+import com.nexus.exceptions.EParametroNulo;
 import com.nexus.exceptions.EStockInsuficiente;
 import com.nexus.exceptions.EValorNegativo;
 
@@ -8,7 +9,10 @@ public class OrdenItem {
     private final Producto producto;
     private int cantidad;
 
-    public OrdenItem(Producto producto, int cantidad) throws EStockInsuficiente, ECantidadNegativa, EValorNegativo{
+    public OrdenItem(Producto producto, int cantidad) throws EParametroNulo, ECantidadNegativa{
+        if (producto == null) {
+            throw new EParametroNulo("producto");
+        }
         this.producto = producto;
         if(cantidad <= 0){
             throw new ECantidadNegativa("Cantidad inválida solo se aceptan cantidades positivas");
@@ -28,7 +32,7 @@ public class OrdenItem {
         return cantidad;
     }
 
-    public void setCantidad(int a) {
+    public void setCantidad(int a) throws ECantidadNegativa {
         if (a <= 0) {
             throw new ECantidadNegativa("La cantidad debe ser positiva");
         }

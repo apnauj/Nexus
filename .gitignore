@@ -41,3 +41,4 @@ build/
 # Archivos de sistema/temporales
 *.log
 *.lock
+Pruebas.java

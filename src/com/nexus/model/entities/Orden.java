@@ -1,6 +1,6 @@
 package com.nexus.model.entities;
-// Importa Enums
 
+import com.nexus.exceptions.EParametroNulo;
 import com.nexus.model.enums.Estado;
 import com.nexus.model.enums.MetodoPago;
 
@@ -15,13 +15,20 @@ public class Orden {
     private MetodoPago metodoPago;
     private OrdenItem items[];
 
-    //Constructor
-    public Orden(Cliente cliente, String fecha,MetodoPago metodoPago) {
-        //Genera automaticamente el id unico
+    public Orden(Cliente cliente, String fecha, MetodoPago metodoPago) throws EParametroNulo {
+        if (cliente == null) {
+            throw new EParametroNulo("cliente");
+        }
+        if (fecha == null || fecha.isBlank()) {
+            throw new EParametroNulo("fecha");
+        }
+        if (metodoPago == null) {
+            throw new EParametroNulo("metodoPago");
+        }
         this.idPedido = UUID.randomUUID();
         this.cliente = cliente;
         this.fecha = fecha;
-        this.estado = Estado.Pendiente;
+        this.estado = Estado.PENDIENTE;
         this.metodoPago = metodoPago;
         this.items = new OrdenItem[0];
     }
@@ -60,26 +67,26 @@ public class Orden {
         return cliente;
     }
 
-    public String  addItemOrden(OrdenItem a){
-        //Valida que la orden no sea aprobada ni rechazada
-        if (this.estado != Estado.Pendiente) {
+    public String addItemOrden(OrdenItem a) throws EParametroNulo {
+        if (this.estado != Estado.PENDIENTE) {
             throw new IllegalStateException("Solo se pueden agregar items a órdenes en estado Pendiente");
         }
-        //Valida si existe la OrdenxItem
-        if (a == null){
-            return "No existe la Orden X Item";
-        } else {
-            //Crea un espacio en el arreglo y agrega el producto
-            items = Arrays.copyOf(items, items.length + 1);
-            items[items.length - 1] = a;
-            return "Se agregó correctamente el producto";
+        if (a == null) {
+            throw new EParametroNulo("OrdenItem");
         }
+            //Crea un espacio en el arreglo y agrega el producto
+        items = Arrays.copyOf(items, items.length + 1);
+        items[items.length - 1] = a;
+        return "Se agregó correctamente el producto";
     }
 
-    public double calcularTotal(){
+    public double calcularTotal() {
+        if (items == null) return 0;
         double total = 0;
-        for(OrdenItem i:items){
-            total+=i.calcularSubtotal();
+        for (OrdenItem i : items) {
+            if (i != null) {
+                total += i.calcularSubtotal();
+            }
         }
         return total;
     }
@@ -95,7 +102,7 @@ public class Orden {
 
 
     public OrdenItem removeItemAt(int index) {
-        if (this.estado != Estado.Pendiente) {
+        if (this.estado != Estado.PENDIENTE) {
             throw new IllegalStateException("Solo se pueden quitar items de órdenes en estado Pendiente");
         }
         if (index < 0 || index >= items.length) {
@@ -110,7 +117,8 @@ public class Orden {
                 j++;
             }
         }
-		return removed;
+        items = newItems;
+        return removed;
 
     }
 
