@@ -26,6 +26,7 @@ public class OrdenItem {
         //Cuando creamos un OrdenItem
         producto.setStock(producto.getStock() - cantidad);
     }
+
     public Producto getProducto() {
         return producto;
     }
@@ -45,5 +46,12 @@ public class OrdenItem {
         return producto.calcularPrecio()*cantidad;
     }
 
-
+    public boolean stockSuficiente(Producto producto){
+        Producto p = getProducto();
+        if(p.getStock()!=0 && p.getStock()>getCantidad()) {
+            return true;
+        }else{
+            return false;
+        }
+    }
 }

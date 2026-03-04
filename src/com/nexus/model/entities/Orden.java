@@ -1,6 +1,7 @@
 package com.nexus.model.entities;
 // Importa Enums
 
+import com.nexus.exceptions.EValorNegativo;
 import com.nexus.model.enums.Estado;
 import com.nexus.model.enums.MetodoPago;
 
@@ -13,6 +14,9 @@ public class Orden {
     private String fecha;
     private Estado estado;
     private MetodoPago metodoPago;
+    private double valorPagado;
+    private double cambio;
+    private double total;
     private OrdenItem items[];
 
     //Constructor
@@ -23,6 +27,9 @@ public class Orden {
         this.fecha = fecha;
         this.estado = Estado.Pendiente;
         this.metodoPago = metodoPago;
+        this.valorPagado = 0;
+        this.cambio = 0;
+        this.total = 0;
         this.items = new OrdenItem[0];
     }
 
@@ -62,6 +69,7 @@ public class Orden {
         double total = 0;
         for(OrdenItem i:items){
             total+=i.calcularSubtotal();
+            setTotal(total);
         }
         return total;
     }
@@ -109,6 +117,57 @@ public class Orden {
 		return removed;
 
     }
+
+    public double getValorPagado() {
+        return valorPagado;
+    }
+
+    public void setValorPagado(double valorPagado) {
+        this.valorPagado = valorPagado;
+    }
+
+    public double getCambio() {
+        return cambio;
+    }
+
+    public void setCambio(double total, double valorPagado) {
+        this.cambio = total-valorPagado;
+    }
+
+    public double getTotal() {
+        return total;
+    }
+
+    public void setTotal(double total) {
+        this.total = total;
+    }
+
+    public void cambioEstado(){
+        if(total<=valorPagado){
+            setEstado(Estado.Aprobado);
+        }else{
+            setEstado(Estado.Rechazado);
+        }
+    }
+
+    public String decrementarStock(OrdenItem items[]) throws EValorNegativo {
+        String text = "";
+        if(estado == Estado.Aprobado) {
+            for (OrdenItem i : items) {
+                Producto p = i.getProducto();
+                if (i.stockSuficiente(i.getProducto())) {
+                    p.setStock(p.getStock() - i.getCantidad());
+                } else {
+                    throw new EValorNegativo("No hay suficientes productos quedan: " + p.getStock() + p.getNombre());
+                }
+                text= "El proceso se ha ejecutado correctamente";
+            }
+        }else{
+            text = "La orden no ha sido aprobada";
+        }
+        return text;
+    }
+
 
     //TODO: modificar la cantidad exclusivamente de un OrdenItem
 }
