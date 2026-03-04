@@ -15,7 +15,14 @@ public abstract class Producto {
 	protected double descuento;
 	protected int stock;
 	
-	
+	/*
+	Constructor de producto, este constructor recibe nombre, descripcion, categoria, tiempoGarantia
+	Debe de hacer varias validaciones para asegurarse de que va a realizar la creación de un producto válido
+	1. Se asegura que el precio no es menor ni igual a 0
+	2. Se asegura de que el stock con el que se va a inicializar no es menor ni igual a 0
+	3. Se asergura de que el tiempo de garantia no es menor ni igual a 0
+	4. Si todas estas validaciones pasan podemos crear el producto
+	*/
 	
 	public Producto(String nombre, String descripcion, String categoria, int tiempoGarantia, double precioBase,int stock) throws EValorNegativo {
 		if(precioBase<=0) {
@@ -68,6 +75,11 @@ public abstract class Producto {
 	public double getPreciobase() {
 		return precioBase;
 	}
+
+	/*
+	Este method sirve para modificar el precioBase
+	La única validación que debemos de hacer es el precio base que debe de ser mayor que 0
+	*/
 	
 	public void setPrecioBase(double precioBase)throws EValorNegativo {
 		if(precioBase <=0) {
@@ -80,6 +92,11 @@ public abstract class Producto {
 	public double getDescuento() {
 		return descuento;
 	}
+
+	/*
+	Este method sirve para modificar el descuento
+	La única validación que debemos de hacer es que el descuento que debe de ser mayor que 0
+	*/
 	
 	public void setDescuento(double descuento)throws EValorNegativo {
 		if(descuento <=0 ) {
@@ -92,7 +109,13 @@ public abstract class Producto {
 	public int getStock() {
 		return stock;
 	}
-	
+
+	/*
+	Este method sirve para modificar el stock
+	La única validación que debemos de hacer es que el stock que debe de ser mayor que 0
+	*/
+
+
 	public void setStock(int stock) throws EValorNegativo {
 		if(descuento <=0) {
 			throw new EValorNegativo("El valor del stock no puede ser negativo o cero, el valor ingresado fue: "+stock);
@@ -104,12 +127,6 @@ public abstract class Producto {
 	
 	public String getCategoria() {
 		return categoria;
-	}
-	
-	public void mostrarProducto(Producto[] productos) {
-		for(Producto p:productos) {
-			System.out.print(p.getNombre()+" || ");
-		}
 	}
 	
 	public double calcularPrecio() {

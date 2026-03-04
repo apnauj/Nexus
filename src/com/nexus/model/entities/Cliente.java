@@ -63,6 +63,11 @@ public class Cliente {
     public void setHistorial(Orden[] historial) {
         this.historial = historial;
     }
+
+    /*
+    Este méthod se encarga de añadir una compra al historial
+    de un cliente
+    */
     
     public void AgregarCompras(Orden o) {
     	historial=Arrays.copyOf(historial,historial.length+1);

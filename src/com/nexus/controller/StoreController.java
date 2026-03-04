@@ -49,15 +49,6 @@ public class StoreController {
 
     // --- Métodos de add (Añadir) ---
 
-    public void createOrden(Cliente cliente,String fecha, Estado estado, MetodoPago metodoPago) {
-    	Orden o= new Orden(cliente,fecha,metodoPago);
-    	Cliente c=searchCliente(cliente.getTipoDoc(), cliente.getNumDoc());
-
-    	historialOrdenes=Arrays.copyOf(historialOrdenes,historialOrdenes.length+1);
-    	historialOrdenes[historialOrdenes.length-1]=o;
-
-    	c.AgregarCompras(o);
-    }
 
     /*
         Crear una nueva orden, se necesita por parte del Usuario el tipo de documento del cliente, numero de documento del cliente y como va a pagar
@@ -79,8 +70,7 @@ public class StoreController {
             historialOrdenes = Arrays.copyOf(historialOrdenes, historialOrdenes.length + 1);
             historialOrdenes[historialOrdenes.length-1] = o;
 
-            cliente.setHistorial(Arrays.copyOf(cliente.getHistorial(), cliente.getHistorial().length + 1));
-            cliente.getHistorial()[cliente.getHistorial().length-1] = o;
+            cliente.AgregarCompras(o);
 
             return o.getIdPedido();
         } catch (EClienteNoEncontrado e){
