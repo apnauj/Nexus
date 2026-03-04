@@ -1,5 +1,6 @@
 package com.nexus.model.entities;
 
+import com.nexus.exceptions.EParametroNulo;
 import com.nexus.exceptions.EValorNegativo;
 import com.nexus.model.enums.Estado;
 import com.nexus.model.enums.MetodoPago;
@@ -90,7 +91,7 @@ public class Orden {
 
     public String  addItemOrden(OrdenItem a){
         //Valida que la orden no sea aprobada ni rechazada
-        if (this.estado != Estado.Pendiente) {
+        if (this.estado != Estado.PENDIENTE) {
             throw new IllegalStateException("Solo se pueden agregar items a órdenes en estado Pendiente");
         }
         //Valida si existe la OrdenxItem
@@ -151,15 +152,15 @@ public class Orden {
 
     public void cambioEstado(){
         if(total<=valorPagado){
-            setEstado(Estado.Aprobado);
+            setEstado(Estado.APROBADO);
         }else{
-            setEstado(Estado.Rechazado);
+            setEstado(Estado.RECHAZADO);
         }
     }
 
     public String decrementarStock(OrdenItem items[]) throws EValorNegativo {
         String text = "";
-        if(estado == Estado.Aprobado) {
+        if(estado == Estado.APROBADO) {
             for (OrdenItem i : items) {
                 Producto p = i.getProducto();
                 if (i.stockSuficiente(i.getProducto())) {
