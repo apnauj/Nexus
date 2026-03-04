@@ -11,11 +11,7 @@ public class OrdenItem {
     private int cantidad;
 
     public OrdenItem(Producto producto, int cantidad) throws EProductoNoEncontrado, ECantidadNegativa, EValorNegativo{
-        if(StoreController.getProductos().contains(producto)) {
             this.producto = producto;
-        }else{
-            throw new EProductoNoEncontrado("No se encontro el producto");
-        }
         if(cantidad <= 0){
             throw new ECantidadNegativa("Cantidad inválida solo se aceptan cantidades positivas");
         } else if(producto.getStock() < cantidad){
@@ -23,8 +19,6 @@ public class OrdenItem {
         } else {
             this.cantidad = cantidad;
         }
-        //Cuando creamos un OrdenItem
-        producto.setStock(producto.getStock() - cantidad);
     }
 
     public Producto getProducto() {
