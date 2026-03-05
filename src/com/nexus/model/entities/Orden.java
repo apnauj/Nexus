@@ -5,10 +5,11 @@ import com.nexus.exceptions.EValorNegativo;
 import com.nexus.model.enums.Estado;
 import com.nexus.model.enums.MetodoPago;
 
+import java.io.*;
 import java.util.Arrays;
 import java.util.UUID;
 
-public class Orden {
+public class Orden implements Serializable {
     private final UUID idPedido;
     private Cliente cliente;
     private String fecha;
@@ -176,6 +177,21 @@ public class Orden {
         return text;
     }
 
+    public void escribirOrden(String dir) throws IOException {
+        FileOutputStream f = new FileOutputStream(dir);
+        ObjectOutputStream b = new ObjectOutputStream(f);
+        b.writeObject((Orden)this);
+        b.close();
+        f.close();
+    }
 
+    public static Orden leerOrden(String dir) throws IOException, ClassNotFoundException {
+        FileInputStream f = new FileInputStream(dir);
+        ObjectInputStream b = new ObjectInputStream(f);
+        Orden orden = (Orden) b.readObject();
+        f.close();
+        b.close();
+        return orden;
+    }
     //TODO: modificar la cantidad exclusivamente de un OrdenItem
 }
