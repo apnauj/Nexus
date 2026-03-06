@@ -1,5 +1,6 @@
 package com.nexus.model.entities;
 
+import com.nexus.controller.StoreController;
 import com.nexus.exceptions.EParametroNulo;
 import com.nexus.exceptions.EValorNegativo;
 import com.nexus.model.enums.Estado;
@@ -73,15 +74,6 @@ public class Orden implements Serializable {
         return cliente;
     }
 
-    public double calcularTotal(){
-        double total = 0;
-        for(OrdenItem i:items){
-            total+=i.calcularSubtotal();
-            setTotal(total);
-        }
-        return total;
-    }
-
     public UUID getIdPedido() {
     	return this.idPedido;
     }
@@ -90,14 +82,15 @@ public class Orden implements Serializable {
     	return this.items;
     }
 
+    //Añade un item a la orden
     public String  addItemOrden(OrdenItem a){
         //Valida que la orden no sea aprobada ni rechazada
         if (this.estado != Estado.PENDIENTE) {
             throw new IllegalStateException("Solo se pueden agregar items a órdenes en estado Pendiente");
         }
-        //Valida si existe la OrdenxItem
+        //Valida OrdenxItem es nulo
         if (a == null){
-            return "No existe la Orden X Item";
+            return "No se permiten detalles nulos";
         } else {
             //Crea un espacio en el arreglo y agrega el producto
             items = Arrays.copyOf(items, items.length + 1);
@@ -106,10 +99,14 @@ public class Orden implements Serializable {
         }
     }
 
+    //Quita un producto de la Orden
     public OrdenItem removeItemAt(int index) {
+        //Valida si no está aprobado o rechazado
         if (this.estado != Estado.PENDIENTE) {
             throw new IllegalStateException("Solo se pueden quitar items de órdenes en estado Pendiente");
         }
+        //Valida si el parametro pasado no es negativo o mayor a la cantidad del arreglo
+        //Revisar
         if (index < 0 || index >= items.length) {
             throw new IndexOutOfBoundsException("Índice inválido: " + index);
         }
@@ -138,12 +135,23 @@ public class Orden implements Serializable {
     public double getCambio() {
         return cambio;
     }
-
+    //calcula y guarda el cambio que se debe dar al cliente
     public void setCambio(double total, double valorPagado) {
         this.cambio = total-valorPagado;
     }
 
+    //Traer total
     public double getTotal() {
+        return total;
+    }
+    //Calcula el total recorriendo cada item y trayendo su subtotal para sumarlo al total. Tambien usa setTotal
+    public double calcularTotal(){
+        double total = 0;
+        //Recorre el arreglo
+        for(OrdenItem i:items){
+            total+=i.calcularSubtotal();
+            setTotal(total);
+        }
         return total;
     }
 
@@ -151,6 +159,7 @@ public class Orden implements Serializable {
         this.total = total;
     }
 
+    //Cambia el estado de compra si el valorPagado es mayor o igual al total
     public void cambioEstado(){
         if(total<=valorPagado){
             setEstado(Estado.APROBADO);
@@ -176,7 +185,7 @@ public class Orden implements Serializable {
         }
         return text;
     }
-
+    //Serialización
     public void escribirOrden(String dir) throws IOException {
         FileOutputStream f = new FileOutputStream(dir);
         ObjectOutputStream b = new ObjectOutputStream(f);
@@ -193,5 +202,6 @@ public class Orden implements Serializable {
         b.close();
         return orden;
     }
-    //TODO: modificar la cantidad exclusivamente de un OrdenItem
 }
+
+

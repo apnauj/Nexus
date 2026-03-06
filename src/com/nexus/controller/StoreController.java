@@ -354,6 +354,32 @@ public class StoreController {
         }
     }
 
+    public String modificarCantidadItem(Producto p, int c, Orden orden) throws EProductoNoEncontrado, EValorNegativo, ECantidadNegativa {
+        String text = "";
+        if(!existeProducto(String.valueOf(p))){
+            throw new EProductoNoEncontrado("No se encontró el producto");
+        }else if(c<0){
+            throw new EValorNegativo("No se pueden cantidades negativas");
+        }else{
+            OrdenItem[] items= orden.getItems();
+            int i = 0;
+            int index;
+            boolean sw = false;
+            while(i<items.length && !sw) {
+                OrdenItem o1 = items[i];
+                if (o1.getProducto() == p) {
+                    sw = true;
+                    o1.setCantidad(c);
+                    text = "Se cambio la cantidad correctamente";
+                }
+            }
+            if(!sw){
+                text = "No se encontro el item";
+            }
+        }
+        return text;
+    }
+
     //TODO: Métodos de login y logout
 
     public Usuario getCurrentUser(){
