@@ -101,9 +101,9 @@ public class Videojuego extends Producto implements Serializable {
 
             long diferencia = hoy - lanzamiento;
 
-            long anos = diferencia / (1000L * 60 * 60 * 24 * 365);
+            long años = diferencia / (1000L * 60 * 60 * 24 * 365);
 
-            if (anos >= 2) {
+            if (años >= 2) {
                 descuento = 0.20; // 20%
             } else {
                 descuento = 0.05; // 5%
