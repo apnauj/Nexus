@@ -3,9 +3,17 @@ package com.nexus.model.entities;
 import com.nexus.exceptions.EParametroNulo;
 import com.nexus.model.enums.Rol;
 
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
 import java.util.UUID;
 
-public class Usuario {
+public class Usuario implements Serializable {
+    
+    private long serialVersionUID = -67675765756776L;
     private final UUID id;
     private String username;
     private String password;
@@ -53,5 +61,22 @@ public class Usuario {
 
     public void setRol(Rol rol) {
         this.rol = rol;
+    }
+
+    public void escribirUsuario(String dir) throws IOException {
+        FileOutputStream f = new FileOutputStream(dir);
+        ObjectOutputStream b = new ObjectOutputStream(f);
+        b.writeObject((Usuario)this);
+        b.close();
+        f.close();
+    }
+
+    public static Usuario leerUsuario(String dir) throws IOException, ClassNotFoundException {
+        FileInputStream f = new FileInputStream(dir);
+        ObjectInputStream b = new ObjectInputStream(f);
+        Usuario usuario = (Usuario) b.readObject();
+        f.close();
+        b.close();
+        return usuario;
     }
 }

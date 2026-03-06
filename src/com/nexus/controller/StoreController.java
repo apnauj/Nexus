@@ -15,6 +15,8 @@ import com.nexus.exceptions.EValorNegativo;
 import com.nexus.model.entities.*;
 import com.nexus.model.enums.*;
 
+import java.io.File;
+import java.io.IOException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
@@ -22,7 +24,7 @@ import java.util.Date;
 import java.util.UUID;
 
 public class StoreController {
-    private Orden[] historialOrdenes;
+    private Orden[] ordenes;
     private Producto[] productos;
     private Cliente[] clientes;
     private Usuario[] usuarios;
@@ -30,7 +32,7 @@ public class StoreController {
 
     public StoreController() {
         // Inicializamos los arreglos vacíos (tamaño 0) para evitar NullPointerException
-        this.historialOrdenes = new Orden[0];
+        this.ordenes = new Orden[0];
         this.productos = new Producto[0];
         this.clientes = new Cliente[0];
         this.usuarios = new Usuario[0];
@@ -38,7 +40,7 @@ public class StoreController {
     }
 
     public Orden[] getHistorial() {
-        return this.historialOrdenes;
+        return this.ordenes;
     }
 
     public Cliente[] getClientes() {
@@ -47,6 +49,10 @@ public class StoreController {
 
     public Usuario[] getUsuarios() {
         return this.usuarios;
+    }
+
+    public Producto[] getProductos(){
+        return this.productos;
     }
 
     // --- Métodos de add (Añadir) ---
@@ -58,8 +64,8 @@ public class StoreController {
         Se pone la fecha en formato dd/MM/yyyy que es con el que se manejaran todas las fechas del sistema
         Para esto se llama a la fecha actual y se formatea con el formato que se pasa
         Ahora, ya teniendo el cliente podemos crear una nueva orden con los parametros de su constructor. La orden tiene un estado de PENDIENTE por defecto.
-        Añadimos la orden al atrreglo de historialOrdenes
-        Añadimos la orden al arreglo de historialOrdenes del cliente
+        Añadimos la orden al atrreglo de ordenes
+        Añadimos la orden al arreglo de ordenes del cliente
         Devolvemos la el UUID en caso de haber completado el flujo exitosamente (para así reutilizar este UUID en otras operaciones de la interfaz mientras estamos trabjando con ella), de lo contrario se habría lanzado una excepción
     */
 
@@ -71,8 +77,8 @@ public class StoreController {
         DateTimeFormatter formateador = DateTimeFormatter.ofPattern("dd/MM/yyyy");
         String fecha = (LocalDate.now()).format(formateador);
         Orden o = new Orden(cliente, fecha, metodoPago);
-        historialOrdenes = Arrays.copyOf(historialOrdenes, historialOrdenes.length + 1);
-        historialOrdenes[historialOrdenes.length - 1] = o;
+        ordenes = Arrays.copyOf(ordenes, ordenes.length + 1);
+        ordenes[ordenes.length - 1] = o;
         cliente.AgregarCompras(o);
         return o.getIdPedido();
     }
@@ -144,7 +150,6 @@ public class StoreController {
 
 
     // --- Métodos auxiliares de existencia ---
-    //TODO: cambiar todo esto por whiles
 
     public boolean existeCliente(TipoDocumento tipoDoc, String numDoc) {
         int i = 0;
@@ -152,6 +157,7 @@ public class StoreController {
             if(this.clientes[i].getNumDoc().equals(numDoc) && this.clientes[i].getTipoDoc().equals(tipoDoc)) {
                 return true;
             }
+            i++;
         }
         return false;
     }
@@ -162,6 +168,7 @@ public class StoreController {
             if(this.usuarios[i].getUsername().equals(username)) {
                 return true;
             }
+            i++;
         }
         return false;
     }
@@ -172,6 +179,7 @@ public class StoreController {
             if(this.productos[i].getNombre().equalsIgnoreCase(nombre)) {
                 return true;
             }
+            i++;
         }
         return false;
     }
@@ -181,9 +189,9 @@ public class StoreController {
     public Orden searchOrden(UUID id) throws EOrdenNoEncontrada, EParametroNulo {
         if (id == null) throw new EParametroNulo("id");
         int i = 0;
-        while (i < historialOrdenes.length) {
-            if (historialOrdenes[i].getIdPedido().equals(id)) {
-                return historialOrdenes[i];
+        while (i < ordenes.length) {
+            if (ordenes[i].getIdPedido().equals(id)) {
+                return ordenes[i];
             }
             i++;
         }
@@ -235,9 +243,9 @@ public class StoreController {
         int i = 0;
 
 
-        while (i < historialOrdenes.length) {
+        while (i < ordenes.length) {
 
-            OrdenItem[] items = historialOrdenes[i].getItems();
+            OrdenItem[] items = ordenes[i].getItems();
 
             int j = 0; // 🔹 Se reinicia para cada orden
 
@@ -272,7 +280,7 @@ public class StoreController {
         if (tipoDoc == null) throw new EParametroNulo("tipoDoc");
         if (numDoc == null || numDoc.isBlank()) throw new EParametroNulo("numDoc");
         Cliente c = searchCliente(tipoDoc, numDoc);
-        for (Orden ord : historialOrdenes) {
+        for (Orden ord : ordenes) {
             if (ord.getCliente() != null && ord.getCliente().getId().equals(c.getId())) {
                 throw new EHistorialOrden("No se puede eliminar el cliente porque tiene órdenes asociadas.");
             }
@@ -388,5 +396,136 @@ public class StoreController {
 
     //TODO: generar reportes
     //método que pase por el historial y con el uso de la fecha filtre
+
+    public String[] cargarFicheros() {
+        String[] archivosFallidos = new String[0];
+        String pathFicheros = "src/com/ficheros/";
+        File dir = new File(pathFicheros);
+
+        this.clientes = new Cliente[0];
+        this.productos = new Producto[0];
+        this.usuarios = new Usuario[0];
+        this.ordenes = new Orden[0];
+
+        File[] ficheros = dir.listFiles();
+        if (ficheros == null) {
+            return archivosFallidos;
+        }
+
+        for (File f : ficheros) {
+            if (f.isFile()){
+                String nombreArchivo = f.getName();
+                String extension = getExtension(nombreArchivo);
+            try {
+                switch (extension) {
+                    case "clienteFile":
+                        Cliente c = Cliente.leerCliente(f.getPath());
+                        clientes = Arrays.copyOf(clientes, clientes.length + 1);
+                        clientes[clientes.length - 1] = c;
+                        break;
+                    case "videojuegoFile":
+                        Videojuego v = Videojuego.leerVideojuego(f.getPath());
+                        productos = Arrays.copyOf(productos, productos.length + 1);
+                        productos[productos.length - 1] = v;
+                        break;
+                    case "hardwareFile":
+                        Hardware h = Hardware.leerHardware(f.getPath());
+                        productos = Arrays.copyOf(productos, productos.length + 1);
+                        productos[productos.length - 1] = h;
+                        break;
+                    case "usuarioFile":
+                        Usuario u = Usuario.leerUsuario(f.getPath());
+                        usuarios = Arrays.copyOf(usuarios, usuarios.length + 1);
+                        usuarios[usuarios.length - 1] = u;
+                        break;
+                    case "ordenFile":
+                        Orden o = Orden.leerOrden(f.getPath());
+                        ordenes = Arrays.copyOf(ordenes, ordenes.length + 1);
+                        ordenes[ordenes.length - 1] = o;
+                        break;
+                    default:
+                        break;
+                }
+            } catch (IOException | ClassNotFoundException e) {
+                archivosFallidos = Arrays.copyOf(archivosFallidos, archivosFallidos.length + 1);
+                archivosFallidos[archivosFallidos.length - 1] = nombreArchivo + " (" + e.getMessage() + ")";
+            }
+            }
+        }
+        return archivosFallidos;
+    }
+
+    public String[] guardarFicheros() {
+        String[] archivosFallidos = new String[0];
+        String pathFicheros = "src/com/ficheros/";
+        File dir = new File(pathFicheros);
+
+        File[] ficherosExistentes = dir.listFiles();
+        if (ficherosExistentes != null) {
+            for (File f : ficherosExistentes) {
+                if (f.isFile() && (f.getName().endsWith(".clienteFile") || f.getName().endsWith(".videojuegoFile")
+                        || f.getName().endsWith(".hardwareFile") || f.getName().endsWith(".usuarioFile")
+                        || f.getName().endsWith(".ordenFile"))) {
+                    f.delete();
+                }
+            }
+        }
+
+        int i = 1;
+        for (Cliente c : clientes) {
+            try {
+                c.escribirCliente(pathFicheros + "cliente" + i + ".clienteFile");
+            } catch (IOException e) {
+                archivosFallidos = Arrays.copyOf(archivosFallidos, archivosFallidos.length + 1);
+                archivosFallidos[archivosFallidos.length - 1] = "cliente" + i + ": " + e.getMessage();
+            }
+            i++;
+        }
+
+        int j = 1;
+        for (Producto p : productos) {
+            try {
+                if (p instanceof Videojuego v) {
+                    v.escribirVideojuego(pathFicheros + "videojuego" + j + ".videojuegoFile");
+                } else if (p instanceof Hardware h) {
+                    h.escribirHardware(pathFicheros + "hardware" + j + ".hardwareFile");
+                }
+            } catch (IOException e) {
+                archivosFallidos = Arrays.copyOf(archivosFallidos, archivosFallidos.length + 1);
+                archivosFallidos[archivosFallidos.length - 1] = "producto" + j + ": " + e.getMessage();
+            }
+            j++;
+        }
+
+        int k = 1;
+        for (Usuario u : usuarios) {
+            try {
+                u.escribirUsuario(pathFicheros + "usuario" + k + ".usuarioFile");
+            } catch (IOException e) {
+                archivosFallidos = Arrays.copyOf(archivosFallidos, archivosFallidos.length + 1);
+                archivosFallidos[archivosFallidos.length - 1] = "usuario" + k + ": " + e.getMessage();
+            }
+            k++;
+        }
+
+        int ord = 1;
+        for (Orden o : ordenes) {
+            try {
+                o.escribirOrden(pathFicheros + "orden" + ord + ".ordenFile");
+            } catch (IOException e) {
+                archivosFallidos = Arrays.copyOf(archivosFallidos, archivosFallidos.length + 1);
+                archivosFallidos[archivosFallidos.length - 1] = "orden" + ord + ": " + e.getMessage();
+            }
+            ord++;
+        }
+        return archivosFallidos;
+    }
+
+    public String getExtension(String filename) {
+    if (filename == null || !filename.contains(".")) {
+        return "";
+    }
+    return filename.substring(filename.lastIndexOf(".") + 1);
+}
 
 }

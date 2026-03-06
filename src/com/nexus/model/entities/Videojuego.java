@@ -2,10 +2,17 @@ package com.nexus.model.entities;
 
 import com.nexus.exceptions.EParametroNulo;
 
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
 import java.util.Date;
 
-public class Videojuego extends Producto {
+public class Videojuego extends Producto implements Serializable {
 
+    private long serialVersionUID = -576859584434L;
     private String[] desarrolladores;
     private String[] generos;
     private boolean multijugador;
@@ -105,5 +112,22 @@ public class Videojuego extends Producto {
             descuento = 0.05;
         }
 
+    }
+
+    public void escribirVideojuego(String dir) throws IOException {
+        FileOutputStream f = new FileOutputStream(dir);
+        ObjectOutputStream b = new ObjectOutputStream(f);
+        b.writeObject((Videojuego)this);
+        b.close();
+        f.close();
+    }
+
+    public static Videojuego leerVideojuego(String dir) throws IOException, ClassNotFoundException {
+        FileInputStream f = new FileInputStream(dir);
+        ObjectInputStream b = new ObjectInputStream(f);
+        Videojuego videojuego = (Videojuego) b.readObject();
+        f.close();
+        b.close();
+        return videojuego;
     }
 }

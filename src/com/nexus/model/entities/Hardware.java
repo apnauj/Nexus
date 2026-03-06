@@ -2,10 +2,12 @@ package com.nexus.model.entities;
 
 import com.nexus.exceptions.EParametroNulo;
 
+import java.io.*;
 import java.util.Date;
 
-public class Hardware extends Producto {
+public class Hardware extends Producto implements Serializable {
 
+    private long serialVersionUID = -2343434343434L;
     private float consumo;
     private String fabricante;
 
@@ -42,5 +44,22 @@ public class Hardware extends Producto {
         } else {
             descuento = 0.05;  // 5%
         }
+    }
+
+    public void escribirHardware(String dir) throws IOException {
+        FileOutputStream f = new FileOutputStream(dir);
+        ObjectOutputStream b = new ObjectOutputStream(f);
+        b.writeObject((Hardware)this);
+        b.close();
+        f.close();
+    }
+
+    public static Hardware leerHardware(String dir) throws IOException, ClassNotFoundException {
+        FileInputStream f = new FileInputStream(dir);
+        ObjectInputStream b = new ObjectInputStream(f);
+        Hardware hardware = (Hardware) b.readObject();
+        f.close();
+        b.close();
+        return hardware;
     }
 }

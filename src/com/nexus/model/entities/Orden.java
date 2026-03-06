@@ -11,6 +11,8 @@ import java.util.Arrays;
 import java.util.UUID;
 
 public class Orden implements Serializable {
+    
+    private long serialVersionUID = -97089709609L;
     private final UUID idPedido;
     private Cliente cliente;
     private String fecha;

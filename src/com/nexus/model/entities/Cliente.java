@@ -1,12 +1,14 @@
 package com.nexus.model.entities;
 
+import java.io.*;
 import java.util.Arrays;
 import java.util.UUID;
 
 import com.nexus.exceptions.EParametroNulo;
 import com.nexus.model.enums.TipoDocumento;
 
-public class Cliente {
+public class Cliente implements Serializable{
+    private long serialVersionUID = -78459984354675L;
     private final UUID id;
     private TipoDocumento tipoDoc;
     private String numDoc;
@@ -88,6 +90,22 @@ public class Cliente {
 
     public UUID getId() { return id; }
 
+    public void escribirCliente(String dir) throws IOException {
+        FileOutputStream f = new FileOutputStream(dir);
+        ObjectOutputStream b = new ObjectOutputStream(f);
+        b.writeObject((Cliente)this);
+        b.close();
+        f.close();
+    }
+
+    public static Cliente leerCliente(String dir) throws IOException, ClassNotFoundException {
+        FileInputStream f = new FileInputStream(dir);
+        ObjectInputStream b = new ObjectInputStream(f);
+        Cliente cliente = (Cliente) b.readObject();
+        f.close();
+        b.close();
+        return cliente;
+    }
 
     
 }

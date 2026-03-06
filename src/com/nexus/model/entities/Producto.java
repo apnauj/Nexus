@@ -138,6 +138,6 @@ public abstract class Producto {
 	}
 	
 
-	 abstract void asignarDescuento(); 
+	abstract void asignarDescuento(); 
 
-	}
+}
