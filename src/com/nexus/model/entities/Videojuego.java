@@ -79,32 +79,21 @@ public class Videojuego extends Producto implements Serializable {
 
     
 
-/*
- * Devuelve una cadena con información resumida del videojuego.
- * Incluye el nombre del juego, la plataforma y el precio final
- * calculado usando el método calcularPrecio() heredado de Producto.
- */
     public String obtenerInfoJuego() {
         return nombre + " - " + plataforma + " - " + calcularPrecio();
     }
 
-/* Este método utiliza el método setStock() heredado de la clase
- * Producto para modificar la cantidad disponible en inventario.
- */
+
     public void actualizarStock(int nuevoStock) {
         setStock(nuevoStock);
     }
     
-/*Verifica si el videojuego está disponible en inventario.*/
+
     public boolean verificarDisponibilidad() {
         return stock > 0;
     }
 
-    /**
- * Calcula automáticamente el descuento del videojuego según su antigüedad 
- * Si el videojuego tiene más de 2 años desde su fecha de lanzamiento se aplica un descuento del 20%
- * Si tiene menos de 2 años se aplica un descuento del 5%.
- */
+
     @Override
     void asignarDescuento() {
         if(fechaLanzamiento != null){
@@ -126,10 +115,7 @@ public class Videojuego extends Producto implements Serializable {
 
     }
 
-    /**
- * Serializa el objeto Videojuego y lo guarda en un archivo.
- * Esto permite persistir el objeto en disco para poder recuperarlo posteriormente.
- */
+
     public void escribirVideojuego(String dir) throws IOException {
         FileOutputStream f = new FileOutputStream(dir);
         ObjectOutputStream b = new ObjectOutputStream(f);
@@ -138,10 +124,7 @@ public class Videojuego extends Producto implements Serializable {
         f.close();
     }
 
-    /**
- * Lee un archivo serializado y reconstruye un objeto Videojuego.
- * @return el objeto Videojuego leído desde el archivo.
- */
+    
     public static Videojuego leerVideojuego(String dir) throws IOException, ClassNotFoundException {
         FileInputStream f = new FileInputStream(dir);
         ObjectInputStream b = new ObjectInputStream(f);
