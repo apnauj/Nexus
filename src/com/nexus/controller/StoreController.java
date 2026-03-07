@@ -68,7 +68,6 @@ public class StoreController {
         Añadimos la orden al arreglo de ordenes del cliente
         Devolvemos la el UUID en caso de haber completado el flujo exitosamente (para así reutilizar este UUID en otras operaciones de la interfaz mientras estamos trabjando con ella), de lo contrario se habría lanzado una excepción
     */
-
     public UUID addOrden(TipoDocumento tipoDoc, String numDoc, MetodoPago metodoPago) throws EClienteNoEncontrado, EParametroNulo {
         if (tipoDoc == null) throw new EParametroNulo("tipoDoc");
         if (numDoc == null || numDoc.isBlank()) throw new EParametroNulo("numDoc");
@@ -186,6 +185,11 @@ public class StoreController {
 
     // --- Métodos de Búsqueda (Search) ---
 
+    /**
+ * Busca una orden dentro del sistema usando su UUID.
+ * El método recorre el arreglo de órdenes y compara
+ * cada identificador con el recibido como parámetro.
+ */
     public Orden searchOrden(UUID id) throws EOrdenNoEncontrada, EParametroNulo {
         if (id == null) throw new EParametroNulo("id");
         int i = 0;
@@ -314,6 +318,17 @@ public class StoreController {
         this.usuarios = nuevoArreglo;
     }
 
+    /**
+ * Elimina un item de una orden existente. 
+ * Este método:
+ * 1. Busca la orden mediante su UUID.
+ * 2. Busca el producto dentro de la orden.
+ * 3. Verifica que la orden esté en estado PENDIENTE.
+ * 4. Elimina el item del arreglo de items.
+ * 5. Restaura el stock del producto eliminado.
+ * @param idOrden Identificador de la orden.
+ * @param nombre Nombre del producto que se desea eliminar.
+ */
     public void removeItemOrden(UUID idOrden, String nombre) throws EOrdenNoEncontrada, EProductoNoEncontrado, EValorNegativo, EParametroNulo {
         if (idOrden == null) throw new EParametroNulo("idOrden");
         if (nombre == null || nombre.isBlank()) throw new EParametroNulo("nombre");
@@ -343,6 +358,14 @@ public class StoreController {
         p.setStock(p.getStock() + removed.getCantidad());
     }
 
+    /**
+ * Verifica el pago de una orden y cambia su estado.
+ * Si el pago es válido:
+ *  La orden pasa al estado APROBADO.
+ * Si el pago es rechazado:
+ *  La orden pasa a estado RECHAZADO.
+ *  Se restaura el stock de todos los productos que estaban en la orden. 
+ */
     public void verificarPago(UUID idOrden, boolean pago) throws EOrdenNoEncontrada, EParametroNulo {
         if (idOrden == null) throw new EParametroNulo("idOrden");
         Orden orden = searchOrden(idOrden);
