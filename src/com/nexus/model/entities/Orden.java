@@ -84,7 +84,13 @@ public class Orden implements Serializable {
     	return this.items;
     }
 
-    //Añade un item a la orden
+   /**
+ * Agrega un nuevo item a la orden.
+ * Este método valida que:
+ * La orden esté en estado PENDIENTE.
+ * El item recibido no sea nulo 
+ * Luego agrega el item al arreglo de items de la orden.
+ */
     public String  addItemOrden(OrdenItem a){
         //Valida que la orden no sea aprobada ni rechazada
         if (this.estado != Estado.PENDIENTE) {
@@ -101,7 +107,13 @@ public class Orden implements Serializable {
         }
     }
 
-    //Quita un producto de la Orden
+    /**
+ * Elimina un item de la orden usando su índice.
+ * El método valida:
+ * Que la orden esté en estado PENDIENTE.
+ * Que el índice esté dentro del rango válido.
+ * Luego crea un nuevo arreglo sin el item eliminado.
+ */
     public OrdenItem removeItemAt(int index) {
         //Valida si no está aprobado o rechazado
         if (this.estado != Estado.PENDIENTE) {
@@ -146,7 +158,14 @@ public class Orden implements Serializable {
     public double getTotal() {
         return total;
     }
-    //Calcula el total recorriendo cada item y trayendo su subtotal para sumarlo al total. Tambien usa setTotal
+
+    /**
+ * Calcula el valor total de la orden.
+ * El método recorre todos los items de la orden
+ * y suma el subtotal de cada uno.
+ * Cada subtotal corresponde a:
+ * precio del producto * cantidad
+ */
     public double calcularTotal(){
         double total = 0;
         //Recorre el arreglo
