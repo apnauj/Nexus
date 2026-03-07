@@ -83,20 +83,21 @@ public class Videojuego extends Producto implements Serializable {
 
     
 
-    //informacion resumida del juego
     public String obtenerInfoJuego() {
         return nombre + " - " + plataforma + " - " + calcularPrecio();
     }
 
-    //actualiza stock del producto, setStock se hereda de la clase padre
+
     public void actualizarStock(int nuevoStock) {
         setStock(nuevoStock);
     }
+    
 
     public boolean verificarDisponibilidad() {
         return stock > 0;
     }
-    
+
+
     @Override
     void asignarDescuento() {
         if(fechaLanzamiento != null){
@@ -105,9 +106,9 @@ public class Videojuego extends Producto implements Serializable {
 
             long diferencia = hoy - lanzamiento;
 
-            long anos = diferencia / (1000L * 60 * 60 * 24 * 365);
+            long años = diferencia / (1000L * 60 * 60 * 24 * 365);
 
-            if (anos >= 2) {
+            if (años >= 2) {
                 descuento = 0.20; // 20%
             } else {
                 descuento = 0.05; // 5%
@@ -118,6 +119,7 @@ public class Videojuego extends Producto implements Serializable {
 
     }
 
+
     public void escribirVideojuego(String dir) throws IOException {
         FileOutputStream f = new FileOutputStream(dir);
         ObjectOutputStream b = new ObjectOutputStream(f);
@@ -126,6 +128,7 @@ public class Videojuego extends Producto implements Serializable {
         f.close();
     }
 
+    
     public static Videojuego leerVideojuego(String dir) throws IOException, ClassNotFoundException {
         FileInputStream f = new FileInputStream(dir);
         ObjectInputStream b = new ObjectInputStream(f);

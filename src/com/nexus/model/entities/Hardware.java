@@ -32,9 +32,13 @@ public class Hardware extends Producto implements Serializable {
     public void setConsumo(float consumo) {
         this.consumo = consumo;
     }
+
+   
     public void actualizarStock(int nuevoStock) {
         setStock(nuevoStock);
     }
+
+   
     public boolean verificarDisponibilidad() {
         return stock > 0;
     }
@@ -56,6 +60,7 @@ public class Hardware extends Producto implements Serializable {
         f.close();
     }
 
+   
     public static Hardware leerHardware(String dir) throws IOException, ClassNotFoundException {
         FileInputStream f = new FileInputStream(dir);
         ObjectInputStream b = new ObjectInputStream(f);

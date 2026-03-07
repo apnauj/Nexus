@@ -188,6 +188,11 @@ public class StoreController {
 
     // --- Métodos de Búsqueda (Search) ---
 
+    /**
+ * Busca una orden dentro del sistema usando su UUID.
+ * El método recorre el arreglo de órdenes y compara
+ * cada identificador con el recibido como parámetro.
+ */
     public Orden searchOrden(UUID id) throws EOrdenNoEncontrada, EParametroNulo {
         if (id == null) throw new EParametroNulo("id");
         int i = 0;
@@ -347,12 +352,23 @@ public class StoreController {
                     j++;
                 }
             }
-            i++; 
+            i++;
         }
 
         this.usuarios = nuevoArreglo;
     }
 
+    /**
+ * Elimina un item de una orden existente.
+ * Este método:
+ * 1. Busca la orden mediante su UUID.
+ * 2. Busca el producto dentro de la orden.
+ * 3. Verifica que la orden esté en estado PENDIENTE.
+ * 4. Elimina el item del arreglo de items.
+ * 5. Restaura el stock del producto eliminado.
+ * @param idOrden Identificador de la orden.
+ * @param nombre Nombre del producto que se desea eliminar.
+ */
     public void removeItemOrden(UUID idOrden, String nombre) throws EOrdenNoEncontrada, EProductoNoEncontrado, EParametroNulo {
         if (idOrden == null) throw new EParametroNulo("idOrden");
         if (nombre == null || nombre.isBlank()) throw new EParametroNulo("nombre");
@@ -381,11 +397,14 @@ public class StoreController {
     }
 
     /**
-     * Verifica el pago de una orden. Delega en Orden.cambioEstado() para determinar si el pago
-     * es suficiente (APROBADO + decrementar stock + cambio) o insuficiente (RECHAZADO).
-     * El decremento de stock se realiza sobre el arreglo real de productos para garantizar
-     * consistencia (incluyendo órdenes cargadas desde archivo).
-     */
+ * Verifica el pago de una orden y cambia su estado.
+ * Si el pago es válido:
+ *  La orden pasa al estado APROBADO.
+ * Si el pago es rechazado:
+ *  La orden pasa a estado RECHAZADO.
+ *  Se restaura el stock de todos los productos que estaban en la orden.
+ */
+
     public void verificarPago(UUID idOrden, double valorPagado) throws EOrdenNoEncontrada, EParametroNulo, EValorNegativo, EProductoNoEncontrado {
         if (idOrden == null) throw new EParametroNulo("idOrden");
         if (valorPagado < 0) throw new EValorNegativo("El valor pagado no puede ser negativo");
