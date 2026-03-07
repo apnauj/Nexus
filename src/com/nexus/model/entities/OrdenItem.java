@@ -1,7 +1,7 @@
 package com.nexus.model.entities;
 
-import com.nexus.controller.StoreController;
 import com.nexus.exceptions.ECantidadNegativa;
+import com.nexus.exceptions.EParametroNulo;
 import com.nexus.exceptions.EProductoNoEncontrado;
 import com.nexus.exceptions.EStockInsuficiente;
 import com.nexus.exceptions.EValorNegativo;
@@ -10,8 +10,11 @@ public class OrdenItem {
     private final Producto producto;
     private int cantidad;
 
-    public OrdenItem(Producto producto, int cantidad) throws EProductoNoEncontrado, ECantidadNegativa, EValorNegativo{
-            this.producto = producto;
+    public OrdenItem(Producto producto, int cantidad) throws ECantidadNegativa, EParametroNulo, EStockInsuficiente{
+        if (producto == null) {
+            throw new EParametroNulo("producto");
+        }
+        this.producto = producto;
         if(cantidad <= 0){
             throw new ECantidadNegativa("Cantidad inválida solo se aceptan cantidades positivas");
         } else if(producto.getStock() < cantidad){
@@ -40,12 +43,7 @@ public class OrdenItem {
         return producto.calcularPrecio()*cantidad;
     }
 
-    public boolean stockSuficiente(Producto producto){
-        Producto p = getProducto();
-        if(p.getStock()!=0 && p.getStock()>getCantidad()) {
-            return true;
-        }else{
-            return false;
-        }
+    public boolean stockSuficiente(){
+        return producto.getStock() >= cantidad;
     }
 }

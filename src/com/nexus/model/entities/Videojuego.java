@@ -1,5 +1,6 @@
 package com.nexus.model.entities;
 
+import com.nexus.exceptions.ECantidadNegativa;
 import com.nexus.exceptions.EParametroNulo;
 
 import java.io.FileInputStream;
@@ -21,10 +22,13 @@ public class Videojuego extends Producto implements Serializable {
     private double tamano;  // GB
 
 
-    public Videojuego(String nombre, String descripcion, String categoria, int tiempoGarantia, double precioBase, int stock, String[] desarrolladores, String[] generos, boolean multijugador, Date fechaLanzamiento, String plataforma, double tamano) throws EParametroNulo {
+    public Videojuego(String nombre, String descripcion, String categoria, int tiempoGarantia, double precioBase, int stock, String[] desarrolladores, String[] generos, boolean multijugador, Date fechaLanzamiento, String plataforma, double tamano) throws EParametroNulo, ECantidadNegativa {
 
         super(nombre, descripcion, categoria, tiempoGarantia, precioBase, stock);
-
+        if(desarrolladores == null) throw new EParametroNulo("desarrolladores");
+        if(generos == null) throw new EParametroNulo("generos");
+        if(plataforma == null) throw new EParametroNulo("plataforma");
+        if (tamano < 0) throw new ECantidadNegativa("El peso en GB del videojuego no puede ser negativo");
         this.desarrolladores = desarrolladores;
         this.generos = generos;
         this.multijugador = multijugador;

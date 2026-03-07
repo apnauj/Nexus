@@ -1,6 +1,5 @@
 package com.nexus.model.entities;
 
-import com.nexus.controller.StoreController;
 import com.nexus.exceptions.EParametroNulo;
 import com.nexus.exceptions.EValorNegativo;
 import com.nexus.model.enums.Estado;
@@ -85,19 +84,19 @@ public class Orden implements Serializable {
     }
 
     //Añade un item a la orden
-    public String  addItemOrden(OrdenItem a){
+    public void  addItemOrden(OrdenItem a) throws EParametroNulo {
         //Valida que la orden no sea aprobada ni rechazada
         if (this.estado != Estado.PENDIENTE) {
             throw new IllegalStateException("Solo se pueden agregar items a órdenes en estado Pendiente");
         }
         //Valida OrdenxItem es nulo
         if (a == null){
-            return "No se permiten detalles nulos";
+            throw new EParametroNulo("No se permiten detalles nulos");
         } else {
             //Crea un espacio en el arreglo y agrega el producto
             items = Arrays.copyOf(items, items.length + 1);
             items[items.length - 1] = a;
-            return "Se agregó correctamente el producto";
+            System.out.println("Se agregó correctamente el producto");
         }
     }
 
@@ -137,10 +136,6 @@ public class Orden implements Serializable {
     public double getCambio() {
         return cambio;
     }
-    //calcula y guarda el cambio que se debe dar al cliente
-    public void setCambio(double total, double valorPagado) {
-        this.cambio = total-valorPagado;
-    }
 
     //Traer total
     public double getTotal() {
@@ -152,8 +147,8 @@ public class Orden implements Serializable {
         //Recorre el arreglo
         for(OrdenItem i:items){
             total+=i.calcularSubtotal();
-            setTotal(total);
         }
+        setTotal(total);
         return total;
     }
 
@@ -161,31 +156,36 @@ public class Orden implements Serializable {
         this.total = total;
     }
 
-    //Cambia el estado de compra si el valorPagado es mayor o igual al total
-    public void cambioEstado(){
-        if(total<=valorPagado){
+    // Cambia el estado de compra si el valorPagado es mayor o igual al total.
+    // Nota: El decremento de stock se realiza en StoreController sobre el arreglo real de productos.
+    public void cambioEstado() throws EValorNegativo {
+        if (total <= valorPagado) {
             setEstado(Estado.APROBADO);
-        }else{
+            this.cambio = valorPagado - total;
+        } else {
             setEstado(Estado.RECHAZADO);
+            this.cambio = valorPagado;
         }
     }
 
-    public String decrementarStock(OrdenItem items[]) throws EValorNegativo {
-        String text = "";
-        if(estado == Estado.APROBADO) {
+    /**
+     * @deprecated El decremento de stock se realiza en StoreController para garantizar
+     * que se modifique el arreglo real de productos (incluyendo órdenes cargadas desde archivo).
+     */
+    public void decrementarStock() throws EValorNegativo {
+        if (estado == Estado.APROBADO && items != null) {
             for (OrdenItem i : items) {
                 Producto p = i.getProducto();
-                if (i.stockSuficiente(i.getProducto())) {
+                if (i.stockSuficiente()) {
                     p.setStock(p.getStock() - i.getCantidad());
                 } else {
-                    throw new EValorNegativo("No hay suficientes productos quedan: " + p.getStock() + p.getNombre());
+                    throw new EValorNegativo("No hay suficientes productos. Quedan: " + p.getStock() + " de " + p.getNombre());
                 }
-                text= "El proceso se ha ejecutado correctamente";
+                System.out.println("El proceso se ha ejecutado correctamente");
             }
         }else{
-            text = "La orden no ha sido aprobada";
+            System.out.println("La orden no ha sido aprobada");
         }
-        return text;
     }
     //Serialización
     public void escribirOrden(String dir) throws IOException {

@@ -73,12 +73,14 @@ public class StoreController {
         if (tipoDoc == null) throw new EParametroNulo("tipoDoc");
         if (numDoc == null || numDoc.isBlank()) throw new EParametroNulo("numDoc");
         if (metodoPago == null) throw new EParametroNulo("metodoPago");
+
         Cliente cliente = searchCliente(tipoDoc, numDoc);
         DateTimeFormatter formateador = DateTimeFormatter.ofPattern("dd/MM/yyyy");
         String fecha = (LocalDate.now()).format(formateador);
         Orden o = new Orden(cliente, fecha, metodoPago);
         ordenes = Arrays.copyOf(ordenes, ordenes.length + 1);
         ordenes[ordenes.length - 1] = o;
+
         cliente.AgregarCompras(o);
         return o.getIdPedido();
     }
@@ -126,7 +128,7 @@ public class StoreController {
         this.usuarios[this.usuarios.length - 1] = nuevoUsuario;
     }
 
-    public void addHardware(String nombre, String descripcion, String categoria, int tiempoGarantia, double precioBase, int stock, float consumo, String fabricante) throws EProductoYaExiste, EParametroNulo {
+    public void addHardware (String nombre, String descripcion, String categoria, int tiempoGarantia, double precioBase, int stock, float consumo, String fabricante) throws EProductoYaExiste, EParametroNulo, ECantidadNegativa {
         if (nombre == null || nombre.isBlank()) throw new EParametroNulo("nombre");
         if (existeProducto(nombre)) {
             throw new EProductoYaExiste(nombre);
@@ -136,7 +138,7 @@ public class StoreController {
         this.productos[this.productos.length - 1] = nuevoHardware;
     }
 
-    public void addVideojuego(String nombre, String descripcion, String categoria, int tiempoGarantia, double precioBase, int stock, String[] desarrolladores, String[] generos, boolean multijugador, Date fechaLanzamiento, String plataforma, double tamano) throws EProductoYaExiste, EParametroNulo {
+    public void addVideojuego(String nombre, String descripcion, String categoria, int tiempoGarantia, double precioBase, int stock, String[] desarrolladores, String[] generos, boolean multijugador, Date fechaLanzamiento, String plataforma, double tamano) throws EProductoYaExiste, EParametroNulo, ECantidadNegativa {
         if (nombre == null || nombre.isBlank()) throw new EParametroNulo("nombre");
         if (existeProducto(nombre)) {
             throw new EProductoYaExiste(nombre);
@@ -202,12 +204,26 @@ public class StoreController {
         if (nombre == null || nombre.isBlank()) throw new EParametroNulo("nombre");
         int i = 0;
         while (i < productos.length) {
-            if (productos[i].getNombre().equals(nombre)) {
+            if (productos[i].getNombre().equalsIgnoreCase(nombre)) {
                 return productos[i];
             }
             i++;
         }
         throw new EProductoNoEncontrado(nombre);
+    }
+
+    /** Obtiene un producto del arreglo real por su ID. Usado para decrementar stock correctamente. */
+    public Producto getProductoById(UUID id) throws EProductoNoEncontrado, EParametroNulo {
+        if (id == null) throw new EParametroNulo("id");
+        int i = 0;
+        while (i < productos.length) {
+            Producto p = productos[i];
+            if (p.getId().equals(id)) {
+                return p;
+            }
+            i++;
+        }
+        throw new EProductoNoEncontrado("Producto con ID " + id + " no encontrado");
     }
 
     public Cliente searchCliente(TipoDocumento tipoDoc, String numDoc) throws EClienteNoEncontrado, EParametroNulo {
@@ -227,7 +243,7 @@ public class StoreController {
         if (username == null || username.isBlank()) throw new EParametroNulo("username");
         int i = 0;
         while (i < usuarios.length) {
-            if (usuarios[i].getUsername().equals(username)) {
+            if (usuarios[i].getUsername().equalsIgnoreCase(username)) {
                 return usuarios[i];
             }
             i++;
@@ -247,13 +263,11 @@ public class StoreController {
 
             OrdenItem[] items = ordenes[i].getItems();
 
-            int j = 0; // 🔹 Se reinicia para cada orden
+            int j = 0;
 
             while (items != null && j < items.length) {
-                if (items[j].getProducto().getId().equals(p.getId())) {
-                    throw new EHistorialOrden(
-                        "No se puede eliminar el producto porque está asociado a una orden."
-                    );
+                if (items[j] != null && items[j].getProducto() != null && items[j].getProducto().getId().equals(p.getId())) {
+                    throw new EHistorialOrden("No se puede eliminar el producto porque está asociado a una orden.");
                 }
                 j++;
             }
@@ -266,9 +280,9 @@ public class StoreController {
         Producto[] nuevoArreglo = new Producto[this.productos.length - 1];
         int j = 0;
 
-        // 3. Copiamos all excepto el que queremos borrar
+        // 3. Copiamos todos excepto el que queremos borrar (por ID para consistencia con searchProducto)
         for (Producto prod : this.productos) {
-            if (!prod.getNombre().equals(nombre)) {
+            if (!prod.getId().equals(p.getId())) {
                 nuevoArreglo[j] = prod;
                 j++;
             }
@@ -279,42 +293,67 @@ public class StoreController {
     public void deleteCliente(TipoDocumento tipoDoc, String numDoc) throws EClienteNoEncontrado, EHistorialOrden, EParametroNulo {
         if (tipoDoc == null) throw new EParametroNulo("tipoDoc");
         if (numDoc == null || numDoc.isBlank()) throw new EParametroNulo("numDoc");
+
         Cliente c = searchCliente(tipoDoc, numDoc);
-        for (Orden ord : ordenes) {
+
+        // 1. Verificación de órdenes con while
+        int i = 0;
+        while (i < ordenes.length) {
+            Orden ord = ordenes[i];
             if (ord.getCliente() != null && ord.getCliente().getId().equals(c.getId())) {
                 throw new EHistorialOrden("No se puede eliminar el cliente porque tiene órdenes asociadas.");
             }
+            i++;
         }
 
+        // 2. Creación del nuevo arreglo
         Cliente[] nuevoArreglo = new Cliente[this.clientes.length - 1];
         int j = 0;
+        int k = 0;
 
-        for (Cliente cli : this.clientes) {
-            // Comparamos identificadores únicos
+        while (k < this.clientes.length) {
+            Cliente cli = this.clientes[k];
+
+            // Si NO es el cliente que queremos borrar, lo copiamos
             if (!(cli.getTipoDoc().equals(tipoDoc) && cli.getNumDoc().equals(numDoc))) {
-                nuevoArreglo[j] = cli;
-                j++;
+                // Verificación de seguridad para no exceder el tamaño del nuevoArreglo
+                if (j < nuevoArreglo.length) {
+                    nuevoArreglo[j] = cli;
+                    j++;
+                }
             }
+            k++;
         }
         this.clientes = nuevoArreglo;
     }
 
     public void deleteUsuario(String username) throws EUsuarioNoEncontrado, EParametroNulo {
-        if (username == null || username.isBlank()) throw new EParametroNulo("username");
+        if (username == null || username.isBlank()) {
+            throw new EParametroNulo("username");
+        }
+
         Usuario u = searchUsuario(username);
+
         Usuario[] nuevoArreglo = new Usuario[this.usuarios.length - 1];
+
+        int i = 0;
         int j = 0;
 
-        for (Usuario user : this.usuarios) {
-            if (!user.getUsername().equals(username)) {
-                nuevoArreglo[j] = user;
-                j++;
+        while (i < this.usuarios.length) {
+            Usuario user = this.usuarios[i];
+            if (!user.getUsername().equalsIgnoreCase(username)) {
+                if (j < nuevoArreglo.length) {
+                    nuevoArreglo[j] = user;
+                    j++;
+                }
             }
+            i++; 
         }
+
         this.usuarios = nuevoArreglo;
     }
 
-    public void removeItemOrden(UUID idOrden, String nombre) throws EOrdenNoEncontrada, EProductoNoEncontrado, EValorNegativo, EParametroNulo {
+    public void removeItemOrden(UUID idOrden, String nombre) throws EOrdenNoEncontrada, EProductoNoEncontrado, EParametroNulo {
         if (idOrden == null) throw new EParametroNulo("idOrden");
         if (nombre == null || nombre.isBlank()) throw new EParametroNulo("nombre");
         Orden orden = searchOrden(idOrden);
@@ -338,54 +377,75 @@ public class StoreController {
         if (index == -1) {
             throw new IllegalStateException("El producto '" + nombre + "' no está en la orden.");
         }
-        OrdenItem removed = orden.removeItemAt(index);
-        Producto p = removed.getProducto();
-        p.setStock(p.getStock() + removed.getCantidad());
+        orden.removeItemAt(index);
     }
 
-    public void verificarPago(UUID idOrden, boolean pago) throws EOrdenNoEncontrada, EParametroNulo {
+    /**
+     * Verifica el pago de una orden. Delega en Orden.cambioEstado() para determinar si el pago
+     * es suficiente (APROBADO + decrementar stock + cambio) o insuficiente (RECHAZADO).
+     * El decremento de stock se realiza sobre el arreglo real de productos para garantizar
+     * consistencia (incluyendo órdenes cargadas desde archivo).
+     */
+    public void verificarPago(UUID idOrden, double valorPagado) throws EOrdenNoEncontrada, EParametroNulo, EValorNegativo, EProductoNoEncontrado {
         if (idOrden == null) throw new EParametroNulo("idOrden");
+        if (valorPagado < 0) throw new EValorNegativo("El valor pagado no puede ser negativo");
         Orden orden = searchOrden(idOrden);
-        if (pago) {
-            if (orden.getItems() == null || orden.getItems().length == 0) {
-                throw new IllegalStateException("No se puede aprobar una orden sin items");
-            }
-            orden.setEstado(Estado.APROBADO);
-        } else {
-            if (orden.getEstado() == Estado.PENDIENTE) {
-                for (OrdenItem item : orden.getItems()) {
-                    Producto p = item.getProducto();
-                    p.setStock(p.getStock() + item.getCantidad());
-                }
-            }
-            orden.setEstado(Estado.RECHAZADO);
+        if (orden.getEstado() != Estado.PENDIENTE) {
+            throw new IllegalStateException("La orden ya fue verificada (estado: " + orden.getEstado() + ")");
+        }
+        if (orden.getItems() == null || orden.getItems().length == 0) {
+            throw new IllegalStateException("No se puede verificar pago de una orden sin items");
+        }
+        orden.calcularTotal();
+        orden.setValorPagado(valorPagado);
+        orden.cambioEstado();
+        if (orden.getEstado() == Estado.APROBADO) {
+            decrementarStockEnProductos(orden);
         }
     }
 
-    public String modificarCantidadItem(Producto p, int c, Orden orden) throws EProductoNoEncontrado, EValorNegativo, ECantidadNegativa {
-        String text = "";
-        if(!existeProducto(String.valueOf(p))){
-            throw new EProductoNoEncontrado("No se encontró el producto");
-        }else if(c<0){
-            throw new EValorNegativo("No se pueden cantidades negativas");
-        }else{
-            OrdenItem[] items= orden.getItems();
-            int i = 0;
-            int index;
-            boolean sw = false;
-            while(i<items.length && !sw) {
-                OrdenItem o1 = items[i];
-                if (o1.getProducto() == p) {
-                    sw = true;
-                    o1.setCantidad(c);
-                    text = "Se cambio la cantidad correctamente";
-                }
+    /** Decrementa el stock en el arreglo real de productos para cada item de la orden aprobada. */
+    private void decrementarStockEnProductos(Orden orden) throws EValorNegativo, EProductoNoEncontrado, EParametroNulo {
+        OrdenItem[] items = orden.getItems();
+        if (items == null) return;
+        for (OrdenItem item : items) {
+            Producto pEnOrden = item.getProducto();
+            Producto pReal = getProductoById(pEnOrden.getId());
+            if (pReal.getStock() < item.getCantidad()) {
+                throw new EValorNegativo("No hay suficientes productos. Quedan: " + pReal.getStock() + " de " + pReal.getNombre());
             }
-            if(!sw){
-                text = "No se encontro el item";
+            pReal.setStock(pReal.getStock() - item.getCantidad());
+        }
+    }
+
+    /**
+     * Modifica la cantidad de un producto en una orden. La orden debe estar en estado PENDIENTE.
+     */
+    public String modificarCantidadItem(UUID idOrden, String nombreProducto, int cantidad) throws EOrdenNoEncontrada, EProductoNoEncontrado, EValorNegativo, ECantidadNegativa, EStockInsuficiente, EParametroNulo {
+        if (idOrden == null) throw new EParametroNulo("idOrden");
+        if (nombreProducto == null || nombreProducto.isBlank()) throw new EParametroNulo("nombreProducto");
+        Orden orden = searchOrden(idOrden);
+        if (orden.getEstado() != Estado.PENDIENTE) {
+            throw new IllegalStateException("Solo se puede modificar cantidad en órdenes pendientes");
+        }
+        Producto producto = searchProducto(nombreProducto);
+        if (cantidad <= 0) {
+            throw new ECantidadNegativa("La cantidad debe ser positiva");
+        }
+        if (producto.getStock() < cantidad) {
+            throw new EStockInsuficiente(producto);
+        }
+        OrdenItem[] items = orden.getItems();
+        if (items == null) {
+            throw new IllegalStateException("La orden no tiene items");
+        }
+        for (OrdenItem item : items) {
+            if (item.getProducto().getId().equals(producto.getId())) {
+                item.setCantidad(cantidad);
+                return "Se cambió la cantidad correctamente";
             }
         }
-        return text;
+        throw new IllegalStateException("El producto '" + nombreProducto + "' no está en la orden");
     }
 
     //TODO: Métodos de login y logout

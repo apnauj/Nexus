@@ -27,6 +27,12 @@ public class Cliente implements Serializable{
         if (nombre == null || nombre.isBlank()) {
             throw new EParametroNulo("nombre", "El nombre no puede ser null o vacío.");
         }
+        if (apellido == null || apellido.isBlank()) {
+            throw new EParametroNulo("apellido","El apellido no puede ser null o vacio");
+        }
+        if (email == null || email.isBlank()) {
+            throw new EParametroNulo("email","El email no puede ser null o vacio");
+        }
         this.id = UUID.randomUUID();
         this.tipoDoc = tipoDoc;
         this.numDoc = numDoc;

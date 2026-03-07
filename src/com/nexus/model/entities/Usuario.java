@@ -23,8 +23,8 @@ public class Usuario implements Serializable {
         if (username == null || username.isBlank()) {
             throw new EParametroNulo("username");
         }
-        if (password == null) {
-            throw new EParametroNulo("password");
+        if (password == null || password.isBlank()) {
+            throw new EParametroNulo("password", "La contraseña no puede ser null o vacio");
         }
         if (rol == null) {
             throw new EParametroNulo("rol");

@@ -7,12 +7,13 @@ public class LoginService {
         int i=0;
         boolean sw=false;
         Usuario ur = null;
-        while(i<usuariosArray.length && sw==false){
+        while(i<usuariosArray.length && !sw){
             Usuario u1 = usuariosArray[i];
-            if(u1.getUsername()==usuarioIngresado && u1.getPassword()==contrasenaIngresada){
+            if(u1.getUsername().equals(usuarioIngresado) && u1.getPassword().equals(contrasenaIngresada)){
                 sw=true;
                 ur = u1;
             }
+            i++;
         }
         if(sw){
             System.out.println("Se ha iniciado sesion correctamente");

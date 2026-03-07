@@ -39,7 +39,7 @@ public abstract class Producto {
 		}else if (tiempoGarantia <=0) {
 			throw new EValorNegativo("El tiempo de garantia no puede ser negativo, el valor registrado del tiempo de garantia es: "+tiempoGarantia);
 		
-		}else{
+		}
 			
 		this.id=UUID.randomUUID();
 		this.nombre = nombre;
@@ -48,7 +48,6 @@ public abstract class Producto {
 		this.tiempoGarantia = tiempoGarantia;
 		this.precioBase = precioBase;
 		this.stock = stock;
-		}
 	}
 	
 	public UUID getId() {
@@ -79,7 +78,7 @@ public abstract class Producto {
 		this.tiempoGarantia = tiempoGarantia;
 	}
 	
-	public double getPreciobase() {
+	public double getPrecioBase() {
 		return precioBase;
 	}
 
@@ -106,7 +105,7 @@ public abstract class Producto {
 	*/
 	
 	public void setDescuento(double descuento) {
-		if (descuento < 0) {
+		if (descuento <= 0) {
 			throw new EValorNegativo("El valor del descuento no puede ser negativo");
 		}
 		this.descuento = descuento;
@@ -118,7 +117,7 @@ public abstract class Producto {
 
 	/*
 	Este method sirve para modificar el stock
-	La única validación que debemos de hacer es que el stock que debe de ser mayor que 0
+	La única validación que debemos de hacer es que el stock no sea negativo
 	*/
 
 
