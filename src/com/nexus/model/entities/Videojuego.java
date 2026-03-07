@@ -2,6 +2,7 @@ package com.nexus.model.entities;
 
 import com.nexus.exceptions.ECantidadNegativa;
 import com.nexus.exceptions.EParametroNulo;
+import com.nexus.exceptions.EValorNegativo;
 
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -22,7 +23,7 @@ public class Videojuego extends Producto implements Serializable {
     private double tamano;  // GB
 
 
-    public Videojuego(String nombre, String descripcion, String categoria, int tiempoGarantia, double precioBase, int stock, String[] desarrolladores, String[] generos, boolean multijugador, Date fechaLanzamiento, String plataforma, double tamano) throws EParametroNulo, ECantidadNegativa {
+    public Videojuego(String nombre, String descripcion, String categoria, int tiempoGarantia, double precioBase, int stock, String[] desarrolladores, String[] generos, boolean multijugador, Date fechaLanzamiento, String plataforma, double tamano) throws EParametroNulo, ECantidadNegativa, EValorNegativo {
 
         super(nombre, descripcion, categoria, tiempoGarantia, precioBase, stock);
         if(desarrolladores == null) throw new EParametroNulo("desarrolladores");
@@ -88,7 +89,7 @@ public class Videojuego extends Producto implements Serializable {
     }
 
 
-    public void actualizarStock(int nuevoStock) {
+    public void actualizarStock(int nuevoStock) throws EValorNegativo {
         setStock(nuevoStock);
     }
     

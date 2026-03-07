@@ -37,7 +37,7 @@ public class GestionarProductos extends JFrame {
 
 		contentPane = new JPanel();
 		contentPane.setBorder(new EmptyBorder(10, 10, 10, 10));
-		contentPane.setLayout(new BorderLayout()); // IMPORTANTE
+		contentPane.setLayout(new BorderLayout());
 
 		setContentPane(contentPane);
 

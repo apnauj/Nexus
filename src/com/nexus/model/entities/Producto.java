@@ -25,7 +25,7 @@ public abstract class Producto {
 	4. Si todas estas validaciones pasan podemos crear el producto
 	*/
 	
-	public Producto(String nombre, String descripcion, String categoria, int tiempoGarantia, double precioBase, int stock) throws EParametroNulo {
+	public Producto(String nombre, String descripcion, String categoria, int tiempoGarantia, double precioBase, int stock) throws EParametroNulo, EValorNegativo {
 		if (nombre == null || nombre.isBlank()) {
 			throw new EParametroNulo("nombre", "El nombre del producto no puede ser null o vacío.");
 		}
@@ -87,7 +87,7 @@ public abstract class Producto {
 	La única validación que debemos de hacer es el precio base que debe de ser mayor que 0
 	*/
 	
-	public void setPrecioBase(double precioBase) {
+	public void setPrecioBase(double precioBase) throws EValorNegativo {
 		if(precioBase <=0) {
 			throw new EValorNegativo("El valor del precio base no puede ser negativo o cero, el valor registrado fue: "+precioBase);
 		}else {
@@ -104,7 +104,7 @@ public abstract class Producto {
 	La única validación que debemos de hacer es que el descuento que debe de ser mayor que 0
 	*/
 	
-	public void setDescuento(double descuento) {
+	public void setDescuento(double descuento) throws EValorNegativo {
 		if (descuento <= 0) {
 			throw new EValorNegativo("El valor del descuento no puede ser negativo");
 		}
@@ -121,7 +121,7 @@ public abstract class Producto {
 	*/
 
 
-	public void setStock(int stock) {
+	public void setStock(int stock) throws EValorNegativo {
 		if (stock < 0) {
 			throw new EValorNegativo("El valor del stock no puede ser negativo, el valor ingresado fue: " + stock);
 		}

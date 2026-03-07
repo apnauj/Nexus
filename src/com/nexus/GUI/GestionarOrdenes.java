@@ -65,26 +65,30 @@ public class GestionarOrdenes extends JFrame {
 			public void actionPerformed(ActionEvent e) {
 				AgregarOrden ao = new AgregarOrden();
 				ao.setVisible(true);
+				GestionarOrdenes.this.dispose();
 			}
 		});
 		panelBotones.add(AddOrden);
 
-		JButton EliminarOrdenItem = new JButton("Eliminar Item de la Orden");
-		EliminarOrdenItem.addActionListener(new ActionListener() {
+		JButton removeOrdenItem = new JButton("Eliminar Item de la Orden");
+		removeOrdenItem.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-			
+				EliminarItemOrden eliminado=new EliminarItemOrden();
+				eliminado.setVisible(true);
+				GestionarOrdenes.this.dispose();
 			}
 		});
 		
 		JButton AddOrdenItem = new JButton("Añadir Item a la orden");
 		AddOrdenItem.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				AddItemOrden aio= new AddItemOrden();
+				AgregarItemOrden aio= new AgregarItemOrden();
 				aio.setVisible(true);
+				GestionarOrdenes.this.dispose();
 			}
 		});
 		panelBotones.add(AddOrdenItem);
-		panelBotones.add(EliminarOrdenItem);
+		panelBotones.add(removeOrdenItem);
 		
 
 		JButton ObtenerOrdenes = new JButton("Obtener historial de ordenes");
@@ -92,6 +96,7 @@ public class GestionarOrdenes extends JFrame {
 			public void actionPerformed(ActionEvent e) {
 				ListarOrdenes lo = new ListarOrdenes();
 				lo.setVisible(true);
+				GestionarOrdenes.this.dispose();
 			}
 		});
 		panelBotones.add(ObtenerOrdenes);

@@ -51,7 +51,7 @@ public class GestionarClientes extends JFrame {
 			public void actionPerformed(ActionEvent e) {
 				Store_Controller store= new Store_Controller();
 				store.setVisible(true);
-				dispose(); // cierra esta ventana
+				GestionarClientes.this.dispose(); // cierra esta ventana
 			}
 		});
 
@@ -59,6 +59,17 @@ public class GestionarClientes extends JFrame {
 		JPanel panelBotones = new JPanel();
 		panelBotones.setLayout(new GridLayout(2, 1, 10, 10));
 		contentPane.add(panelBotones, BorderLayout.CENTER);
+		
+		JButton addCliente = new JButton("Agregar Cliente");
+		panelBotones.add(addCliente);
+
+		addCliente.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				AgregarCliente cliente = new AgregarCliente();
+				cliente.setVisible(true);
+				GestionarClientes.this.dispose();
+			}
+		});
 
 		JButton deleteCliente = new JButton("Eliminar Cliente");
 		panelBotones.add(deleteCliente);
@@ -67,17 +78,10 @@ public class GestionarClientes extends JFrame {
 			public void actionPerformed(ActionEvent e) {
 				EliminarCliente cliente = new EliminarCliente();
 				cliente.setVisible(true);
+				GestionarClientes.this.dispose();
 			}
 		});
 
-		JButton addCliente = new JButton("Agregar Cliente");
-		panelBotones.add(addCliente);
-
-		addCliente.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				AgregarCliente cliente = new AgregarCliente();
-				cliente.setVisible(true);
-			}
-		});
+		
 	}
 }

@@ -1,20 +1,21 @@
 package com.nexus.GUI;
 import com.nexus.GUI.*;
 import java.awt.EventQueue;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
 
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
 
 import com.nexus.controller.StoreController;
 
-import java.awt.GridBagLayout;
 import javax.swing.JButton;
-import java.awt.GridBagConstraints;
-import java.awt.Insets;
 import java.awt.GridLayout;
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
+import java.awt.Color;
 
 public class Store_Controller extends JFrame {
 
@@ -49,6 +50,26 @@ public class Store_Controller extends JFrame {
 
 		setContentPane(contentPane);
 		contentPane.setLayout(new GridLayout(0, 1, 0, 0));
+		
+		
+		JPanel centerPanel = new JPanel(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.weightx = 1.0;
+        gbc.weighty = 1.0;
+        gbc.anchor = GridBagConstraints.CENTER;
+        contentPane.add(centerPanel);
+		JLabel Titulo = new JLabel("NEXUS STORE");
+		Titulo.setForeground(new Color(0, 255, 0));
+		GridBagConstraints gbc_Titulo = new GridBagConstraints();
+		gbc_Titulo.gridx = 0;
+		gbc_Titulo.gridy = 0;
+		centerPanel.add(Titulo, gbc_Titulo);
+		
+		
+		
+		
 		
 		JButton GestionarOrdenes = new JButton("Gestionar Ordenes");
 		GestionarOrdenes.addActionListener(new ActionListener() {

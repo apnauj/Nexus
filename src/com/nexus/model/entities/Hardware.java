@@ -2,6 +2,7 @@ package com.nexus.model.entities;
 
 import com.nexus.exceptions.ECantidadNegativa;
 import com.nexus.exceptions.EParametroNulo;
+import com.nexus.exceptions.EValorNegativo;
 
 import java.io.*;
 import java.util.Date;
@@ -12,7 +13,7 @@ public class Hardware extends Producto implements Serializable {
     private float consumo;
     private String fabricante;
 
-    public Hardware (String nombre, String descripcion, String categoria, int tiempoGarantia, double precioBase, int stock, float consumo, String fabricante) throws EParametroNulo, ECantidadNegativa {
+    public Hardware (String nombre, String descripcion, String categoria, int tiempoGarantia, double precioBase, int stock, float consumo, String fabricante) throws EParametroNulo, ECantidadNegativa, EValorNegativo {
         super(nombre, descripcion, categoria, tiempoGarantia, precioBase, stock);
         if(consumo<0) throw new ECantidadNegativa("El consumo debe ser mayor que 0");
         if (fabricante == null) throw new EParametroNulo("fabricante");
@@ -34,7 +35,7 @@ public class Hardware extends Producto implements Serializable {
     }
 
    
-    public void actualizarStock(int nuevoStock) {
+    public void actualizarStock(int nuevoStock) throws EValorNegativo {
         setStock(nuevoStock);
     }
 

@@ -89,8 +89,9 @@ public class Orden implements Serializable {
  * La orden esté en estado PENDIENTE.
  * El item recibido no sea nulo
  * Luego agrega el item al arreglo de items de la orden.
+ * @throws EParametroNulo 
  */
-    public String  addItemOrden(OrdenItem a){
+    public String  addItemOrden(OrdenItem a) throws EParametroNulo{
         //Valida que la orden no sea aprobada ni rechazada
         if (this.estado != Estado.PENDIENTE) {
             throw new IllegalStateException("Solo se pueden agregar items a órdenes en estado Pendiente");
@@ -104,6 +105,7 @@ public class Orden implements Serializable {
             items[items.length - 1] = a;
             System.out.println("Se agregó correctamente el producto");
         }
+		return fecha;
     }
 
     /**
