@@ -1,5 +1,6 @@
 package com.nexus.model.entities;
 
+import com.nexus.exceptions.EFormatoInvalido;
 import com.nexus.exceptions.EParametroNulo;
 import com.nexus.model.enums.Rol;
 
@@ -35,6 +36,21 @@ public class Usuario implements Serializable {
         this.rol = rol;
     }
 
+    private void validarPassword(String pass) throws EFormatoInvalido {
+        /* Explicación del Regex:
+           ^                : Inicio de cadena
+           (?=.*[0-9])      : Al menos un número
+           (?=.*[A-Z])      : Al menos una mayúscula
+           .{8,16}          : Entre 8 y 16 caracteres
+           $                : Fin de cadena
+        */
+        String regex = "^(?=.*[0-9])(?=.*[A-Z]).{8,16}$";
+
+        if (!pass.matches(regex)) {
+            throw new EFormatoInvalido("La contraseña debe tener entre 8 y 16 caracteres, incluir al menos un número y una letra mayúscula.");
+        }
+    }
+
     public UUID getId() {
         return id;
     }
@@ -47,7 +63,8 @@ public class Usuario implements Serializable {
         this.username = username;
     }
 
-    public String getPassword() {
+    public String getPassword() throws EFormatoInvalido {
+        validarPassword(password);
         return password;
     }
 
