@@ -56,7 +56,7 @@ public class AgregarCliente extends JFrame {
 		JButton Inicio = new JButton("Inicio");
 		Inicio.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				Store_Controller inicio= new Store_Controller();
+				MenuPrincipalFrame inicio= new MenuPrincipalFrame();
 				
 				inicio.setVisible(true);
 				AgregarCliente.this.dispose();

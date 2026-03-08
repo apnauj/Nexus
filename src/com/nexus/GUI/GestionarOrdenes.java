@@ -46,7 +46,7 @@ public class GestionarOrdenes extends JFrame {
 
 		Regresar.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				Store_Controller store= new Store_Controller();
+				MenuPrincipalFrame store= new MenuPrincipalFrame();
 				store.setVisible(true);
 				GestionarOrdenes.this.dispose(); // cierra esta ventana		
 			}

@@ -17,7 +17,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
 import java.awt.Color;
 
-public class Store_Controller extends JFrame {
+public class MenuPrincipalFrame extends JFrame {
 
 	private static final long serialVersionUID = 1L;
 	private JPanel contentPane;
@@ -30,7 +30,7 @@ public class Store_Controller extends JFrame {
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
 				try {
-					Store_Controller frame = new Store_Controller();
+					MenuPrincipalFrame frame = new MenuPrincipalFrame();
 					frame.setVisible(true);
 				} catch (Exception e) {
 					e.printStackTrace();
@@ -42,7 +42,7 @@ public class Store_Controller extends JFrame {
 	/**
 	 * Create the frame.
 	 */
-	public Store_Controller() {
+	public MenuPrincipalFrame() {
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setBounds(100, 100, 678, 427);
 		contentPane = new JPanel();
@@ -76,7 +76,7 @@ public class Store_Controller extends JFrame {
 			public void actionPerformed(ActionEvent e) {
 				GestionarOrdenes go= new GestionarOrdenes();
 				go.setVisible(true);
-				Store_Controller.this.dispose();
+				MenuPrincipalFrame.this.dispose();
 			}
 		});
 		contentPane.add(GestionarOrdenes);
@@ -86,7 +86,7 @@ public class Store_Controller extends JFrame {
 			public void actionPerformed(ActionEvent e) {
 				GestionarProductos gp= new GestionarProductos();
 				gp.setVisible(true);
-				Store_Controller.this.dispose();
+				MenuPrincipalFrame.this.dispose();
 			}
 		});
 		contentPane.add(GestionarProductos);
@@ -96,7 +96,7 @@ public class Store_Controller extends JFrame {
 			public void actionPerformed(ActionEvent e) {
 				GestionarClientes gc= new GestionarClientes();
 				gc.setVisible(true);
-				Store_Controller.this.dispose();
+				MenuPrincipalFrame.this.dispose();
 			}
 		});
 		contentPane.add(GestionarClientes);
@@ -106,7 +106,7 @@ public class Store_Controller extends JFrame {
 			public void actionPerformed(ActionEvent e) {
 				GestionarUsuarios gu= new GestionarUsuarios();
 				gu.setVisible(true);
-				Store_Controller.this.dispose();
+				MenuPrincipalFrame.this.dispose();
 			}
 		});
 		contentPane.add(GestionarUsuarios);

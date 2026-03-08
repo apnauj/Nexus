@@ -54,7 +54,7 @@ public class GestionarUsuarios extends JFrame {
 
 		regresar.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				Store_Controller store= new Store_Controller();
+				MenuPrincipalFrame store= new MenuPrincipalFrame();
 				store.setVisible(true);
 				GestionarUsuarios.this.dispose();
 			}

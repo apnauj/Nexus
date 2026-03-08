@@ -1,17 +1,6 @@
 package com.nexus.controller;
 
-import com.nexus.exceptions.ECantidadNegativa;
-import com.nexus.exceptions.EClienteNoEncontrado;
-import com.nexus.exceptions.EClienteYaExiste;
-import com.nexus.exceptions.EHistorialOrden;
-import com.nexus.exceptions.EOrdenNoEncontrada;
-import com.nexus.exceptions.EParametroNulo;
-import com.nexus.exceptions.EProductoNoEncontrado;
-import com.nexus.exceptions.EProductoYaExiste;
-import com.nexus.exceptions.EStockInsuficiente;
-import com.nexus.exceptions.EUsuarioNoEncontrado;
-import com.nexus.exceptions.EUsuarioYaExiste;
-import com.nexus.exceptions.EValorNegativo;
+import com.nexus.exceptions.*;
 import com.nexus.model.entities.*;
 import com.nexus.model.enums.*;
 
@@ -104,7 +93,7 @@ public class StoreController {
         o.addItemOrden(oi);
     }
 
-    public void addCliente(TipoDocumento tipoDoc, String numDoc, String nombre, String apellido, String email) throws EClienteYaExiste, EParametroNulo {
+    public void addCliente(TipoDocumento tipoDoc, String numDoc, String nombre, String apellido, String email) throws EClienteYaExiste, EParametroNulo, EFormatoInvalido {
         if (tipoDoc == null) throw new EParametroNulo("tipoDoc");
         if (numDoc == null || numDoc.isBlank()) throw new EParametroNulo("numDoc");
         if (nombre == null || nombre.isBlank()) throw new EParametroNulo("nombre");
@@ -469,7 +458,7 @@ public class StoreController {
     
 
     public void actualizarCliente(TipoDocumento tipoDoc, String numDoc, String nombre, String apellido, String email) 
-            throws EClienteNoEncontrado, EParametroNulo {
+            throws EClienteNoEncontrado, EParametroNulo, EFormatoInvalido {
 
         if (tipoDoc == null) throw new EParametroNulo("tipoDoc");
         if (numDoc == null || numDoc.isBlank()) throw new EParametroNulo("numDoc");
