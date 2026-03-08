@@ -764,9 +764,9 @@ public class StoreController {
         if (items == null) return new String[0];
 
         String[] nombres = new String[0];
-        for (int i = 0; i < items.length; i++) {
-            if (items[i] != null && items[i].getProducto() != null) {
-                String n = items[i].getProducto().getNombre();
+        for (OrdenItem item : items) {
+            if (item != null && item.getProducto() != null) {
+                String n = item.getProducto().getNombre();
                 if (n != null && !n.isBlank()) {
                     nombres = Arrays.copyOf(nombres, nombres.length + 1);
                     nombres[nombres.length - 1] = n;
