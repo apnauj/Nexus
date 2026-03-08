@@ -4,6 +4,7 @@ import java.io.*;
 import java.util.Arrays;
 import java.util.UUID;
 
+import com.nexus.exceptions.EFormatoInvalido;
 import com.nexus.exceptions.EParametroNulo;
 import com.nexus.model.enums.TipoDocumento;
 
@@ -17,7 +18,7 @@ public class Cliente implements Serializable{
     private String email;
     private Orden[] historial;
 
-    public Cliente(TipoDocumento tipoDoc, String numDoc, String nombre, String apellido, String email) throws EParametroNulo {
+    public Cliente(TipoDocumento tipoDoc, String numDoc, String nombre, String apellido, String email) throws EParametroNulo, EFormatoInvalido {
         if (tipoDoc == null) {
             throw new EParametroNulo("tipoDoc");
         }
@@ -33,6 +34,8 @@ public class Cliente implements Serializable{
         if (email == null || email.isBlank()) {
             throw new EParametroNulo("email","El email no puede ser null o vacio");
         }
+        validarEmail(email);
+        validarDocumento(numDoc);
         this.id = UUID.randomUUID();
         this.tipoDoc = tipoDoc;
         this.numDoc = numDoc;
@@ -42,6 +45,19 @@ public class Cliente implements Serializable{
         this.historial = new Orden[0];
     }
 
+    private void validarDocumento(String doc) throws EFormatoInvalido {
+        // Verifica que sean solo números y máximo 10 dígitos
+        if (!doc.matches("\\d{1,10}")) {
+            throw new EFormatoInvalido("El documento debe ser numérico y tener máximo 10 dígitos.");
+        }
+    }
+
+    private void validarEmail(String email) throws EFormatoInvalido {
+        // Verifica que contenga '@' y '.'
+        if (!email.contains("@") || !email.contains(".")) {
+            throw new EFormatoInvalido("El formato del email es inválido (debe contener @ y .)");
+        }
+    }
 
 
     public TipoDocumento getTipoDoc(){
@@ -53,7 +69,8 @@ public class Cliente implements Serializable{
     public String getNumDoc(){
         return numDoc;
     }
-    public void setNumDoc(String numDoc){
+    public void setNumDoc(String numDoc) throws EFormatoInvalido {
+        validarDocumento(numDoc);
         this.numDoc = numDoc;
     }
     public String getNombre() {
@@ -71,7 +88,8 @@ public class Cliente implements Serializable{
     public String getEmail() {
         return email;
     }
-    public void setEmail(String email) {
+    public void setEmail(String email) throws EFormatoInvalido {
+        validarEmail(email);
         this.email = email;
     }
     public Orden[] getHistorial() {

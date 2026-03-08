@@ -1,17 +1,6 @@
 package com.nexus.controller;
 
-import com.nexus.exceptions.ECantidadNegativa;
-import com.nexus.exceptions.EClienteNoEncontrado;
-import com.nexus.exceptions.EClienteYaExiste;
-import com.nexus.exceptions.EHistorialOrden;
-import com.nexus.exceptions.EOrdenNoEncontrada;
-import com.nexus.exceptions.EParametroNulo;
-import com.nexus.exceptions.EProductoNoEncontrado;
-import com.nexus.exceptions.EProductoYaExiste;
-import com.nexus.exceptions.EStockInsuficiente;
-import com.nexus.exceptions.EUsuarioNoEncontrado;
-import com.nexus.exceptions.EUsuarioYaExiste;
-import com.nexus.exceptions.EValorNegativo;
+import com.nexus.exceptions.*;
 import com.nexus.model.entities.*;
 import com.nexus.model.enums.*;
 
@@ -104,7 +93,7 @@ public class StoreController {
         o.addItemOrden(oi);
     }
 
-    public void addCliente(TipoDocumento tipoDoc, String numDoc, String nombre, String apellido, String email) throws EClienteYaExiste, EParametroNulo {
+    public void addCliente(TipoDocumento tipoDoc, String numDoc, String nombre, String apellido, String email) throws EClienteYaExiste, EParametroNulo, EFormatoInvalido {
         if (tipoDoc == null) throw new EParametroNulo("tipoDoc");
         if (numDoc == null || numDoc.isBlank()) throw new EParametroNulo("numDoc");
         if (nombre == null || nombre.isBlank()) throw new EParametroNulo("nombre");
@@ -128,7 +117,7 @@ public class StoreController {
         this.usuarios[this.usuarios.length - 1] = nuevoUsuario;
     }
 
-    public void addHardware (String nombre, String descripcion, String categoria, int tiempoGarantia, double precioBase, int stock, float consumo, String fabricante) throws EProductoYaExiste, EParametroNulo, ECantidadNegativa {
+    public void addHardware (String nombre, String descripcion, String categoria, int tiempoGarantia, double precioBase, int stock, float consumo, String fabricante) throws EProductoYaExiste, EParametroNulo, ECantidadNegativa, EValorNegativo {
         if (nombre == null || nombre.isBlank()) throw new EParametroNulo("nombre");
         if (existeProducto(nombre)) {
             throw new EProductoYaExiste(nombre);
@@ -138,7 +127,7 @@ public class StoreController {
         this.productos[this.productos.length - 1] = nuevoHardware;
     }
 
-    public void addVideojuego(String nombre, String descripcion, String categoria, int tiempoGarantia, double precioBase, int stock, String[] desarrolladores, String[] generos, boolean multijugador, Date fechaLanzamiento, String plataforma, double tamano) throws EProductoYaExiste, EParametroNulo, ECantidadNegativa {
+    public void addVideojuego(String nombre, String descripcion, String categoria, int tiempoGarantia, double precioBase, int stock, String[] desarrolladores, String[] generos, boolean multijugador, Date fechaLanzamiento, String plataforma, double tamano) throws EProductoYaExiste, EParametroNulo, ECantidadNegativa, EValorNegativo {
         if (nombre == null || nombre.isBlank()) throw new EParametroNulo("nombre");
         if (existeProducto(nombre)) {
             throw new EProductoYaExiste(nombre);
