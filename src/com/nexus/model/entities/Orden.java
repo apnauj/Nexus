@@ -47,10 +47,6 @@ public class Orden implements Serializable {
         this.cliente = cliente;
     }
 
-    public void setFecha(String fecha) {
-        this.fecha = fecha;
-    }
-
     public Estado getEstado() {
         return estado;
     }
@@ -91,7 +87,7 @@ public class Orden implements Serializable {
  * Luego agrega el item al arreglo de items de la orden.
  * @throws EParametroNulo 
  */
-    public String  addItemOrden(OrdenItem a) throws EParametroNulo{
+    public void  addItemOrden(OrdenItem a) throws EParametroNulo{
         //Valida que la orden no sea aprobada ni rechazada
         if (this.estado != Estado.PENDIENTE) {
             throw new IllegalStateException("Solo se pueden agregar items a órdenes en estado Pendiente");
@@ -105,7 +101,6 @@ public class Orden implements Serializable {
             items[items.length - 1] = a;
             System.out.println("Se agregó correctamente el producto");
         }
-		return fecha;
     }
 
     /**
@@ -143,7 +138,8 @@ public class Orden implements Serializable {
         return valorPagado;
     }
 
-    public void setValorPagado(double valorPagado) {
+    public void setValorPagado(double valorPagado) throws EValorNegativo {
+        if(valorPagado < 0) throw new EValorNegativo("El valor pagado no puede ser negativo");
         this.valorPagado = valorPagado;
     }
 

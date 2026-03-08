@@ -97,6 +97,8 @@ public class StoreController {
         if (tipoDoc == null) throw new EParametroNulo("tipoDoc");
         if (numDoc == null || numDoc.isBlank()) throw new EParametroNulo("numDoc");
         if (nombre == null || nombre.isBlank()) throw new EParametroNulo("nombre");
+        if(apellido == null || apellido.isBlank()) throw new EParametroNulo("apellido");
+        if(email == null || email.isBlank()) throw new EParametroNulo("email");
         if (existeCliente(tipoDoc, numDoc)) {
             throw new EClienteYaExiste(tipoDoc, numDoc);
         }
