@@ -9,7 +9,7 @@ import java.util.Date;
 
 public class Hardware extends Producto implements Serializable {
 
-    private long serialVersionUID = -2343434343434L;
+    private static final long serialVersionUID = -2343434343434L;
     private float consumo;
     private String fabricante;
 

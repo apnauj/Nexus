@@ -14,7 +14,7 @@ import java.util.Date;
 
 public class Videojuego extends Producto implements Serializable {
 
-    private long serialVersionUID = -576859584434L;
+    private static final long serialVersionUID = -576859584434L;
     private String[] desarrolladores;
     private String[] generos;
     private boolean multijugador;

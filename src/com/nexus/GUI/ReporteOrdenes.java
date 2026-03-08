@@ -21,15 +21,8 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.FlowLayout;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.Insets;
+import java.awt.*;
 import java.awt.Dialog.ModalityType;
-import java.awt.Window;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 
@@ -270,7 +263,7 @@ public class ReporteOrdenes extends JFrame {
         public DetalleOrdenDialog(Window parent, Orden orden) {
             super(parent, "Detalle de orden", ModalityType.APPLICATION_MODAL);
 
-            setSize(480, 420);
+            setSize(520, 420);
             setLocationRelativeTo(parent);
             setResizable(true);
             setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
@@ -281,24 +274,20 @@ public class ReporteOrdenes extends JFrame {
             content.setLayout(new BorderLayout(UITheme.ESPACIADO, UITheme.ESPACIADO));
             setContentPane(content);
 
-            JPanel panelInfo = new JPanel(new GridBagLayout());
+            JPanel panelInfo = new JPanel(new GridLayout(5, 2, 8, 6));
             panelInfo.setBackground(Color.WHITE);
             panelInfo.setBorder(BorderFactory.createCompoundBorder(
                     BorderFactory.createLineBorder(UITheme.BORDE),
                     new EmptyBorder(12, 12, 12, 12)));
 
-            GridBagConstraints gbc = new GridBagConstraints();
-            gbc.anchor = GridBagConstraints.WEST;
-            gbc.insets = new Insets(4, 0, 4, 16);
-
             Cliente c = orden.getCliente();
             String clienteStr = (c != null) ? c.getNombre() + " " + c.getApellido() : "-";
 
-            agregarFila(panelInfo, gbc, "ID:", orden.getIdPedido().toString());
-            agregarFila(panelInfo, gbc, "Cliente:", clienteStr);
-            agregarFila(panelInfo, gbc, "Fecha:", orden.getFecha());
-            agregarFila(panelInfo, gbc, "Estado:", orden.getEstado().toString());
-            agregarFila(panelInfo, gbc, "Método de pago:", orden.getMetodoPago() != null ? orden.getMetodoPago().toString() : "-");
+            agregarFilaInfo(panelInfo, "ID:", orden.getIdPedido().toString());
+            agregarFilaInfo(panelInfo, "Cliente:", clienteStr);
+            agregarFilaInfo(panelInfo, "Fecha:", orden.getFecha());
+            agregarFilaInfo(panelInfo, "Estado:", orden.getEstado().toString());
+            agregarFilaInfo(panelInfo, "Método de pago:", orden.getMetodoPago() != null ? orden.getMetodoPago().toString() : "-");
 
             content.add(panelInfo, BorderLayout.NORTH);
 
@@ -343,7 +332,7 @@ public class ReporteOrdenes extends JFrame {
 
             JPanel panelTotales = new JPanel(new GridBagLayout());
             panelTotales.setOpaque(false);
-            gbc = new GridBagConstraints();
+            GridBagConstraints gbc = new GridBagConstraints();
             gbc.anchor = GridBagConstraints.EAST;
             gbc.insets = new Insets(4, 0, 4, 0);
 
@@ -373,20 +362,16 @@ public class ReporteOrdenes extends JFrame {
             content.add(panelSur, BorderLayout.SOUTH);
         }
 
-        private void agregarFila(JPanel p, GridBagConstraints gbc, String etiqueta, String valor) {
+        private void agregarFilaInfo(JPanel p, String etiqueta, String valor) {
             JLabel lbl = new JLabel(etiqueta);
             lbl.setFont(UITheme.FONT_ETIQUETA);
             lbl.setForeground(UITheme.TEXTO_SECUNDARIO);
-            gbc.gridx = 0;
-            gbc.weightx = 0;
-            p.add(lbl, gbc);
+            p.add(lbl);
 
             JLabel val = new JLabel(valor);
             val.setFont(UITheme.FONT_NORMAL);
-            gbc.gridx = 1;
-            gbc.weightx = 1.0;
-            p.add(val, gbc);
-            gbc.gridy++;
+            val.setToolTipText(valor.length() > 40 ? valor : null);
+            p.add(val);
         }
     }
 }
