@@ -1,6 +1,8 @@
 package com.nexus.model.entities;
 
+import com.nexus.exceptions.EEstadoOrdenInvalido;
 import com.nexus.exceptions.EParametroNulo;
+import com.nexus.exceptions.EStockInsuficiente;
 import com.nexus.exceptions.EValorNegativo;
 import com.nexus.model.enums.Estado;
 import com.nexus.model.enums.MetodoPago;
@@ -23,15 +25,10 @@ public class Orden implements Serializable {
     private OrdenItem items[];
 
     public Orden(Cliente cliente, String fecha, MetodoPago metodoPago) throws EParametroNulo {
-        if (cliente == null) {
-            throw new EParametroNulo("cliente");
-        }
-        if (fecha == null || fecha.isBlank()) {
-            throw new EParametroNulo("fecha");
-        }
-        if (metodoPago == null) {
-            throw new EParametroNulo("metodoPago");
-        }
+        if (cliente == null) throw new EParametroNulo("cliente");
+        if (fecha == null || fecha.isBlank()) throw new EParametroNulo("fecha");
+        if (metodoPago == null) throw new EParametroNulo("metodoPago");
+
         this.idPedido = UUID.randomUUID();
         this.cliente = cliente;
         this.fecha = fecha;
@@ -85,12 +82,12 @@ public class Orden implements Serializable {
  * La orden esté en estado PENDIENTE.
  * El item recibido no sea nulo
  * Luego agrega el item al arreglo de items de la orden.
- * @throws EParametroNulo 
+ * Lanza la excepcion EParametroNulo
  */
-    public void  addItemOrden(OrdenItem a) throws EParametroNulo{
+    public void  addItemOrden(OrdenItem a) throws EParametroNulo, EEstadoOrdenInvalido{
         //Valida que la orden no sea aprobada ni rechazada
         if (this.estado != Estado.PENDIENTE) {
-            throw new IllegalStateException("Solo se pueden agregar items a órdenes en estado Pendiente");
+            throw new EEstadoOrdenInvalido("Solo se pueden agregar items a órdenes en estado Pendiente");
         }
         //Valida OrdenxItem es nulo
         if (a == null){
@@ -110,10 +107,10 @@ public class Orden implements Serializable {
  * Que el índice esté dentro del rango válido.
  * Luego crea un nuevo arreglo sin el item eliminado.
  */
-    public OrdenItem removeItemAt(int index) {
+    public OrdenItem removeItemAt(int index) throws EEstadoOrdenInvalido{
         //Valida si no está aprobado o rechazado
         if (this.estado != Estado.PENDIENTE) {
-            throw new IllegalStateException("Solo se pueden quitar items de órdenes en estado Pendiente");
+            throw new EEstadoOrdenInvalido("Solo se pueden quitar items de órdenes en estado Pendiente");
         }
         //Valida si el parametro pasado no es negativo o mayor a la cantidad del arreglo
         //Revisar
@@ -189,14 +186,14 @@ public class Orden implements Serializable {
      * @deprecated El decremento de stock se realiza en StoreController para garantizar
      * que se modifique el arreglo real de productos (incluyendo órdenes cargadas desde archivo).
      */
-    public void decrementarStock() throws EValorNegativo {
+    public void decrementarStock() throws EStockInsuficiente, EValorNegativo {
         if (estado == Estado.APROBADO && items != null) {
             for (OrdenItem i : items) {
                 Producto p = i.getProducto();
                 if (i.stockSuficiente()) {
                     p.setStock(p.getStock() - i.getCantidad());
                 } else {
-                    throw new EValorNegativo("No hay suficientes productos. Quedan: " + p.getStock() + " de " + p.getNombre());
+                    throw new EStockInsuficiente(p);
                 }
                 System.out.println("El proceso se ha ejecutado correctamente");
             }

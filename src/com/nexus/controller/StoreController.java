@@ -133,13 +133,13 @@ public class StoreController {
     Capturamos las posibles excepciones que puede producir añadir un item con
     */
 
-    public void addItemToOrden(UUID idOrden, String producto, int cantidad) throws EOrdenNoEncontrada, EProductoNoEncontrado, EStockInsuficiente, EParametroNulo, ECantidadNegativa {
+    public void addItemToOrden(UUID idOrden, String producto, int cantidad) throws EOrdenNoEncontrada, EProductoNoEncontrado, EStockInsuficiente, EParametroNulo, ECantidadNegativa, EEstadoOrdenInvalido {
         if (idOrden == null) throw new EParametroNulo("idOrden");
         if (producto == null || producto.isBlank()) throw new EParametroNulo("producto");
         Orden o = searchOrden(idOrden);
         Producto p = searchProducto(producto);
         if (o.getEstado() != Estado.PENDIENTE) {
-            throw new IllegalStateException("Solo se pueden agregar items a órdenes pendientes");
+            throw new EEstadoOrdenInvalido("Solo se pueden agregar items a órdenes pendientes");
         }
         OrdenItem oi = new OrdenItem(p, cantidad);
         o.addItemOrden(oi);
@@ -152,9 +152,8 @@ public class StoreController {
         if (nombre == null || nombre.isBlank()) throw new EParametroNulo("nombre");
         if(apellido == null || apellido.isBlank()) throw new EParametroNulo("apellido");
         if(email == null || email.isBlank()) throw new EParametroNulo("email");
-        if (existeCliente(tipoDoc, numDoc)) {
-            throw new EClienteYaExiste(tipoDoc, numDoc);
-        }
+        if (existeCliente(tipoDoc, numDoc)) throw new EClienteYaExiste(tipoDoc, numDoc);
+
         Cliente nuevoCliente = new Cliente(tipoDoc, numDoc, nombre, apellido, email);
         this.clientes = Arrays.copyOf(this.clientes, this.clientes.length + 1);
         this.clientes[this.clientes.length - 1] = nuevoCliente;
@@ -164,9 +163,8 @@ public class StoreController {
         if (username == null || username.isBlank()) throw new EParametroNulo("username");
         if (password == null) throw new EParametroNulo("password");
         if (rol == null) throw new EParametroNulo("rol");
-        if (existeUsuario(username)) {
-            throw new EUsuarioYaExiste(username);
-        }
+        if (existeUsuario(username)) throw new EUsuarioYaExiste(username);
+
         Usuario nuevoUsuario = new Usuario(username, password, rol);
         this.usuarios = Arrays.copyOf(this.usuarios, this.usuarios.length + 1);
         this.usuarios[this.usuarios.length - 1] = nuevoUsuario;
@@ -174,9 +172,8 @@ public class StoreController {
 
     public void addHardware (String nombre, String descripcion, String categoria, int tiempoGarantia, double precioBase, int stock, float consumo, String fabricante) throws EProductoYaExiste, EParametroNulo, ECantidadNegativa, EValorNegativo {
         if (nombre == null || nombre.isBlank()) throw new EParametroNulo("nombre");
-        if (existeProducto(nombre)) {
-            throw new EProductoYaExiste(nombre);
-        }
+        if (existeProducto(nombre)) throw new EProductoYaExiste(nombre);
+
         Producto nuevoHardware = new Hardware(nombre, descripcion, categoria, tiempoGarantia, precioBase, stock, consumo, fabricante);
         this.productos = Arrays.copyOf(this.productos, this.productos.length + 1);
         this.productos[this.productos.length - 1] = nuevoHardware;
@@ -198,6 +195,7 @@ public class StoreController {
     // --- Métodos auxiliares de existencia ---
 
     public boolean existeCliente(TipoDocumento tipoDoc, String numDoc) {
+        if (tipoDoc == null && (numDoc == null || numDoc.isBlank())) return false;
         int i = 0;
         while (i < this.clientes.length) {
             if(this.clientes[i].getNumDoc().equals(numDoc) && this.clientes[i].getTipoDoc().equals(tipoDoc)) {
@@ -209,6 +207,7 @@ public class StoreController {
     }
 
     public boolean existeUsuario(String username) {
+        if(username == null || username.isBlank()) return false;
         int i = 0;
         while (i < this.usuarios.length) {
             if(this.usuarios[i].getUsername().equals(username)) {
@@ -416,17 +415,17 @@ public class StoreController {
  * @param idOrden Identificador de la orden.
  * @param nombre Nombre del producto que se desea eliminar.
  */
-    public void removeItemOrden(UUID idOrden, String nombre) throws EOrdenNoEncontrada, EProductoNoEncontrado, EParametroNulo {
+    public void removeItemOrden(UUID idOrden, String nombre) throws EOrdenNoEncontrada, EProductoNoEncontrado, EParametroNulo, EEstadoOrdenInvalido {
         if (idOrden == null) throw new EParametroNulo("idOrden");
         if (nombre == null || nombre.isBlank()) throw new EParametroNulo("nombre");
         Orden orden = searchOrden(idOrden);
         Producto producto = searchProducto(nombre);
         if (orden.getEstado() != Estado.PENDIENTE) {
-            throw new IllegalStateException("Solo se pueden quitar items de órdenes pendientes");
+            throw new EEstadoOrdenInvalido("Solo se pueden quitar items de órdenes pendientes");
         }
         OrdenItem[] items = orden.getItems();
         if (items == null) {
-            throw new IllegalStateException("La orden no tiene items.");
+            throw new EEstadoOrdenInvalido("La orden no tiene items.");
         }
         int index = -1;
         int i = 0;
@@ -438,7 +437,7 @@ public class StoreController {
             i++;
         }
         if (index == -1) {
-            throw new IllegalStateException("El producto '" + nombre + "' no está en la orden.");
+            throw new EProductoNoEncontrado("El producto '" + nombre + "' no está en la orden.");
         }
         orden.removeItemAt(index);
         orden.calcularTotal();
@@ -453,15 +452,15 @@ public class StoreController {
  *  Se restaura el stock de todos los productos que estaban en la orden.
  */
 
-    public void verificarPago(UUID idOrden, double valorPagado) throws EOrdenNoEncontrada, EParametroNulo, EValorNegativo, EProductoNoEncontrado {
+    public void verificarPago(UUID idOrden, double valorPagado) throws EOrdenNoEncontrada, EParametroNulo, EValorNegativo, EProductoNoEncontrado, EEstadoOrdenInvalido {
         if (idOrden == null) throw new EParametroNulo("idOrden");
         if (valorPagado < 0) throw new EValorNegativo("El valor pagado no puede ser negativo");
         Orden orden = searchOrden(idOrden);
         if (orden.getEstado() != Estado.PENDIENTE) {
-            throw new IllegalStateException("La orden ya fue verificada (estado: " + orden.getEstado() + ")");
+            throw new EEstadoOrdenInvalido("La orden ya fue verificada (estado: " + orden.getEstado() + ")");
         }
         if (orden.getItems() == null || orden.getItems().length == 0) {
-            throw new IllegalStateException("No se puede verificar pago de una orden sin items");
+            throw new EEstadoOrdenInvalido("No se puede verificar pago de una orden sin items");
         }
         orden.calcularTotal();
         orden.setValorPagado(valorPagado);
@@ -488,12 +487,12 @@ public class StoreController {
     /**
      * Modifica la cantidad de un producto en una orden. La orden debe estar en estado PENDIENTE.
      */
-    public String modificarCantidadItem(UUID idOrden, String nombreProducto, int cantidad) throws EOrdenNoEncontrada, EProductoNoEncontrado, EValorNegativo, ECantidadNegativa, EStockInsuficiente, EParametroNulo {
+    public String modificarCantidadItem(UUID idOrden, String nombreProducto, int cantidad) throws EOrdenNoEncontrada, EProductoNoEncontrado, EEstadoOrdenInvalido, ECantidadNegativa, EStockInsuficiente, EParametroNulo {
         if (idOrden == null) throw new EParametroNulo("idOrden");
         if (nombreProducto == null || nombreProducto.isBlank()) throw new EParametroNulo("nombreProducto");
         Orden orden = searchOrden(idOrden);
         if (orden.getEstado() != Estado.PENDIENTE) {
-            throw new IllegalStateException("Solo se puede modificar cantidad en órdenes pendientes");
+            throw new EEstadoOrdenInvalido("Solo se puede modificar cantidad en órdenes pendientes");
         }
         Producto producto = searchProducto(nombreProducto);
         if (cantidad <= 0) {
@@ -504,7 +503,7 @@ public class StoreController {
         }
         OrdenItem[] items = orden.getItems();
         if (items == null) {
-            throw new IllegalStateException("La orden no tiene items");
+            throw new EEstadoOrdenInvalido("La orden no tiene items");
         }
         for (OrdenItem item : items) {
             if (item.getProducto().getId().equals(producto.getId())) {
@@ -512,7 +511,7 @@ public class StoreController {
                 return "Se cambió la cantidad correctamente";
             }
         }
-        throw new IllegalStateException("El producto '" + nombreProducto + "' no está en la orden");
+        throw new EProductoNoEncontrado("El producto '" + nombreProducto + "' no está en la orden");
     }
     
 
@@ -539,7 +538,7 @@ public class StoreController {
     	
     public void actualizarProducto(String nombre, String descripcion, String categoria,
             int tiempoGarantia, double precioBase, int stock)
-throws EProductoNoEncontrado, EParametroNulo, ECantidadNegativa, EValorNegativo {
+            throws EProductoNoEncontrado, EParametroNulo, ECantidadNegativa, EValorNegativo {
 
     	if (nombre == null || nombre.isBlank()) {
     		throw new EParametroNulo("nombre");
@@ -568,14 +567,9 @@ throws EProductoNoEncontrado, EParametroNulo, ECantidadNegativa, EValorNegativo 
     	}
 }
 
-    //TODO: Métodos de login y logout
-
     public Usuario getCurrentUser(){
         return currentUser;
     }
-
-    //TODO: generar reportes
-    //método que pase por el historial y con el uso de la fecha filtre
 
     public String[] cargarFicheros() {
         String[] archivosFallidos = new String[0];

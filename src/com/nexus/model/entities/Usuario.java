@@ -21,15 +21,10 @@ public class Usuario implements Serializable {
     private Rol rol;
 
     public Usuario(String username, String password, Rol rol) throws EParametroNulo{
-        if (username == null || username.isBlank()) {
-            throw new EParametroNulo("username");
-        }
-        if (password == null || password.isBlank()) {
-            throw new EParametroNulo("password", "La contraseña no puede ser null o vacio");
-        }
-        if (rol == null) {
-            throw new EParametroNulo("rol");
-        }
+        if (username == null || username.isBlank()) throw new EParametroNulo("username");
+        if (password == null || password.isBlank()) throw new EParametroNulo("password", "La contraseña no puede ser null o vacio");
+        if (rol == null) throw new EParametroNulo("rol");
+
         this.id = UUID.randomUUID();
         this.username = username;
         this.password = password;
