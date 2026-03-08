@@ -2,10 +2,14 @@ package com.nexus.model.entities;
 
 
 import com.nexus.exceptions.EFormatoInvalido;
+import com.nexus.exceptions.EParametroNulo;
 
 public class LoginService {
 
-    public static Usuario login(String usuarioIngresado, String contrasenaIngresada, Usuario[] usuariosArray) throws EFormatoInvalido {
+    public static Usuario login(String usuarioIngresado, String contrasenaIngresada, Usuario[] usuariosArray) throws EFormatoInvalido, EParametroNulo {
+        if(usuarioIngresado == null || usuarioIngresado.isBlank()) throw new EParametroNulo("usuarioIngresado");
+        if(contrasenaIngresada == null || contrasenaIngresada.isBlank()) throw new EParametroNulo("contrasenaIngresada");
+
         int i=0;
         boolean sw=false;
         Usuario ur = null;
