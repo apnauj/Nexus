@@ -13,18 +13,70 @@ import java.util.Date;
 import java.util.UUID;
 
 public class StoreController {
+    private static StoreController instance;
+
     private Orden[] ordenes;
     private Producto[] productos;
     private Cliente[] clientes;
     private Usuario[] usuarios;
     private Usuario currentUser;
 
-    public StoreController() {
+    private StoreController() {
         // Inicializamos los arreglos vacíos (tamaño 0) para evitar NullPointerException
         this.ordenes = new Orden[0];
         this.productos = new Producto[0];
         this.clientes = new Cliente[0];
         this.usuarios = new Usuario[0];
+        this.currentUser = null;
+    }
+
+    /**
+     * Obtiene la única instancia del controlador.
+     * Carga los ficheros y crea el admin por defecto si no hay usuarios.
+     */
+    public static synchronized StoreController getInstance() {
+        if (instance == null) {
+            instance = new StoreController();
+            instance.inicializar();
+        }
+        return instance;
+    }
+
+    private void inicializar() {
+        cargarFicheros();
+        asegurarAdminExiste();
+    }
+
+    /**
+     * Garantiza que exista un usuario admin para poder acceder al sistema.
+     * Se crea si no hay usuarios o si ninguno tiene username "admin".
+     */
+    private void asegurarAdminExiste() {
+        if (usuarios.length == 0) {
+            crearAdminPorDefecto();
+            return;
+        }
+        for (Usuario u : usuarios) {
+            if ("admin".equalsIgnoreCase(u.getUsername())) {
+                return; // Ya existe admin
+            }
+        }
+        crearAdminPorDefecto();
+    }
+
+    private void crearAdminPorDefecto() {
+        try {
+            addUsuario("admin", "Admin123", Rol.ADMIN);
+        } catch (EUsuarioYaExiste | EParametroNulo e) {
+            // No debería ocurrir si verificamos antes
+        }
+    }
+
+    public void setCurrentUser(Usuario user) {
+        this.currentUser = user;
+    }
+
+    public void logout() {
         this.currentUser = null;
     }
 
@@ -91,6 +143,7 @@ public class StoreController {
         }
         OrdenItem oi = new OrdenItem(p, cantidad);
         o.addItemOrden(oi);
+        o.calcularTotal();
     }
 
     public void addCliente(TipoDocumento tipoDoc, String numDoc, String nombre, String apellido, String email) throws EClienteYaExiste, EParametroNulo, EFormatoInvalido {
@@ -167,9 +220,11 @@ public class StoreController {
     }
 
     public boolean existeProducto(String nombre) {
+        if (nombre == null || nombre.isBlank()) return false;
         int i = 0;
         while (i < this.productos.length) {
-            if(this.productos[i].getNombre().equalsIgnoreCase(nombre)) {
+            String n = this.productos[i].getNombre();
+            if (n != null && n.equalsIgnoreCase(nombre)) {
                 return true;
             }
             i++;
@@ -200,7 +255,8 @@ public class StoreController {
         if (nombre == null || nombre.isBlank()) throw new EParametroNulo("nombre");
         int i = 0;
         while (i < productos.length) {
-            if (productos[i].getNombre().equalsIgnoreCase(nombre)) {
+            String n = productos[i].getNombre();
+            if (n != null && n.equalsIgnoreCase(nombre)) {
                 return productos[i];
             }
             i++;
@@ -385,6 +441,7 @@ public class StoreController {
             throw new IllegalStateException("El producto '" + nombre + "' no está en la orden.");
         }
         orden.removeItemAt(index);
+        orden.calcularTotal();
     }
 
     /**
@@ -524,6 +581,9 @@ throws EProductoNoEncontrado, EParametroNulo, ECantidadNegativa, EValorNegativo 
         String[] archivosFallidos = new String[0];
         String pathFicheros = "src/com/ficheros/";
         File dir = new File(pathFicheros);
+        if (!dir.exists()) {
+            dir.mkdirs();
+        }
 
         this.clientes = new Cliente[0];
         this.productos = new Producto[0];
@@ -548,13 +608,23 @@ throws EProductoNoEncontrado, EParametroNulo, ECantidadNegativa, EValorNegativo 
                         break;
                     case "videojuegoFile":
                         Videojuego v = Videojuego.leerVideojuego(f.getPath());
-                        productos = Arrays.copyOf(productos, productos.length + 1);
-                        productos[productos.length - 1] = v;
+                        if (v.getNombre() != null && !v.getNombre().isBlank()) {
+                            productos = Arrays.copyOf(productos, productos.length + 1);
+                            productos[productos.length - 1] = v;
+                        } else {
+                            archivosFallidos = Arrays.copyOf(archivosFallidos, archivosFallidos.length + 1);
+                            archivosFallidos[archivosFallidos.length - 1] = nombreArchivo + " (producto corrupto: nombre nulo)";
+                        }
                         break;
                     case "hardwareFile":
                         Hardware h = Hardware.leerHardware(f.getPath());
-                        productos = Arrays.copyOf(productos, productos.length + 1);
-                        productos[productos.length - 1] = h;
+                        if (h.getNombre() != null && !h.getNombre().isBlank()) {
+                            productos = Arrays.copyOf(productos, productos.length + 1);
+                            productos[productos.length - 1] = h;
+                        } else {
+                            archivosFallidos = Arrays.copyOf(archivosFallidos, archivosFallidos.length + 1);
+                            archivosFallidos[archivosFallidos.length - 1] = nombreArchivo + " (producto corrupto: nombre nulo)";
+                        }
                         break;
                     case "usuarioFile":
                         Usuario u = Usuario.leerUsuario(f.getPath());
@@ -582,6 +652,9 @@ throws EProductoNoEncontrado, EParametroNulo, ECantidadNegativa, EValorNegativo 
         String[] archivosFallidos = new String[0];
         String pathFicheros = "src/com/ficheros/";
         File dir = new File(pathFicheros);
+        if (!dir.exists()) {
+            dir.mkdirs();
+        }
 
         File[] ficherosExistentes = dir.listFiles();
         if (ficherosExistentes != null) {
@@ -650,5 +723,18 @@ throws EProductoNoEncontrado, EParametroNulo, ECantidadNegativa, EValorNegativo 
     }
     return filename.substring(filename.lastIndexOf(".") + 1);
 }
+
+    public Orden[] getOrdenesPorFechas(LocalDate inicio, LocalDate fin) {
+        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+        Orden[] ans = new Orden[0];
+        for (Orden o : ordenes) {
+            LocalDate fechaOrden = LocalDate.parse(o.getFecha(), dtf);
+            if(!fechaOrden.isBefore(inicio) && !fechaOrden.isAfter(fin)) {
+                ans = Arrays.copyOf(ans, ans.length + 1);
+                ans[ans.length - 1] = o;
+            }
+        }
+        return ans;
+    }
 
 }

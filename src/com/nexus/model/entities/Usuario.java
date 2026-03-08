@@ -72,6 +72,14 @@ public class Usuario implements Serializable {
         this.password = password;
     }
 
+    /**
+     * Verifica si la contraseña ingresada coincide con la almacenada.
+     * No valida formato; solo compara para uso en login.
+     */
+    public boolean verificarPassword(String input) {
+        return password != null && password.equals(input);
+    }
+
     public Rol getRol() {
         return rol;
     }

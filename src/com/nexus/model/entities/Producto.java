@@ -1,12 +1,14 @@
 package com.nexus.model.entities;
 
+import java.io.Serializable;
 import java.util.UUID;
 
 import com.nexus.exceptions.EParametroNulo;
 import com.nexus.exceptions.EValorNegativo;
 
-public abstract class Producto {
+public abstract class Producto implements Serializable {
 
+	private static final long serialVersionUID = 1L;
 	protected final UUID id;
 	protected String nombre;
 	protected String descripcion;

@@ -6,7 +6,11 @@ import com.nexus.exceptions.EProductoNoEncontrado;
 import com.nexus.exceptions.EStockInsuficiente;
 import com.nexus.exceptions.EValorNegativo;
 
-public class OrdenItem {
+import java.io.Serializable;
+
+public class OrdenItem implements Serializable {
+
+    private static final long serialVersionUID = 1L;
     private final Producto producto;
     private int cantidad;
 
