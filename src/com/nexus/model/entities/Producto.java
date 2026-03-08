@@ -74,8 +74,14 @@ public abstract class Producto {
 		return tiempoGarantia;
 	}
 	
-	public void setTiempoGarantia(int tiempoGarantia) {
+	public void setTiempoGarantia(int tiempoGarantia) throws EValorNegativo {
+		if(tiempoGarantia>0) {
+			
+		
 		this.tiempoGarantia = tiempoGarantia;
+		}else {
+			throw new EValorNegativo("El tiempo de garantia no puede ser menor a 1");
+		}
 	}
 	
 	public double getPrecioBase() {
@@ -130,6 +136,9 @@ public abstract class Producto {
 	
 	public String getCategoria() {
 		return categoria;
+	}
+	public void setCategoria(String categoria) {
+		this.categoria=categoria;
 	}
 	
 	public double calcularPrecio() {
