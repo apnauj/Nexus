@@ -731,4 +731,49 @@ public class StoreController {
         return ans;
     }
 
+    public Orden[] getOrdenesPendientes(){
+        Orden[] ans = new Orden[0];
+        for(Orden o : ordenes){
+            if(o != null && o.getEstado() != null){
+                if(o.getEstado() == Estado.PENDIENTE){
+                    ans = Arrays.copyOf(ans, ans.length + 1);
+                    ans[ans.length - 1] = o;
+                }
+            }
+        }
+        return ans;
+    }
+
+    public Producto[] getProductosConStockDisponible(){
+        Producto[] ans = new Producto[0];
+        for(Producto p : productos){
+            if(p != null){
+                if (p.getStock() > 0){
+                    ans = Arrays.copyOf(ans, ans.length + 1);
+                    ans[ans.length - 1] = p;
+                }
+            }
+        }
+        return ans;
+    }
+
+    public String[] getOpcionesProductosEnOrden(UUID idOrden) throws EParametroNulo, EOrdenNoEncontrada {
+        if (idOrden == null) throw new EParametroNulo("idOrden");
+        Orden orden = searchOrden(idOrden);
+        OrdenItem[] items = orden.getItems();
+        if (items == null) return new String[0];
+
+        String[] nombres = new String[0];
+        for (int i = 0; i < items.length; i++) {
+            if (items[i] != null && items[i].getProducto() != null) {
+                String n = items[i].getProducto().getNombre();
+                if (n != null && !n.isBlank()) {
+                    nombres = Arrays.copyOf(nombres, nombres.length + 1);
+                    nombres[nombres.length - 1] = n;
+                }
+            }
+        }
+        return nombres;
+    }
+
 }
