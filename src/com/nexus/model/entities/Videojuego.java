@@ -63,6 +63,10 @@ public class Videojuego extends Producto implements Serializable {
         return tamano;
     }
 
+    public void setDesarrolladores(String[] desarrolladores) {
+        this.desarrolladores = desarrolladores;
+    }
+
     public void setGeneros(String[] generos) {
         this.generos = generos;
     }
@@ -94,7 +98,7 @@ public class Videojuego extends Producto implements Serializable {
 
 
     @Override
-    void asignarDescuento() {
+    public void asignarDescuento() {
         if(fechaLanzamiento != null){
             long hoy = System.currentTimeMillis();
             long lanzamiento = fechaLanzamiento.getTime();

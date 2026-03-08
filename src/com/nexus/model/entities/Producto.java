@@ -30,14 +30,9 @@ public abstract class Producto implements Serializable {
 	public Producto(String nombre, String descripcion, String categoria, int tiempoGarantia, double precioBase, int stock) throws EParametroNulo, EValorNegativo {
 		if (nombre == null || nombre.isBlank()) throw new EParametroNulo("nombre", "El nombre del producto no puede ser null o vacío.");
 		if (categoria == null || categoria.isBlank()) throw new EParametroNulo("categoria", "La categoría no puede ser null o vacía.");
-		if (precioBase <= 0) {
-			throw new EValorNegativo("El precio base no puede ser negativo, usted registro: "+precioBase);	
-		} else if (stock < 0) {
-			throw new EValorNegativo("El stock no puede ser negativo, el stock registrado fue: " + stock);
-		}else if (tiempoGarantia <=0) {
-			throw new EValorNegativo("El tiempo de garantia no puede ser negativo, el valor registrado del tiempo de garantia es: "+tiempoGarantia);
-		
-		}
+		if (precioBase < 0) throw new EValorNegativo("El precio base no puede ser negativo, usted registro: "+precioBase);
+		if (stock < 0) throw new EValorNegativo("El stock no puede ser negativo, el stock registrado fue: " + stock);
+		if (tiempoGarantia <0) throw new EValorNegativo("El tiempo de garantia no puede ser negativo, el valor registrado del tiempo de garantia es: "+tiempoGarantia);
 			
 		this.id=UUID.randomUUID();
 		this.nombre = nombre;

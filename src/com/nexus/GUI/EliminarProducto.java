@@ -4,7 +4,6 @@ import com.nexus.controller.StoreController;
 import com.nexus.exceptions.EHistorialOrden;
 import com.nexus.exceptions.EParametroNulo;
 import com.nexus.exceptions.EProductoNoEncontrado;
-import com.nexus.model.entities.Producto;
 
 import javax.swing.JButton;
 import javax.swing.JComboBox;
@@ -61,18 +60,13 @@ public class EliminarProducto extends JFrame {
         JPanel panelForm = new JPanel(new GridLayout(0, 1, 0, 10));
         panelForm.setPreferredSize(new Dimension(380, 60));
 
-        if (controlador.getProductos().length == 0) {
+        String[] nombresProductos = controlador.getNombresProductos();
+        if (nombresProductos.length == 0) {
             panelForm.add(new JLabel("No hay productos registrados."));
         } else {
             JPanel row = new JPanel(new FlowLayout(FlowLayout.LEFT));
             row.add(new JLabel("Producto a eliminar: "));
-            java.util.List<String> nombresList = new java.util.ArrayList<>();
-            for (Producto p : controlador.getProductos()) {
-                String n = p.getNombre();
-                if (n != null && !n.isBlank()) nombresList.add(n);
-            }
-            String[] nombres = nombresList.toArray(new String[0]);
-            cmbProducto = new JComboBox<>(nombres);
+            cmbProducto = new JComboBox<>(nombresProductos);
             cmbProducto.setPreferredSize(new Dimension(250, 25));
             row.add(cmbProducto);
             panelForm.add(row);
@@ -88,7 +82,7 @@ public class EliminarProducto extends JFrame {
     }
 
     private void eliminarProducto() {
-        if (controlador.getProductos().length == 0) {
+        if (controlador.getNombresProductos().length == 0) {
             JOptionPane.showMessageDialog(this, "No hay productos para eliminar.", "Sin productos", JOptionPane.WARNING_MESSAGE);
             return;
         }

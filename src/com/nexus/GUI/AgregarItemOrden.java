@@ -6,10 +6,8 @@ import com.nexus.exceptions.EOrdenNoEncontrada;
 import com.nexus.exceptions.EParametroNulo;
 import com.nexus.exceptions.EProductoNoEncontrado;
 import com.nexus.exceptions.EStockInsuficiente;
-import com.nexus.model.entities.Cliente;
 import com.nexus.model.entities.Orden;
 import com.nexus.model.entities.Producto;
-import com.nexus.model.enums.Estado;
 
 import javax.swing.JButton;
 import javax.swing.JComboBox;
@@ -24,8 +22,6 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.GridLayout;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.UUID;
 
 /**
@@ -38,8 +34,8 @@ public class AgregarItemOrden extends JFrame {
     private JComboBox<String> cmbOrden;
     private JComboBox<String> cmbProducto;
     private JTextField txtCantidad;
-    private List<Orden> ordenesPendientes;
-    private List<Producto> productosDisponibles;
+    private Orden[] ordenesPendientes;
+    private String[] opcionesProductos;
 
     public AgregarItemOrden() {
         controlador = StoreController.getInstance();
@@ -72,54 +68,33 @@ public class AgregarItemOrden extends JFrame {
         panelSuperior.add(btnRegresar);
         contentPane.add(panelSuperior, BorderLayout.NORTH);
 
-        ordenesPendientes = new ArrayList<>();
-        productosDisponibles = new ArrayList<>();
-        for (Orden o : controlador.getHistorial()) {
-            if (o.getEstado() == Estado.PENDIENTE) ordenesPendientes.add(o);
-        }
-        for (Producto p : controlador.getProductos()) {
-            if (p.getStock() > 0) productosDisponibles.add(p);
-        }
+        ordenesPendientes = controlador.getOrdenesPendientes();
+        String[] opcionesOrden = controlador.getOpcionesOrdenesPendientes();
+        opcionesProductos = controlador.getOpcionesProductosDisponibles();
 
         JPanel panelForm = new JPanel(new GridLayout(0, 1, 0, 10));
         panelForm.setPreferredSize(new Dimension(420, 180));
 
-        if (ordenesPendientes.isEmpty()) {
+        if (opcionesOrden.length == 0) {
             panelForm.add(new JLabel("No hay órdenes pendientes. Cree una orden primero."));
         } else {
             JPanel rowOrden = new JPanel(new FlowLayout(FlowLayout.LEFT));
             rowOrden.add(new JLabel("Orden: "));
-            String[] opcionesOrden = new String[ordenesPendientes.size()];
-            for (int i = 0; i < ordenesPendientes.size(); i++) {
-                Orden o = ordenesPendientes.get(i);
-                Cliente c = o.getCliente();
-                String clienteStr = (c != null) ? c.getNombre() + " " + c.getApellido() : "?";
-                opcionesOrden[i] = clienteStr + " - " + o.getFecha();
-            }
             cmbOrden = new JComboBox<>(opcionesOrden);
             cmbOrden.setPreferredSize(new Dimension(280, 25));
             rowOrden.add(cmbOrden);
             panelForm.add(rowOrden);
         }
 
-        if (productosDisponibles.isEmpty()) {
+        if (opcionesProductos.length == 0) {
             panelForm.add(new JLabel("No hay productos con stock disponible."));
         } else {
-            List<String> nombresList = new ArrayList<>();
-            for (Producto p : productosDisponibles) {
-                String n = p.getNombre();
-                if (n != null && !n.isBlank()) nombresList.add(n);
-            }
-            if (nombresList.isEmpty()) {
-                panelForm.add(new JLabel("No hay productos con nombre válido."));
-            } else {
-                JPanel rowProducto = new JPanel(new FlowLayout(FlowLayout.LEFT));
-                rowProducto.add(new JLabel("Producto: "));
-                cmbProducto = new JComboBox<>(nombresList.toArray(new String[0]));
-                cmbProducto.setPreferredSize(new Dimension(280, 25));
-                rowProducto.add(cmbProducto);
-                panelForm.add(rowProducto);
-            }
+            JPanel rowProducto = new JPanel(new FlowLayout(FlowLayout.LEFT));
+            rowProducto.add(new JLabel("Producto: "));
+            cmbProducto = new JComboBox<>(opcionesProductos);
+            cmbProducto.setPreferredSize(new Dimension(280, 25));
+            rowProducto.add(cmbProducto);
+            panelForm.add(rowProducto);
         }
 
         JPanel rowCantidad = new JPanel(new FlowLayout(FlowLayout.LEFT));
@@ -141,11 +116,11 @@ public class AgregarItemOrden extends JFrame {
     }
 
     private void añadirItem() {
-        if (ordenesPendientes == null || ordenesPendientes.isEmpty()) {
+        if (ordenesPendientes == null || ordenesPendientes.length == 0) {
             JOptionPane.showMessageDialog(this, "No hay órdenes pendientes disponibles.", "Sin órdenes", JOptionPane.WARNING_MESSAGE);
             return;
         }
-        if (productosDisponibles == null || productosDisponibles.isEmpty()) {
+        if (opcionesProductos == null || opcionesProductos.length == 0) {
             JOptionPane.showMessageDialog(this, "No hay productos con stock disponible.", "Sin productos", JOptionPane.WARNING_MESSAGE);
             return;
         }
@@ -173,7 +148,7 @@ public class AgregarItemOrden extends JFrame {
 
         int idxOrden = cmbOrden.getSelectedIndex();
         String nombreProducto = (String) cmbProducto.getSelectedItem();
-        UUID idOrden = ordenesPendientes.get(idxOrden).getIdPedido();
+        UUID idOrden = ordenesPendientes[idxOrden].getIdPedido();
 
         try {
             controlador.addItemToOrden(idOrden, nombreProducto, cantidad);

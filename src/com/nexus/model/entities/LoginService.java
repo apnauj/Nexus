@@ -15,10 +15,15 @@ public class LoginService {
             throw new EParametroNulo("contrasenaIngresada");
         }
 
-        for (Usuario u : usuariosArray) {
+        int i = 0;
+        while (i < usuariosArray.length) {
+            Usuario u = usuariosArray[i];
+
             if (u.getUsername().equalsIgnoreCase(usuarioIngresado) && u.verificarPassword(contrasenaIngresada)) {
                 return u;
             }
+
+            i++; 
         }
         throw new ECredencialesInvalidas();
     }

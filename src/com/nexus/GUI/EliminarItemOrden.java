@@ -1,14 +1,11 @@
 package com.nexus.GUI;
 
 import com.nexus.controller.StoreController;
+import com.nexus.exceptions.EEstadoOrdenInvalido;
 import com.nexus.exceptions.EOrdenNoEncontrada;
 import com.nexus.exceptions.EParametroNulo;
 import com.nexus.exceptions.EProductoNoEncontrado;
-import com.nexus.model.entities.Cliente;
 import com.nexus.model.entities.Orden;
-import com.nexus.model.entities.OrdenItem;
-import com.nexus.model.entities.Producto;
-import com.nexus.model.enums.Estado;
 
 import javax.swing.JButton;
 import javax.swing.JComboBox;
@@ -21,12 +18,11 @@ import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.GridLayout;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.UUID;
 
 /**
  * Pantalla para eliminar un item de una orden pendiente.
+ * Usa los métodos del controlador para obtener órdenes y productos (sin List/ArrayList).
  */
 public class EliminarItemOrden extends JFrame {
 
@@ -34,8 +30,8 @@ public class EliminarItemOrden extends JFrame {
     private StoreController controlador;
     private JComboBox<String> cmbOrden;
     private JComboBox<String> cmbProducto;
-    private List<Orden> ordenesPendientes;
-    private List<String> productosEnOrden;
+    private Orden[] ordenesPendientes;
+    private String[] opcionesProductosEnOrden;
 
     public EliminarItemOrden() {
         controlador = StoreController.getInstance();
@@ -68,29 +64,18 @@ public class EliminarItemOrden extends JFrame {
         panelSuperior.add(btnRegresar);
         contentPane.add(panelSuperior, BorderLayout.NORTH);
 
-        ordenesPendientes = new ArrayList<>();
-        for (Orden o : controlador.getHistorial()) {
-            if (o.getEstado() == Estado.PENDIENTE && o.getItems() != null && o.getItems().length > 0) {
-                ordenesPendientes.add(o);
-            }
-        }
+        ordenesPendientes = controlador.getOrdenesPendientes();
+        String[] opcionesOrden = controlador.getOpcionesOrdenesPendientes();
 
         JPanel panelForm = new JPanel(new GridLayout(0, 1, 0, 10));
         panelForm.setPreferredSize(new Dimension(420, 120));
 
-        if (ordenesPendientes.isEmpty()) {
-            panelForm.add(new JLabel("No hay órdenes pendientes con items."));
+        if (opcionesOrden.length == 0) {
+            panelForm.add(new JLabel("No hay órdenes pendientes. Cree una orden y añada items primero."));
         } else {
             JPanel rowOrden = new JPanel(new FlowLayout(FlowLayout.LEFT));
             rowOrden.add(new JLabel("Orden: "));
-            String[] opciones = new String[ordenesPendientes.size()];
-            for (int i = 0; i < ordenesPendientes.size(); i++) {
-                Orden o = ordenesPendientes.get(i);
-                Cliente c = o.getCliente();
-                String clienteStr = (c != null) ? c.getNombre() + " " + c.getApellido() : "?";
-                opciones[i] = clienteStr + " - " + o.getFecha();
-            }
-            cmbOrden = new JComboBox<>(opciones);
+            cmbOrden = new JComboBox<>(opcionesOrden);
             cmbOrden.setPreferredSize(new Dimension(280, 25));
             cmbOrden.addActionListener(e -> actualizarProductosEnOrden());
             rowOrden.add(cmbOrden);
@@ -98,9 +83,8 @@ public class EliminarItemOrden extends JFrame {
 
             JPanel rowProducto = new JPanel(new FlowLayout(FlowLayout.LEFT));
             rowProducto.add(new JLabel("Producto a eliminar: "));
-            productosEnOrden = new ArrayList<>();
-            actualizarListaProductos();
-            cmbProducto = new JComboBox<>(productosEnOrden.toArray(new String[0]));
+            opcionesProductosEnOrden = obtenerProductosEnOrdenSeleccionada();
+            cmbProducto = new JComboBox<>(opcionesProductosEnOrden);
             cmbProducto.setPreferredSize(new Dimension(280, 25));
             rowProducto.add(cmbProducto);
             panelForm.add(rowProducto);
@@ -115,61 +99,56 @@ public class EliminarItemOrden extends JFrame {
         contentPane.add(panelBotones, BorderLayout.SOUTH);
     }
 
-    private void actualizarListaProductos() {
-        productosEnOrden.clear();
-        if (ordenesPendientes != null && !ordenesPendientes.isEmpty()) {
-            Orden o = ordenesPendientes.get(0);
-            if (o.getItems() != null) {
-                for (OrdenItem item : o.getItems()) {
-                    if (item.getProducto() != null) {
-                        String n = item.getProducto().getNombre();
-                        if (n != null && !n.isBlank()) productosEnOrden.add(n);
-                    }
-                }
-            }
+    private String[] obtenerProductosEnOrdenSeleccionada() {
+        if (ordenesPendientes == null || ordenesPendientes.length == 0) return new String[0];
+        int idx = cmbOrden != null ? cmbOrden.getSelectedIndex() : 0;
+        if (idx < 0 || idx >= ordenesPendientes.length) return new String[0];
+        try {
+            UUID idOrden = ordenesPendientes[idx].getIdPedido();
+            return controlador.getOpcionesProductosEnOrden(idOrden);
+        } catch (EParametroNulo | EOrdenNoEncontrada e) {
+            return new String[0];
         }
     }
 
     private void actualizarProductosEnOrden() {
         if (cmbOrden == null || cmbProducto == null) return;
-        int idx = cmbOrden.getSelectedIndex();
-        if (idx < 0 || idx >= ordenesPendientes.size()) return;
-
-        productosEnOrden.clear();
-        Orden o = ordenesPendientes.get(idx);
-        if (o.getItems() != null) {
-            for (OrdenItem item : o.getItems()) {
-                if (item.getProducto() != null) {
-                    String n = item.getProducto().getNombre();
-                    if (n != null && !n.isBlank()) productosEnOrden.add(n);
-                }
-            }
-        }
+        opcionesProductosEnOrden = obtenerProductosEnOrdenSeleccionada();
         cmbProducto.removeAllItems();
-        for (String n : productosEnOrden) cmbProducto.addItem(n);
+        for (String n : opcionesProductosEnOrden) {
+            cmbProducto.addItem(n);
+        }
     }
 
     private void eliminarItem() {
-        if (ordenesPendientes == null || ordenesPendientes.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "No hay órdenes pendientes con items.", "Sin órdenes", JOptionPane.WARNING_MESSAGE);
+        if (ordenesPendientes == null || ordenesPendientes.length == 0) {
+            JOptionPane.showMessageDialog(this, "No hay órdenes pendientes disponibles.", "Sin órdenes", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        if (opcionesProductosEnOrden == null || opcionesProductosEnOrden.length == 0) {
+            JOptionPane.showMessageDialog(this, "La orden seleccionada no tiene productos.", "Sin productos", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        if (cmbProducto == null) {
+            JOptionPane.showMessageDialog(this, "No hay productos para eliminar.", "Sin productos", JOptionPane.WARNING_MESSAGE);
             return;
         }
 
-        int idxOrden = cmbOrden.getSelectedIndex();
         String nombreProducto = (String) cmbProducto.getSelectedItem();
         if (nombreProducto == null || nombreProducto.isBlank()) {
             JOptionPane.showMessageDialog(this, "Seleccione un producto.", "Campo requerido", JOptionPane.WARNING_MESSAGE);
             return;
         }
 
-        UUID idOrden = ordenesPendientes.get(idxOrden).getIdPedido();
+        int idxOrden = cmbOrden.getSelectedIndex();
+        UUID idOrden = ordenesPendientes[idxOrden].getIdPedido();
 
         try {
             controlador.removeItemOrden(idOrden, nombreProducto);
             JOptionPane.showMessageDialog(this, "Item eliminado correctamente.", "Éxito", JOptionPane.INFORMATION_MESSAGE);
             new GestionarOrdenes().setVisible(true);
             dispose();
-        } catch (EOrdenNoEncontrada | EProductoNoEncontrado | EParametroNulo ex) {
+        } catch (EOrdenNoEncontrada | EProductoNoEncontrado | EParametroNulo | EEstadoOrdenInvalido ex) {
             JOptionPane.showMessageDialog(this, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(this, "Error: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
