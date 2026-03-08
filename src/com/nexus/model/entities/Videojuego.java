@@ -88,12 +88,6 @@ public class Videojuego extends Producto implements Serializable {
         return nombre + " - " + plataforma + " - " + calcularPrecio();
     }
 
-
-    public void actualizarStock(int nuevoStock) throws EValorNegativo {
-        setStock(nuevoStock);
-    }
-    
-
     public boolean verificarDisponibilidad() {
         return stock > 0;
     }

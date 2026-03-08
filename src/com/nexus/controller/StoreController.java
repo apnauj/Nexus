@@ -430,7 +430,7 @@ public class StoreController {
         int index = -1;
         int i = 0;
         while (i < items.length) {
-            if (items[i].getProducto().getId().equals(producto.getId())) {
+            if (items[i] != null && items[i].getProducto() != null && items[i].getProducto().getId().equals(producto.getId())) {
                 index = i;
                 break;
             }
@@ -452,7 +452,7 @@ public class StoreController {
  *  Se restaura el stock de todos los productos que estaban en la orden.
  */
 
-    public void verificarPago(UUID idOrden, double valorPagado) throws EOrdenNoEncontrada, EParametroNulo, EValorNegativo, EProductoNoEncontrado, EEstadoOrdenInvalido {
+    public void verificarPago(UUID idOrden, double valorPagado) throws EOrdenNoEncontrada, EParametroNulo, EValorNegativo, EProductoNoEncontrado, EEstadoOrdenInvalido, EStockInsuficiente {
         if (idOrden == null) throw new EParametroNulo("idOrden");
         if (valorPagado < 0) throw new EValorNegativo("El valor pagado no puede ser negativo");
         Orden orden = searchOrden(idOrden);
@@ -471,14 +471,14 @@ public class StoreController {
     }
 
     /** Decrementa el stock en el arreglo real de productos para cada item de la orden aprobada. */
-    private void decrementarStockEnProductos(Orden orden) throws EValorNegativo, EProductoNoEncontrado, EParametroNulo {
+    private void decrementarStockEnProductos(Orden orden) throws EValorNegativo, EProductoNoEncontrado, EParametroNulo, EStockInsuficiente {
         OrdenItem[] items = orden.getItems();
         if (items == null) return;
         for (OrdenItem item : items) {
             Producto pEnOrden = item.getProducto();
             Producto pReal = getProductoById(pEnOrden.getId());
             if (pReal.getStock() < item.getCantidad()) {
-                throw new EValorNegativo("No hay suficientes productos. Quedan: " + pReal.getStock() + " de " + pReal.getNombre());
+                throw new EStockInsuficiente(pReal);
             }
             pReal.setStock(pReal.getStock() - item.getCantidad());
         }
@@ -554,11 +554,11 @@ public class StoreController {
     		producto.setCategoria(categoria);
     	}
 
-    	if (tiempoGarantia >= 0) {
+    	if (tiempoGarantia > 0) {
     		producto.setTiempoGarantia(tiempoGarantia);
     	}
 
-    	if (precioBase >= 0) {
+    	if (precioBase > 0) {
     		producto.setPrecioBase(precioBase);
     	}
 

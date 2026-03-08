@@ -1,9 +1,6 @@
 package com.nexus.model.entities;
 
-import com.nexus.exceptions.EEstadoOrdenInvalido;
-import com.nexus.exceptions.EParametroNulo;
-import com.nexus.exceptions.EStockInsuficiente;
-import com.nexus.exceptions.EValorNegativo;
+import com.nexus.exceptions.*;
 import com.nexus.model.enums.Estado;
 import com.nexus.model.enums.MetodoPago;
 
@@ -94,6 +91,7 @@ public class Orden implements Serializable {
             throw new EParametroNulo("No se permiten detalles nulos");
         } else {
             //Crea un espacio en el arreglo y agrega el producto
+            if (items == null) items = new OrdenItem[0];
             items = Arrays.copyOf(items, items.length + 1);
             items[items.length - 1] = a;
             System.out.println("Se agregó correctamente el producto");
@@ -107,7 +105,7 @@ public class Orden implements Serializable {
  * Que el índice esté dentro del rango válido.
  * Luego crea un nuevo arreglo sin el item eliminado.
  */
-    public OrdenItem removeItemAt(int index) throws EEstadoOrdenInvalido{
+    public OrdenItem removeItemAt(int index) throws EEstadoOrdenInvalido, EIndiceInvalido{
         //Valida si no está aprobado o rechazado
         if (this.estado != Estado.PENDIENTE) {
             throw new EEstadoOrdenInvalido("Solo se pueden quitar items de órdenes en estado Pendiente");
@@ -115,7 +113,7 @@ public class Orden implements Serializable {
         //Valida si el parametro pasado no es negativo o mayor a la cantidad del arreglo
         //Revisar
         if (index < 0 || index >= items.length) {
-            throw new IndexOutOfBoundsException("Índice inválido: " + index);
+            throw new EIndiceInvalido("Índice inválido: " + index);
         }
         OrdenItem removed = items[index];
         OrdenItem[] newItems = new OrdenItem[items.length - 1];
@@ -157,6 +155,7 @@ public class Orden implements Serializable {
  * precio del producto * cantidad
  */
     public double calcularTotal(){
+        if (items == null) { setTotal(0); return 0; }
         double total = 0;
         //Recorre el arreglo
         for(OrdenItem i:items){
@@ -182,25 +181,6 @@ public class Orden implements Serializable {
         }
     }
 
-    /**
-     * @deprecated El decremento de stock se realiza en StoreController para garantizar
-     * que se modifique el arreglo real de productos (incluyendo órdenes cargadas desde archivo).
-     */
-    public void decrementarStock() throws EStockInsuficiente, EValorNegativo {
-        if (estado == Estado.APROBADO && items != null) {
-            for (OrdenItem i : items) {
-                Producto p = i.getProducto();
-                if (i.stockSuficiente()) {
-                    p.setStock(p.getStock() - i.getCantidad());
-                } else {
-                    throw new EStockInsuficiente(p);
-                }
-                System.out.println("El proceso se ha ejecutado correctamente");
-            }
-        }else{
-            System.out.println("La orden no ha sido aprobada");
-        }
-    }
     //Serialización
     public void escribirOrden(String dir) throws IOException {
         FileOutputStream f = new FileOutputStream(dir);

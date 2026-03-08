@@ -58,11 +58,6 @@ public class Usuario implements Serializable {
         this.username = username;
     }
 
-    public String getPassword() throws EFormatoInvalido {
-        validarPassword(password);
-        return password;
-    }
-
     public void setPassword(String password) {
         this.password = password;
     }
