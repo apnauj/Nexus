@@ -23,6 +23,8 @@ import java.awt.GridLayout;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+import static com.nexus.NexusApplication.addGuardarAlCerrar;
+
 /**
  * Pantalla para agregar un producto tipo Videojuego.
  */
@@ -56,7 +58,7 @@ public class AgregarVideoJuegos extends JFrame {
 
         setTitle("Nexus Store - Agregar Videojuego");
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        com.nexus.NexusApplication.addGuardarAlCerrar(this, controlador);
+        addGuardarAlCerrar(this, controlador);
         setBounds(100, 100, UITheme.VENTANA_FORMULARIO_ANCHO, UITheme.VENTANA_FORMULARIO_ALTO);
         setLocationRelativeTo(null);
         setResizable(true);
@@ -213,7 +215,7 @@ public class AgregarVideoJuegos extends JFrame {
 
         try {
             boolean descuentoActivo = chkDescuentoActivo.isSelected();
-            Producto producto = controlador.addVideojuego(nombre, descripcion != null ? descripcion : "", categoria, tiempoGarantia, precioBase, stock,
+            Producto producto = controlador.addVideojuego(nombre, descripcion, categoria, tiempoGarantia, precioBase, stock,
                     desarrollador.trim(), genero.trim(), chkMultijugador.isSelected(), fechaLanzamiento, plataforma, tamano, descuentoActivo);
             String msg = descuentoActivo
                     ? String.format("Videojuego agregado correctamente.%nSe aplicó un descuento del %d%% (según stock y antigüedad).", (int) Math.round(producto.getDescuento() * 100))

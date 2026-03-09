@@ -67,12 +67,13 @@ public class StoreController {
             return;
         }
         //Si no hay ningún usuario que se llame admin crea el admin por defecto
-        for (Usuario u : usuarios) {
-            if ("admin".equalsIgnoreCase(u.getUsername())) {
-                return; // Ya existe admin
-            }
+        int i = 0;
+        while (i < usuarios.length && !"admin".equalsIgnoreCase(usuarios[i].getUsername())) {
+            i++;
         }
-        crearAdminPorDefecto();
+
+        if (i == usuarios.length) crearAdminPorDefecto();
+
     }
 
     /**
@@ -333,21 +334,6 @@ public class StoreController {
     }
 
     /**
-     * Obtiene un producto del arreglo real por su ID. Usado para decrementar stock correctamente. */
-    public Producto getProductoById(UUID id) throws EProductoNoEncontrado, EParametroNulo {
-        if (id == null) throw new EParametroNulo("ID del producto");
-        int i = 0;
-        while (i < productos.length) {
-            Producto p = productos[i];
-            if (p.getId().equals(id)) {
-                return p;
-            }
-            i++;
-        }
-        throw new EProductoNoEncontrado("Producto con ID " + id + " no encontrado");
-    }
-
-    /**
      * Busca un cliente con sus respectivas validaciones
      */
     public Cliente searchCliente(TipoDocumento tipoDoc, String numDoc) throws EClienteNoEncontrado, EParametroNulo {
@@ -512,10 +498,9 @@ public class StoreController {
         }
         int index = -1;
         int i = 0;
-        while (i < items.length) {
+        while (i < items.length && index == -1) {
             if (items[i] != null && items[i].getProducto() != null && items[i].getProducto().getId().equals(producto.getId())) {
                 index = i;
-                break;
             }
             i++;
         }
@@ -527,14 +512,11 @@ public class StoreController {
     }
 
     /**
- * Verifica el pago de una orden y cambia su estado.
- * Si el pago es válido:
- *  La orden pasa al estado APROBADO.
- * Si el pago es rechazado:
- *  La orden pasa a estado RECHAZADO.
- *  Se restaura el stock de todos los productos que estaban en la orden.
- */
-    public void verificarPago(UUID idOrden, double valorPagado) throws EOrdenNoEncontrada, EParametroNulo, EValorNegativo, EProductoNoEncontrado, EEstadoOrdenInvalido, EStockInsuficiente {
+     * Verifica el pago de una orden y cambia su estado.
+     * Si el pago es válido: la orden pasa al estado APROBADO y se decrementa el stock.
+     * Si el pago es rechazado: la orden pasa a estado RECHAZADO.
+     */
+    public void verificarPago(UUID idOrden, double valorPagado) throws EOrdenNoEncontrada, EParametroNulo, EValorNegativo, EEstadoOrdenInvalido, EStockInsuficiente {
         if (idOrden == null) throw new EParametroNulo("ID de la orden");
         if (valorPagado < 0) throw new EValorNegativo("El valor pagado no puede ser negativo");
         Orden orden = searchOrden(idOrden);
@@ -550,20 +532,22 @@ public class StoreController {
     }
 
     /**
-     * Decrementa el stock en el arreglo real de productos para cada item de la orden aprobada.
-     * Recalcula el descuento de cada producto tras el cambio de stock.
+     * Decrementa el stock de cada producto de la orden aprobada.
+     * El producto en la orden es la misma referencia que el del inventario, por lo que
+     * al modificarlo se actualiza el stock real. Recalcula el descuento tras el cambio.
      */
-    private void decrementarStockEnProductos(Orden orden) throws EValorNegativo, EProductoNoEncontrado, EParametroNulo, EStockInsuficiente {
+    private void decrementarStockEnProductos(Orden orden) throws EValorNegativo, EStockInsuficiente {
         OrdenItem[] items = orden.getItems();
         if (items == null) return;
         for (OrdenItem item : items) {
-            Producto pEnOrden = item.getProducto();
-            Producto pReal = getProductoById(pEnOrden.getId());
-            if (pReal.getStock() < item.getCantidad()) {
-                throw new EStockInsuficiente(pReal);
+            Producto p = item.getProducto();
+            if (p.getStock() < item.getCantidad()) {
+                throw new EStockInsuficiente(p);
             }
-            pReal.setStock(pReal.getStock() - item.getCantidad());
-            if (pReal.isDescuentoActivo()) pReal.asignarDescuento();
+            p.setStock(p.getStock() - item.getCantidad());
+            if (p.isDescuentoActivo()) {
+                p.asignarDescuento();
+            }
         }
     }
 
@@ -586,16 +570,18 @@ public class StoreController {
         }
         OrdenItem[] items = orden.getItems();
         if (items == null) {
-            throw new EEstadoOrdenInvalido("La orden no tiene items");
+            throw new EProductoNoEncontrado("La orden no tiene items");
         }
-        for (OrdenItem item : items) {
-            if (item.getProducto().getId().equals(producto.getId())) {
-                item.setCantidad(cantidad);
-                orden.calcularTotal();
-                return;
-            }
+
+        int i = 0;
+        while (i < orden.getItems().length && !items[i].getProducto().getId().equals(producto.getId())) {
+            i++;
         }
-        throw new EProductoNoEncontrado("El producto '" + nombreProducto + "' no está en la orden");
+        if(i == orden.getItems().length){
+            throw new EProductoNoEncontrado("El producto '" + nombreProducto + "' no está en la orden");
+        } else {
+            items[i].setCantidad(cantidad);
+        }
     }
 
     // --- Metodos de modificacion (Update) ---
@@ -721,8 +707,8 @@ public class StoreController {
 
         for (File f : ficheros) {
             if (f.isFile()){
-                String nombreArchivo = f.getName();
-                String extension = getExtension(nombreArchivo);
+                String nombreArchivo = f.getName(); // --> "cliente1.clienteFile"
+                String extension = getExtension(nombreArchivo);// --> "clienteFile"
             try {
                 switch (extension) {
                     case "clienteFile":
@@ -843,7 +829,7 @@ public class StoreController {
     if (filename == null || !filename.contains(".")) {
         return "";
     }
-    return filename.substring(filename.lastIndexOf(".") + 1);
+    return filename.substring(filename.lastIndexOf(".") + 1); //cliente1(.)clienteFile
 }
 
     // --- Métodos auxiliares para organizar información a ser presentada en la interfaz ---
@@ -886,9 +872,9 @@ public class StoreController {
     public String[] getNombresProductos() {
         Producto[] prods = getProductos();
         String[] nombres = new String[0];
-        for (int i = 0; i < prods.length; i++) {
-            if (prods[i] != null) {
-                String n = prods[i].getNombre();
+        for (Producto prod : prods) {
+            if (prod != null) {
+                String n = prod.getNombre();
                 if (n != null && !n.isBlank()) {
                     nombres = Arrays.copyOf(nombres, nombres.length + 1);
                     nombres[nombres.length - 1] = n;
@@ -900,8 +886,8 @@ public class StoreController {
     public String[] getOpcionesProductosDisponibles() {
         Producto[] conStock = getProductosConStockDisponible();
         String[] nombres = new String[0];
-        for (int i = 0; i < conStock.length; i++) {
-            String n = conStock[i] != null ? conStock[i].getNombre() : null;
+        for (Producto producto : conStock) {
+            String n = producto != null ? producto.getNombre() : null;
             if (n != null && !n.isBlank()) {
                 nombres = Arrays.copyOf(nombres, nombres.length + 1);
                 nombres[nombres.length - 1] = n;

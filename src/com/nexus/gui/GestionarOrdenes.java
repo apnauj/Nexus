@@ -4,7 +4,6 @@ import com.nexus.controller.StoreController;
 import com.nexus.exceptions.EFormatoInvalido;
 import com.nexus.exceptions.EOrdenNoEncontrada;
 import com.nexus.exceptions.EParametroNulo;
-import com.nexus.exceptions.EProductoNoEncontrado;
 import com.nexus.exceptions.EValorNegativo;
 import com.nexus.model.entities.Cliente;
 import com.nexus.model.entities.Orden;
@@ -305,7 +304,7 @@ public class GestionarOrdenes extends JFrame {
         } catch (EFormatoInvalido e) {
             JOptionPane.showMessageDialog(this, "El valor no puede ser negativo.",
                     "Formato inválido", JOptionPane.ERROR_MESSAGE);
-        } catch (EOrdenNoEncontrada | EParametroNulo | EValorNegativo | EProductoNoEncontrado ex) {
+        } catch (EOrdenNoEncontrada | EParametroNulo | EValorNegativo ex) {
             JOptionPane.showMessageDialog(this, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(this, "Error: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);

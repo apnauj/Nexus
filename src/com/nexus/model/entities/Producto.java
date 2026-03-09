@@ -1,5 +1,7 @@
 package com.nexus.model.entities;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.io.Serializable;
 import java.util.UUID;
 

@@ -20,6 +20,8 @@ import java.awt.Color;
 import java.awt.FlowLayout;
 import java.awt.GridLayout;
 
+import static com.nexus.NexusApplication.addGuardarAlCerrar;
+
 /**
  * Pantalla para actualizar datos de un cliente existente (nombre, apellido, email).
  */
@@ -41,7 +43,7 @@ public class ActualizarCliente extends JFrame {
         controlador = StoreController.getInstance();
         setTitle("Nexus Store - Actualizar Cliente");
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        com.nexus.NexusApplication.addGuardarAlCerrar(this, controlador);
+        addGuardarAlCerrar(this, controlador);
         setBounds(100, 100, 500, 320);
         setLocationRelativeTo(null);
 
