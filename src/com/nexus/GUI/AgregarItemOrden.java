@@ -139,8 +139,8 @@ public class AgregarItemOrden extends JFrame {
         int cantidad;
         try {
             cantidad = Integer.parseInt(cantidadStr.trim());
-            if (cantidad <= 0) throw new NumberFormatException("Debe ser positivo");
-        } catch (NumberFormatException e) {
+            if (cantidad <= 0) throw new EFormatoInvalido("Debe ser positivo");
+        } catch (EFormatoInvalido e) {
             JOptionPane.showMessageDialog(this, "La cantidad debe ser un número entero positivo.", "Formato inválido", JOptionPane.WARNING_MESSAGE);
             txtCantidad.requestFocus();
             return;

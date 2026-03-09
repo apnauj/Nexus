@@ -290,7 +290,7 @@ public class ActualizarProducto extends JFrame {
             tiempoGarantia = Integer.parseInt(tiempoStr.trim());
             precioBase = Double.parseDouble(precioStr.trim());
             stock = Integer.parseInt(stockStr.trim());
-        } catch (NumberFormatException e) {
+        } catch (EFormatoInvalido e) {
             JOptionPane.showMessageDialog(this, "Verifique que tiempo, precio y stock sean números válidos.", "Formato inválido", JOptionPane.ERROR_MESSAGE);
             return;
         }

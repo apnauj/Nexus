@@ -224,7 +224,7 @@ public class GestionarOrdenes extends JFrame {
         try {
             double valorPagado = Double.parseDouble(input.trim());
             if (valorPagado < 0) {
-                throw new NumberFormatException("El valor no puede ser negativo");
+                throw new EFormatoInvalido("El valor no puede ser negativo");
             }
             controlador.verificarPago(orden.getIdPedido(), valorPagado);
 
@@ -243,7 +243,7 @@ public class GestionarOrdenes extends JFrame {
             }
             JOptionPane.showMessageDialog(this, msg, "Resultado del pago", JOptionPane.INFORMATION_MESSAGE);
             actualizarTabla();
-        } catch (NumberFormatException e) {
+        } catch (EFormatoInvalido e) {
             JOptionPane.showMessageDialog(this, "Ingrese un valor numérico válido.",
                     "Formato inválido", JOptionPane.ERROR_MESSAGE);
         } catch (EOrdenNoEncontrada | EParametroNulo | EValorNegativo | EProductoNoEncontrado ex) {
