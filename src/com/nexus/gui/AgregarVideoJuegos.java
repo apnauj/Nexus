@@ -15,7 +15,6 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
-import javax.swing.Box;
 import javax.swing.border.EmptyBorder;
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -43,6 +42,7 @@ public class AgregarVideoJuegos extends JFrame {
     private JTextField txtFechaLanzamiento;
     private JTextField txtPlataforma;
     private JTextField txtTamano;
+    private JCheckBox chkDescuentoActivo;
 
     public AgregarVideoJuegos() {
         controlador = StoreController.getInstance();
@@ -57,13 +57,14 @@ public class AgregarVideoJuegos extends JFrame {
         setTitle("Nexus Store - Agregar Videojuego");
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         com.nexus.NexusApplication.addGuardarAlCerrar(this, controlador);
-        setBounds(100, 100, 540, 620);
+        setBounds(100, 100, UITheme.VENTANA_FORMULARIO_ANCHO, UITheme.VENTANA_FORMULARIO_ALTO);
         setLocationRelativeTo(null);
         setResizable(true);
 
         JPanel contentPane = new JPanel();
-        contentPane.setBorder(new EmptyBorder(15, 15, 15, 15));
-        contentPane.setLayout(new BorderLayout(5, 5));
+        contentPane.setBackground(UITheme.FONDO_PANEL);
+        contentPane.setBorder(new EmptyBorder(UITheme.MARGEN, UITheme.MARGEN, UITheme.MARGEN, UITheme.MARGEN));
+        contentPane.setLayout(new BorderLayout(UITheme.ESPACIADO, UITheme.ESPACIADO));
         setContentPane(contentPane);
 
         JPanel panelSuperior = new JPanel(new FlowLayout(FlowLayout.LEFT));
@@ -75,7 +76,8 @@ public class AgregarVideoJuegos extends JFrame {
         panelSuperior.add(btnRegresar);
         contentPane.add(panelSuperior, BorderLayout.NORTH);
 
-        JPanel panelForm = new JPanel(new GridLayout(0, 1, 0, 6));
+        JPanel panelForm = new JPanel(new GridLayout(0, 1, 0, UITheme.ESPACIADO));
+        panelForm.setBackground(UITheme.FONDO_PANEL);
 
         panelForm.add(crearFila("Nombre: ", txtNombre = crearTextField(28)));
         panelForm.add(crearFila("Descripción: ", txtDescripcion = crearTextField(28)));
@@ -93,7 +95,10 @@ public class AgregarVideoJuegos extends JFrame {
         panelForm.add(crearFila("Fecha lanzamiento (dd/MM/yyyy): ", txtFechaLanzamiento = crearTextField(12)));
         panelForm.add(crearFila("Plataforma: ", txtPlataforma = crearTextField(15)));
         panelForm.add(crearFila("Tamaño (GB): ", txtTamano = crearTextField(8)));
-        panelForm.add(Box.createVerticalStrut(24));
+        JPanel rowDescuento = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        chkDescuentoActivo = new JCheckBox("Activar descuento", true);
+        rowDescuento.add(chkDescuentoActivo);
+        panelForm.add(rowDescuento);
 
         JScrollPane scrollForm = new JScrollPane(panelForm);
         scrollForm.setBorder(null);
@@ -163,6 +168,11 @@ public class AgregarVideoJuegos extends JFrame {
             JOptionPane.showMessageDialog(this, "Ingrese el género.", "Campo requerido", JOptionPane.WARNING_MESSAGE);
             return;
         }
+        if (tiempoStr == null || tiempoStr.isBlank() || precioStr == null || precioStr.isBlank()
+                || stockStr == null || stockStr.isBlank() || tamanoStr == null || tamanoStr.isBlank()) {
+            JOptionPane.showMessageDialog(this, "Complete todos los campos numéricos (tiempo garantía, precio base, stock, tamaño).", "Campos requeridos", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
 
         int tiempoGarantia, stock;
         double precioBase, tamano;
@@ -202,10 +212,12 @@ public class AgregarVideoJuegos extends JFrame {
         }
 
         try {
+            boolean descuentoActivo = chkDescuentoActivo.isSelected();
             Producto producto = controlador.addVideojuego(nombre, descripcion != null ? descripcion : "", categoria, tiempoGarantia, precioBase, stock,
-                    desarrollador.trim(), genero.trim(), chkMultijugador.isSelected(), fechaLanzamiento, plataforma, tamano);
-            int descuentoPct = (int) Math.round(producto.getDescuento() * 100);
-            String msg = String.format("Videojuego agregado correctamente.%nSe aplicó un descuento del %d%% (según stock y antigüedad).", descuentoPct);
+                    desarrollador.trim(), genero.trim(), chkMultijugador.isSelected(), fechaLanzamiento, plataforma, tamano, descuentoActivo);
+            String msg = descuentoActivo
+                    ? String.format("Videojuego agregado correctamente.%nSe aplicó un descuento del %d%% (según stock y antigüedad).", (int) Math.round(producto.getDescuento() * 100))
+                    : "Videojuego agregado correctamente. Sin descuento aplicado.";
             JOptionPane.showMessageDialog(this, msg, "Éxito", JOptionPane.INFORMATION_MESSAGE);
             new GestionarProductos().setVisible(true);
             dispose();

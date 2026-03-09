@@ -13,14 +13,19 @@ public class Hardware extends Producto implements Serializable {
     private float consumo;
     private String fabricante;
 
-    public Hardware (String nombre, String descripcion, String categoria, int tiempoGarantia, double precioBase, int stock, float consumo, String fabricante) throws EParametroNulo, ECantidadNegativa, EValorNegativo {
+    public Hardware (String nombre, String descripcion, String categoria, int tiempoGarantia, double precioBase, int stock, float consumo, String fabricante, boolean descuentoActivo) throws EParametroNulo, ECantidadNegativa, EValorNegativo {
         super(nombre, descripcion, categoria, tiempoGarantia, precioBase, stock);
         if(consumo<0) throw new ECantidadNegativa("El consumo debe ser un número entero positivo");
         if (fabricante == null || fabricante.isBlank()) throw new EParametroNulo("fabricante");
 
         this.consumo = consumo;
         this.fabricante = fabricante;
-        asignarDescuento();
+        if (descuentoActivo) {
+            setDescuentoActivo(true);
+            asignarDescuento();
+        } else {
+            desactivarDescuento();
+        }
     }
     public float getConsumo() {
         return consumo;

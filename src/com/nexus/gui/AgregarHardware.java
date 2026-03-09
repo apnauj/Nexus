@@ -8,7 +8,9 @@ import com.nexus.exceptions.EValorNegativo;
 import com.nexus.model.entities.Producto;
 
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JFrame;
+import javax.swing.JScrollPane;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -16,7 +18,6 @@ import javax.swing.JTextField;
 import javax.swing.border.EmptyBorder;
 import java.awt.BorderLayout;
 import java.awt.Color;
-import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.GridLayout;
 
@@ -35,6 +36,7 @@ public class AgregarHardware extends JFrame {
     private JTextField txtStock;
     private JTextField txtConsumo;
     private JTextField txtFabricante;
+    private JCheckBox chkDescuentoActivo;
 
     public AgregarHardware() {
         controlador = StoreController.getInstance();
@@ -49,13 +51,14 @@ public class AgregarHardware extends JFrame {
         setTitle("Nexus Store - Agregar Hardware");
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         com.nexus.NexusApplication.addGuardarAlCerrar(this, controlador);
-        setBounds(100, 100, 480, 420);
-        setResizable(false);
+        setBounds(100, 100, UITheme.VENTANA_FORMULARIO_ANCHO, UITheme.VENTANA_FORMULARIO_ALTO);
+        setResizable(true);
         setLocationRelativeTo(null);
 
         JPanel contentPane = new JPanel();
-        contentPane.setBorder(new EmptyBorder(15, 15, 15, 15));
-        contentPane.setLayout(new BorderLayout(5, 5));
+        contentPane.setBackground(UITheme.FONDO_PANEL);
+        contentPane.setBorder(new EmptyBorder(UITheme.MARGEN, UITheme.MARGEN, UITheme.MARGEN, UITheme.MARGEN));
+        contentPane.setLayout(new BorderLayout(UITheme.ESPACIADO, UITheme.ESPACIADO));
         setContentPane(contentPane);
 
         JPanel panelSuperior = new JPanel(new FlowLayout(FlowLayout.LEFT));
@@ -67,8 +70,8 @@ public class AgregarHardware extends JFrame {
         panelSuperior.add(btnRegresar);
         contentPane.add(panelSuperior, BorderLayout.NORTH);
 
-        JPanel panelForm = new JPanel(new GridLayout(0, 1, 0, 6));
-        panelForm.setPreferredSize(new Dimension(420, 280));
+        JPanel panelForm = new JPanel(new GridLayout(0, 1, 0, UITheme.ESPACIADO));
+        panelForm.setBackground(UITheme.FONDO_PANEL);
 
         panelForm.add(crearFila("Nombre: ", txtNombre = crearTextField(25)));
         panelForm.add(crearFila("Descripción: ", txtDescripcion = crearTextField(25)));
@@ -78,8 +81,16 @@ public class AgregarHardware extends JFrame {
         panelForm.add(crearFila("Stock: ", txtStock = crearTextField(5)));
         panelForm.add(crearFila("Consumo (W): ", txtConsumo = crearTextField(8)));
         panelForm.add(crearFila("Fabricante: ", txtFabricante = crearTextField(20)));
+        JPanel rowDescuento = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        chkDescuentoActivo = new JCheckBox("Activar descuento", true);
+        rowDescuento.add(chkDescuentoActivo);
+        panelForm.add(rowDescuento);
 
-        contentPane.add(panelForm, BorderLayout.CENTER);
+        JScrollPane scrollForm = new JScrollPane(panelForm);
+        scrollForm.setBorder(null);
+        scrollForm.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+        scrollForm.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+        contentPane.add(scrollForm, BorderLayout.CENTER);
 
         JPanel panelBotones = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         JButton btnAgregar = new JButton("Agregar Hardware");
@@ -125,6 +136,11 @@ public class AgregarHardware extends JFrame {
             JOptionPane.showMessageDialog(this, "Ingrese el fabricante.", "Campo requerido", JOptionPane.WARNING_MESSAGE);
             return;
         }
+        if (tiempoStr == null || tiempoStr.isBlank() || precioStr == null || precioStr.isBlank()
+                || stockStr == null || stockStr.isBlank() || consumoStr == null || consumoStr.isBlank()) {
+            JOptionPane.showMessageDialog(this, "Complete todos los campos numéricos (tiempo garantía, precio base, stock, consumo).", "Campos requeridos", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
 
         int tiempoGarantia, stock;
         double precioBase;
@@ -155,9 +171,11 @@ public class AgregarHardware extends JFrame {
         }
 
         try {
-            Producto producto = controlador.addHardware(nombre, descripcion != null ? descripcion : "", categoria, tiempoGarantia, precioBase, stock, consumo, fabricante);
-            int descuentoPct = (int) Math.round(producto.getDescuento() * 100);
-            String msg = String.format("Hardware agregado correctamente.%nSe aplicó un descuento del %d%% (según stock y consumo).", descuentoPct);
+            boolean descuentoActivo = chkDescuentoActivo.isSelected();
+            Producto producto = controlador.addHardware(nombre, descripcion != null ? descripcion : "", categoria, tiempoGarantia, precioBase, stock, consumo, fabricante, descuentoActivo);
+            String msg = descuentoActivo
+                    ? String.format("Hardware agregado correctamente.%nSe aplicó un descuento del %d%% (según stock y consumo).", (int) Math.round(producto.getDescuento() * 100))
+                    : "Hardware agregado correctamente. Sin descuento aplicado.";
             JOptionPane.showMessageDialog(this, msg, "Éxito", JOptionPane.INFORMATION_MESSAGE);
             new GestionarProductos().setVisible(true);
             dispose();

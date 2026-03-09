@@ -49,13 +49,14 @@ public class GestionarClientes extends JFrame {
         setTitle("Nexus Store - Gestionar Clientes");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         com.nexus.NexusApplication.addGuardarAlCerrar(this, controlador);
-        setBounds(100, 100, 750, 450);
+        setBounds(100, 100, UITheme.VENTANA_TABLA_ANCHO, UITheme.VENTANA_TABLA_ALTO);
         setLocationRelativeTo(null);
         setResizable(true);
 
         JPanel contentPane = new JPanel();
-        contentPane.setBorder(new EmptyBorder(10, 10, 10, 10));
-        contentPane.setLayout(new BorderLayout(5, 5));
+        contentPane.setBackground(UITheme.FONDO_PANEL);
+        contentPane.setBorder(new EmptyBorder(UITheme.MARGEN, UITheme.MARGEN, UITheme.MARGEN, UITheme.MARGEN));
+        contentPane.setLayout(new BorderLayout(UITheme.ESPACIADO, UITheme.ESPACIADO));
         setContentPane(contentPane);
 
         JPanel panelSuperior = new JPanel(new FlowLayout(FlowLayout.LEFT));
@@ -77,6 +78,7 @@ public class GestionarClientes extends JFrame {
         tablaClientes = new JTable(modeloTabla);
         tablaClientes.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
         tablaClientes.getTableHeader().setReorderingAllowed(false);
+        tablaClientes.getTableHeader().setFont(UITheme.FONT_ENCABEZADO_TABLA);
         JScrollPane scrollTabla = new JScrollPane(tablaClientes);
         contentPane.add(scrollTabla, BorderLayout.CENTER);
 

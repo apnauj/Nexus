@@ -33,12 +33,16 @@ public class StoreController {
     /**
      * Obtiene la única instancia del controlador.
      * Carga los ficheros y crea el admin por defecto si no hay usuarios.
+     * synchronized lo único que hace es asegurarse de que solo se pueda obtener una instancia al tiempo
+     * de manera que sea imposible que dos métodos lleguen al mismo tiempo y se creen 2 instancias
      */
     public static synchronized StoreController getInstance() {
+        //Si no se ha creado se crea el storeController y se inicializa
         if (instance == null) {
             instance = new StoreController();
             instance.inicializar();
         }
+        //Si no, devolvemos el storeController actual
         return instance;
     }
 
@@ -46,7 +50,9 @@ public class StoreController {
     *Inicialización de los ficheros, verificación de que haya un usuario Admin
     */
     private void inicializar() {
+        //Carga los ficheros desde el directorio
         cargarFicheros();
+        //Se asegura de que haya admin, si no es así lo crea
         asegurarAdminExiste();
     }
 
@@ -55,10 +61,12 @@ public class StoreController {
      * Se crea si no hay usuarios o si ninguno tiene username "admin".
      */
     private void asegurarAdminExiste() {
+        //Si no hay usuarios crea el admin por defecto
         if (usuarios.length == 0) {
             crearAdminPorDefecto();
             return;
         }
+        //Si no hay ningún usuario que se llame admin crea el admin por defecto
         for (Usuario u : usuarios) {
             if ("admin".equalsIgnoreCase(u.getUsername())) {
                 return; // Ya existe admin
@@ -68,7 +76,7 @@ public class StoreController {
     }
 
     /**
-     *  Si no existe un admin por defecto lo crea para poder iniciar el sistema desde 0 */
+     *  Crea el admin por defecto */
     private void crearAdminPorDefecto() {
         try {
             addUsuario("admin", "Admin123", Rol.ADMIN);
@@ -137,11 +145,20 @@ public class StoreController {
      * Verificamos que la orden este en estado pendiente, pues de no ser así no podemos añadir productos
      * Capturamos las posibles excepciones que puede producir añadir un item con
     */
-    public void addItemToOrden(UUID idOrden, String producto, int cantidad) throws EOrdenNoEncontrada, EProductoNoEncontrado, EStockInsuficiente, EParametroNulo, ECantidadNegativa, EEstadoOrdenInvalido {
+    public void addItemToOrden(UUID idOrden, String producto, int cantidad) throws EOrdenNoEncontrada, EProductoNoEncontrado, EStockInsuficiente, EParametroNulo, ECantidadNegativa, EEstadoOrdenInvalido, EValorNegativo {
         if (idOrden == null) throw new EParametroNulo("ID de la orden");
         if (producto == null || producto.isBlank()) throw new EParametroNulo("producto");
+        if(cantidad <= 0) throw new EValorNegativo("La cantidad a añadir no puede ser 0 ni negativa");
         Orden o = searchOrden(idOrden);
         Producto p = searchProducto(producto);
+        //Validación de que el producto no este ya en la orden, pues en ese caso lo que se debe hacer es modificar la cantidad
+        int i = 0;
+        while(i < o.getItems().length){
+            if(o.getItems()[i].getProducto().getId().equals(p.getId())){
+                throw new EProductoRepeteido("El producto que intenta agregar ya está en la oren, por favor modifique su cantidad");
+            }
+            i++;
+        }
         if (o.getEstado() != Estado.PENDIENTE) {
             throw new EEstadoOrdenInvalido("Solo se pueden agregar items a órdenes pendientes");
         }
@@ -163,6 +180,17 @@ public class StoreController {
 
         String emailTrimmed = email.trim();
         if (emailTrimmed.contains(" ") || emailTrimmed.contains("\t")) throw new EFormatoInvalido("El email no puede contener espacios.");
+        /**
+         * Validación de formato de email mediante una expresión regular (Regex).
+         * * Explicación del patrón "^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$":
+         * * 1. ^          : Indica el inicio de la cadena. Asegura que no haya texto previo.
+         * 2. [^\\s@]+   : (Local-part) Coincide con uno o más caracteres que NO sean espacios (\s) ni arrobas (@).
+         * 3. @          : Obliga la presencia del símbolo arroba literal.
+         * 4. [^\\s@]+   : (Domain) Coincide con uno o más caracteres que NO sean espacios ni arrobas.
+         * 5. \\.        : Obliga la presencia de un punto literal (se escapa con \\ porque el punto en regex significa "cualquier carácter").
+         * 6. [^\\s@]+   : (TLD/Ext) Coincide con uno o más caracteres finales (la extensión) que no sean espacios ni arrobas.
+         * 7. $          : Indica el fin de la cadena. Asegura que no haya texto extra después del dominio.
+         */
         if (!emailTrimmed.matches("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$")) throw new EFormatoInvalido("El formato del email es inválido. Debe ser: nombre@dominio.ext (ej: usuario@correo.com)");
 
         Cliente nuevoCliente = new Cliente(tipoDoc, numDoc, nombre, apellido, emailTrimmed);
@@ -190,12 +218,18 @@ public class StoreController {
      *
      * @return el producto creado (para obtener el descuento aplicado)
      */
-    public Producto addHardware(String nombre, String descripcion, String categoria, int tiempoGarantia, double precioBase, int stock, float consumo, String fabricante) throws EProductoYaExiste, EParametroNulo, ECantidadNegativa, EValorNegativo {
+    public Producto addHardware(String nombre, String descripcion, String categoria, int tiempoGarantia, double precioBase, int stock, float consumo, String fabricante, boolean descuentoActivo) throws EProductoYaExiste, EParametroNulo, ECantidadNegativa, EValorNegativo {
         if (nombre == null || nombre.isBlank()) throw new EParametroNulo("nombre del producto");
+        if (categoria == null || categoria.isBlank()) throw new EParametroNulo("categoría");
+        if (precioBase < 0) throw new EValorNegativo("El precio base no puede ser negativo, usted registro: "+precioBase);
+        if (stock < 0) throw new EValorNegativo("El stock no puede ser negativo, el stock registrado fue: " + stock);
+        if (tiempoGarantia <0) throw new EValorNegativo("El tiempo de garantia no puede ser negativo, el valor registrado del tiempo de garantia es: "+tiempoGarantia);
+        if (descripcion == null || descripcion.isBlank()) throw new EParametroNulo("descripción");
+        if(consumo<0) throw new ECantidadNegativa("El consumo debe ser un número entero positivo");
         if (fabricante == null || fabricante.isBlank()) throw new EParametroNulo("fabricante");
         if (existeProducto(nombre)) throw new EProductoYaExiste(nombre);
 
-        Hardware nuevoHardware = new Hardware(nombre, descripcion, categoria, tiempoGarantia, precioBase, stock, consumo, fabricante);
+        Hardware nuevoHardware = new Hardware(nombre, descripcion, categoria, tiempoGarantia, precioBase, stock, consumo, fabricante, descuentoActivo);
         this.productos = Arrays.copyOf(this.productos, this.productos.length + 1);
         this.productos[this.productos.length - 1] = nuevoHardware;
         return nuevoHardware;
@@ -205,17 +239,22 @@ public class StoreController {
      * Añade un producto tipo Videojuego con sus respectivas validaciones.
      * El descuento se asigna automáticamente según stock y antigüedad.
      *
-     * @return el producto creado (para obtener el descuento aplicado)
+     * devuelve el producto creado (para obtener el descuento aplicado)
      */
-    public Producto addVideojuego(String nombre, String descripcion, String categoria, int tiempoGarantia, double precioBase, int stock, String desarrollador, String genero, boolean multijugador, Date fechaLanzamiento, String plataforma, double tamano) throws EProductoYaExiste, EParametroNulo, ECantidadNegativa, EValorNegativo {
+    public Producto addVideojuego(String nombre, String descripcion, String categoria, int tiempoGarantia, double precioBase, int stock, String desarrollador, String genero, boolean multijugador, Date fechaLanzamiento, String plataforma, double tamano, boolean descuentoActivo) throws EProductoYaExiste, EParametroNulo, ECantidadNegativa, EValorNegativo {
         if (nombre == null || nombre.isBlank()) throw new EParametroNulo("nombre del producto");
+        if (categoria == null || categoria.isBlank()) throw new EParametroNulo("categoría");
+        if (precioBase < 0) throw new EValorNegativo("El precio base no puede ser negativo, usted registro: "+precioBase);
+        if (stock < 0) throw new EValorNegativo("El stock no puede ser negativo, el stock registrado fue: " + stock);
+        if (tiempoGarantia <0) throw new EValorNegativo("El tiempo de garantia no puede ser negativo, el valor registrado del tiempo de garantia es: "+tiempoGarantia);
+        if (descripcion == null || descripcion.isBlank()) throw new EParametroNulo("descripción");
         if (desarrollador == null || desarrollador.isBlank()) throw new EParametroNulo("desarrollador");
         if (genero == null || genero.isBlank()) throw new EParametroNulo("genero");
         if (plataforma == null || plataforma.isBlank()) throw new EParametroNulo("plataforma");
         if (tamano < 0) throw new ECantidadNegativa("El peso en GB del videojuego no puede ser negativo");
         if (existeProducto(nombre)) throw new EProductoYaExiste(nombre);
 
-        Videojuego nuevoVideojuego = new Videojuego(nombre, descripcion, categoria, tiempoGarantia, precioBase, stock, desarrollador, genero, multijugador, fechaLanzamiento, plataforma, tamano);
+        Videojuego nuevoVideojuego = new Videojuego(nombre, descripcion, categoria, tiempoGarantia, precioBase, stock, desarrollador, genero, multijugador, fechaLanzamiento, plataforma, tamano, descuentoActivo);
         this.productos = Arrays.copyOf(this.productos, this.productos.length + 1);
         this.productos[this.productos.length - 1] = nuevoVideojuego;
         return nuevoVideojuego;
@@ -524,7 +563,7 @@ public class StoreController {
                 throw new EStockInsuficiente(pReal);
             }
             pReal.setStock(pReal.getStock() - item.getCantidad());
-            pReal.asignarDescuento();
+            if (pReal.isDescuentoActivo()) pReal.asignarDescuento();
         }
     }
 
@@ -589,7 +628,7 @@ public class StoreController {
      * Aplica las mismas validaciones que el constructor de Hardware.
      */
     public void actualizarHardware(String nombre, String descripcion, String categoria,
-            int tiempoGarantia, double precioBase, int stock, float consumo, String fabricante)
+            int tiempoGarantia, double precioBase, int stock, float consumo, String fabricante, boolean descuentoActivo)
             throws EProductoNoEncontrado, EParametroNulo, ECantidadNegativa, EValorNegativo {
 
         if (nombre == null || nombre.isBlank()) throw new EParametroNulo("nombre del producto");
@@ -611,7 +650,12 @@ public class StoreController {
         hardware.setTiempoGarantia(tiempoGarantia);
         hardware.setConsumo(consumo);
         hardware.setFabricante(fabricante);
-        hardware.asignarDescuento();
+        if (descuentoActivo) {
+            hardware.setDescuentoActivo(true);
+            hardware.asignarDescuento();
+        } else {
+            hardware.desactivarDescuento();
+        }
     }
 
     /**
@@ -620,7 +664,7 @@ public class StoreController {
      */
     public void actualizarVideojuego(String nombre, String descripcion, String categoria,
             int tiempoGarantia, double precioBase, int stock, String desarrollador, String genero,
-            boolean multijugador, Date fechaLanzamiento, String plataforma, double tamano)
+            boolean multijugador, Date fechaLanzamiento, String plataforma, double tamano, boolean descuentoActivo)
             throws EProductoNoEncontrado, EParametroNulo, ECantidadNegativa, EValorNegativo {
 
         if (nombre == null || nombre.isBlank()) throw new EParametroNulo("nombre del producto");
@@ -648,7 +692,12 @@ public class StoreController {
         videojuego.setFechaLanzamiento(fechaLanzamiento);
         videojuego.setPlataforma(plataforma);
         videojuego.setTamano(tamano);
-        videojuego.asignarDescuento();
+        if (descuentoActivo) {
+            videojuego.setDescuentoActivo(true);
+            videojuego.asignarDescuento();
+        } else {
+            videojuego.desactivarDescuento();
+        }
     }
 
     // --- Métodos para cargar y guardar los ficheros ---
@@ -860,6 +909,9 @@ public class StoreController {
         }
         return nombres;
     }
+    //Esto sirve para crear una lista en la que se tiene Nombre del cliente - fecha de la orden
+    //Esto se hace para los métodos de agregar un item a una orden, eliminar un item de una orden
+    //O modificar la cantidad de un item de una orden
     public String[] getOpcionesOrdenesPendientes() {
         Orden[] pendientes = getOrdenesPendientes();
         String[] opciones = new String[pendientes.length];
@@ -872,6 +924,9 @@ public class StoreController {
         }
         return opciones;
     }
+
+    //Este método sirve para obtener un arreglo de los productos que hay en la orden
+    //Se usa para modificar la cantidad de un producto en la orden o para eliminar un producto en la orden
     public String[] getOpcionesProductosEnOrden(UUID idOrden) throws EParametroNulo, EOrdenNoEncontrada {
         if (idOrden == null) throw new EParametroNulo("ID de la orden");
         Orden orden = searchOrden(idOrden);

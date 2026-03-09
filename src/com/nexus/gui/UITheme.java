@@ -38,6 +38,17 @@ public final class UITheme {
     public static final Font FONT_NORMAL = new Font("SansSerif", Font.PLAIN, 13);
     /** Fuente etiqueta */
     public static final Font FONT_ETIQUETA = new Font("SansSerif", Font.PLAIN, 12);
+    /** Fuente encabezados de tabla (negrita) */
+    public static final Font FONT_ENCABEZADO_TABLA = new Font("SansSerif", Font.BOLD, 13);
+
+    /** Ancho estándar para ventanas de formulario (productos) */
+    public static final int VENTANA_FORMULARIO_ANCHO = 520;
+    /** Alto estándar para ventanas de formulario (productos) */
+    public static final int VENTANA_FORMULARIO_ALTO = 520;
+    /** Ancho estándar para ventanas con tabla */
+    public static final int VENTANA_TABLA_ANCHO = 750;
+    /** Alto estándar para ventanas con tabla */
+    public static final int VENTANA_TABLA_ALTO = 450;
 
     /** Margen estándar */
     public static final int MARGEN = 16;

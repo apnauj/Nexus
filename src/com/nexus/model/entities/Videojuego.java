@@ -23,7 +23,7 @@ public class Videojuego extends Producto implements Serializable {
     private double tamano;  // GB
 
 
-    public Videojuego(String nombre, String descripcion, String categoria, int tiempoGarantia, double precioBase, int stock, String desarrollador, String genero, boolean multijugador, Date fechaLanzamiento, String plataforma, double tamano) throws EParametroNulo, ECantidadNegativa, EValorNegativo {
+    public Videojuego(String nombre, String descripcion, String categoria, int tiempoGarantia, double precioBase, int stock, String desarrollador, String genero, boolean multijugador, Date fechaLanzamiento, String plataforma, double tamano, boolean descuentoActivo) throws EParametroNulo, ECantidadNegativa, EValorNegativo {
 
         super(nombre, descripcion, categoria, tiempoGarantia, precioBase, stock);
         if (desarrollador == null || desarrollador.isBlank()) throw new EParametroNulo("desarrollador");
@@ -36,7 +36,12 @@ public class Videojuego extends Producto implements Serializable {
         this.fechaLanzamiento = fechaLanzamiento;
         this.plataforma = plataforma;
         this.tamano = tamano;
-        asignarDescuento();
+        if (descuentoActivo) {
+            setDescuentoActivo(true);
+            asignarDescuento();
+        } else {
+            desactivarDescuento();
+        }
     }
 
     public String getDesarrollador() {

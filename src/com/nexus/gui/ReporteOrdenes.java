@@ -60,7 +60,7 @@ public class ReporteOrdenes extends JFrame {
         setTitle("Nexus Store - Reporte de Órdenes");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         com.nexus.NexusApplication.addGuardarAlCerrar(this, controlador);
-        setBounds(100, 100, 820, 560);
+        setBounds(100, 100, UITheme.VENTANA_TABLA_ANCHO, UITheme.VENTANA_TABLA_ALTO);
         setResizable(true);
         setLocationRelativeTo(null);
 
@@ -143,7 +143,7 @@ public class ReporteOrdenes extends JFrame {
         tablaOrdenes.setBackground(Color.WHITE);
 
         JTableHeader header = tablaOrdenes.getTableHeader();
-        header.setFont(UITheme.FONT_SUBTITULO);
+        header.setFont(UITheme.FONT_ENCABEZADO_TABLA);
         header.setBackground(new Color(230, 240, 235));
         header.setForeground(UITheme.TEXTO);
         header.setOpaque(true);
@@ -318,7 +318,7 @@ public class ReporteOrdenes extends JFrame {
             JTable tablaItems = new JTable(modelItems);
             tablaItems.setRowHeight(24);
             tablaItems.setFont(UITheme.FONT_NORMAL);
-            tablaItems.getTableHeader().setFont(UITheme.FONT_ETIQUETA);
+            tablaItems.getTableHeader().setFont(UITheme.FONT_ENCABEZADO_TABLA);
             tablaItems.setShowGrid(true);
             tablaItems.setGridColor(UITheme.BORDE);
             JScrollPane scrollItems = new JScrollPane(tablaItems);

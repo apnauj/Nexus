@@ -8,6 +8,7 @@ import com.nexus.exceptions.EProductoNoEncontrado;
 import com.nexus.exceptions.EValorNegativo;
 import com.nexus.model.entities.Cliente;
 import com.nexus.model.entities.Orden;
+import com.nexus.model.entities.OrdenItem;
 import com.nexus.model.enums.Estado;
 import com.nexus.model.enums.Rol;
 
@@ -50,7 +51,7 @@ public class GestionarOrdenes extends JFrame {
         setTitle("Nexus Store - Gestionar Órdenes");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         com.nexus.NexusApplication.addGuardarAlCerrar(this, controlador);
-        setBounds(100, 100, 700, 450);
+        setBounds(100, 100, UITheme.VENTANA_TABLA_ANCHO, UITheme.VENTANA_TABLA_ALTO);
         setResizable(true);
         setLocationRelativeTo(null);
 
@@ -78,6 +79,7 @@ public class GestionarOrdenes extends JFrame {
         tablaOrdenes = new JTable(modeloTabla);
         tablaOrdenes.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
         tablaOrdenes.getTableHeader().setReorderingAllowed(false);
+        tablaOrdenes.getTableHeader().setFont(UITheme.FONT_ENCABEZADO_TABLA);
         JScrollPane scrollTabla = new JScrollPane(tablaOrdenes);
         contentPane.add(scrollTabla, BorderLayout.CENTER);
 
@@ -87,6 +89,10 @@ public class GestionarOrdenes extends JFrame {
 
         JPanel panelBotones = new JPanel(new GridLayout(0, 1, 5, 5));
         contentPane.add(panelBotones, BorderLayout.SOUTH);
+
+        JButton btnVerDetalle = new JButton("Ver detalle de la orden");
+        btnVerDetalle.addActionListener(e -> mostrarDetalleOrden());
+        panelBotones.add(btnVerDetalle);
 
         if (puedeModificar) {
             JButton btnAñadirOrden = new JButton("Añadir Orden");
@@ -141,6 +147,55 @@ public class GestionarOrdenes extends JFrame {
     private void volverAlMenu() {
         new MenuPrincipalFrame().setVisible(true);
         dispose();
+    }
+
+    private void mostrarDetalleOrden() {
+        int fila = tablaOrdenes.getSelectedRow();
+        if (fila < 0) {
+            JOptionPane.showMessageDialog(this, "Seleccione una orden de la tabla.", "Sin selección", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        Orden[] ordenes = controlador.getHistorial();
+        if (fila >= ordenes.length) return;
+        Orden o = ordenes[fila];
+        if (o == null) return;
+
+        Cliente c = o.getCliente();
+        String clienteStr = (c != null) ? c.getNombre() + " " + c.getApellido() : "-";
+        double total = o.getTotal();
+        if (o.getItems() != null && o.getItems().length > 0 && total == 0) {
+            total = o.calcularTotal();
+        }
+        String metodoPagoStr = o.getMetodoPago() != null ? o.getMetodoPago().toString() : "-";
+        String totalStr = String.format("%.2f", total);
+        String valorPagadoStr = String.format("%.2f", o.getValorPagado());
+        String cambioStr = String.format("%.2f", o.getCambio());
+
+        String msg = "ID: " + o.getIdPedido() + "\n"
+                + "Cliente: " + clienteStr + "\n"
+                + "Fecha: " + o.getFecha() + "\n"
+                + "Estado: " + o.getEstado() + "\n"
+                + "Método de pago: " + metodoPagoStr + "\n"
+                + "Total: $" + totalStr + "\n"
+                + "Valor pagado: $" + valorPagadoStr + "\n"
+                + "Cambio: $" + cambioStr + "\n\n"
+                + "--- Items de la orden ---\n";
+
+        OrdenItem[] items = o.getItems();
+        if (items != null && items.length > 0) {
+            for (OrdenItem item : items) {
+                if (item != null && item.getProducto() != null) {
+                    String nomProd = item.getProducto().getNombre();
+                    double subtotal = item.calcularSubtotal();
+                    msg = msg + "  • " + nomProd + " x " + item.getCantidad()
+                            + " = $" + String.format("%.2f", subtotal) + "\n";
+                }
+            }
+        } else {
+            msg = msg + "  (Sin items)\n";
+        }
+
+        JOptionPane.showMessageDialog(this, msg, "Detalle de la orden", JOptionPane.INFORMATION_MESSAGE);
     }
 
     private void abrirAgregarOrden() {
@@ -244,8 +299,11 @@ public class GestionarOrdenes extends JFrame {
             }
             JOptionPane.showMessageDialog(this, msg, "Resultado del pago", JOptionPane.INFORMATION_MESSAGE);
             actualizarTabla();
+        } catch (NumberFormatException e) {
+            JOptionPane.showMessageDialog(this, "Ingrese un valor numérico válido (ej: 150000 o 99.50).",
+                    "Formato inválido", JOptionPane.ERROR_MESSAGE);
         } catch (EFormatoInvalido e) {
-            JOptionPane.showMessageDialog(this, "Ingrese un valor numérico válido.",
+            JOptionPane.showMessageDialog(this, "El valor no puede ser negativo.",
                     "Formato inválido", JOptionPane.ERROR_MESSAGE);
         } catch (EOrdenNoEncontrada | EParametroNulo | EValorNegativo | EProductoNoEncontrado ex) {
             JOptionPane.showMessageDialog(this, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);

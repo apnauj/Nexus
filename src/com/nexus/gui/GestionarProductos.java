@@ -3,6 +3,7 @@ package com.nexus.gui;
 import com.nexus.controller.StoreController;
 import com.nexus.model.entities.Hardware;
 import com.nexus.model.entities.Producto;
+import com.nexus.model.entities.Videojuego;
 import com.nexus.model.enums.Rol;
 
 import javax.swing.JButton;
@@ -46,7 +47,7 @@ public class GestionarProductos extends JFrame {
         setTitle("Nexus Store - Gestionar Productos");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         com.nexus.NexusApplication.addGuardarAlCerrar(this, controlador);
-        setBounds(100, 100, 750, 450);
+        setBounds(100, 100, UITheme.VENTANA_TABLA_ANCHO, UITheme.VENTANA_TABLA_ALTO);
         setLocationRelativeTo(null);
         setResizable(true);
 
@@ -65,7 +66,7 @@ public class GestionarProductos extends JFrame {
         panelSuperior.add(btnRegresar);
         contentPane.add(panelSuperior, BorderLayout.NORTH);
 
-        String[] columnas = { "Nombre", "Categoría", "Tipo", "Precio", "Stock" };
+        String[] columnas = { "Nombre", "Tipo", "Precio Base", "Descuento %", "Precio", "Stock" };
         modeloTabla = new DefaultTableModel(columnas, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
@@ -75,6 +76,7 @@ public class GestionarProductos extends JFrame {
         tablaProductos = new JTable(modeloTabla);
         tablaProductos.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
         tablaProductos.getTableHeader().setReorderingAllowed(false);
+        tablaProductos.getTableHeader().setFont(UITheme.FONT_ENCABEZADO_TABLA);
         JScrollPane scrollTabla = new JScrollPane(tablaProductos);
         contentPane.add(scrollTabla, BorderLayout.CENTER);
 
@@ -95,6 +97,10 @@ public class GestionarProductos extends JFrame {
         });
         panelBotones.add(btnAgregarVideojuego);
 
+        JButton btnVerDetalle = new JButton("Ver detalle del producto");
+        btnVerDetalle.addActionListener(e -> mostrarDetalleProducto());
+        panelBotones.add(btnVerDetalle);
+
         JButton btnEliminar = new JButton("Eliminar Producto");
         btnEliminar.addActionListener(e -> eliminarSeleccionado());
         panelBotones.add(btnEliminar);
@@ -112,14 +118,67 @@ public class GestionarProductos extends JFrame {
             String nombre = p.getNombre();
             if (nombre == null || nombre.isBlank()) continue; // omitir productos corruptos
             String tipo = p instanceof Hardware ? "Hardware" : "Videojuego";
+            int descuentoPct = p.isDescuentoActivo() ? (int) Math.round(p.getDescuento() * 100) : 0;
             modeloTabla.addRow(new Object[]{
                     nombre,
-                    p.getCategoria(),
                     tipo,
+                    String.format("%.2f", p.getPrecioBase()),
+                    descuentoPct + "%",
                     String.format("%.2f", p.calcularPrecio()),
                     p.getStock()
             });
         }
+    }
+
+    private void mostrarDetalleProducto() {
+        int fila = tablaProductos.getSelectedRow();
+        if (fila < 0) {
+            JOptionPane.showMessageDialog(this, "Seleccione un producto de la tabla.", "Sin selección", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        String nombre = (String) modeloTabla.getValueAt(fila, 0);
+        if (nombre == null || nombre.isBlank()) return;
+        Producto p;
+        try {
+            p = controlador.searchProducto(nombre);
+        } catch (com.nexus.exceptions.EProductoNoEncontrado ex) {
+            return;
+        }
+
+        String descripcionStr = p.getDescripcion() != null ? p.getDescripcion() : "-";
+        String categoriaStr = p.getCategoria() != null ? p.getCategoria() : "-";
+        String tipoStr = p instanceof Hardware ? "Hardware" : "Videojuego";
+        String descuentoStr = p.isDescuentoActivo() ? (int) Math.round(p.getDescuento() * 100) + "%" : "Inactivo";
+
+        String msg = "Nombre: " + p.getNombre() + "\n"
+                + "Descripción: " + descripcionStr + "\n"
+                + "Categoría: " + categoriaStr + "\n"
+                + "Tipo: " + tipoStr + "\n"
+                + "Precio base: $" + String.format("%.2f", p.getPrecioBase()) + "\n"
+                + "Descuento: " + descuentoStr + "\n"
+                + "Precio final: $" + String.format("%.2f", p.calcularPrecio()) + "\n"
+                + "Stock: " + p.getStock() + "\n"
+                + "Garantía: " + p.getTiempoGarantia() + " meses\n";
+
+        if (p instanceof Hardware h) {
+            String fabricanteStr = h.getFabricante() != null ? h.getFabricante() : "-";
+            msg = msg + "Consumo: " + h.getConsumo() + " W\n"
+                    + "Fabricante: " + fabricanteStr + "\n";
+        } else if (p instanceof Videojuego v) {
+            String desarrolladorStr = v.getDesarrollador() != null ? v.getDesarrollador() : "-";
+            String generoStr = v.getGenero() != null ? v.getGenero() : "-";
+            String plataformaStr = v.getPlataforma() != null ? v.getPlataforma() : "-";
+            msg = msg + "Desarrollador: " + desarrolladorStr + "\n"
+                    + "Género: " + generoStr + "\n"
+                    + "Multijugador: " + (v.getMultijugador() ? "Sí" : "No") + "\n"
+                    + "Plataforma: " + plataformaStr + "\n"
+                    + "Tamaño: " + v.getTamano() + " GB\n";
+            if (v.getFechaLanzamiento() != null) {
+                msg = msg + "Fecha lanzamiento: " + new java.text.SimpleDateFormat("dd/MM/yyyy").format(v.getFechaLanzamiento()) + "\n";
+            }
+        }
+
+        JOptionPane.showMessageDialog(this, msg, "Detalle del producto", JOptionPane.INFORMATION_MESSAGE);
     }
 
     private String obtenerProductoSeleccionado() {

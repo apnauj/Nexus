@@ -2,7 +2,6 @@ package com.nexus.gui;
 
 import com.nexus.controller.StoreController;
 import com.nexus.exceptions.ECantidadNegativa;
-import com.nexus.exceptions.EFormatoInvalido;
 import com.nexus.exceptions.EOrdenNoEncontrada;
 import com.nexus.exceptions.EParametroNulo;
 import com.nexus.exceptions.EProductoNoEncontrado;
@@ -140,9 +139,13 @@ public class AgregarItemOrden extends JFrame {
         int cantidad;
         try {
             cantidad = Integer.parseInt(cantidadStr.trim());
-            if (cantidad <= 0) throw new EFormatoInvalido("Debe ser positivo");
-        } catch (EFormatoInvalido e) {
-            JOptionPane.showMessageDialog(this, "La cantidad debe ser un número entero positivo.", "Formato inválido", JOptionPane.WARNING_MESSAGE);
+            if (cantidad <= 0) {
+                JOptionPane.showMessageDialog(this, "La cantidad debe ser un número entero positivo.", "Formato inválido", JOptionPane.WARNING_MESSAGE);
+                txtCantidad.requestFocus();
+                return;
+            }
+        } catch (NumberFormatException e) {
+            JOptionPane.showMessageDialog(this, "La cantidad debe ser un número entero válido (ej: 1, 2, 10).", "Formato inválido", JOptionPane.WARNING_MESSAGE);
             txtCantidad.requestFocus();
             return;
         }

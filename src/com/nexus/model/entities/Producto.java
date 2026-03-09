@@ -17,6 +17,7 @@ public abstract class Producto implements Serializable {
 	protected double precioBase;
 	protected double descuento;
 	protected int stock;
+	protected boolean descuentoActivo;
 	
 	/*
 	Constructor de producto, este constructor recibe nombre, descripcion, categoria, tiempoGarantia
@@ -42,6 +43,8 @@ public abstract class Producto implements Serializable {
 		this.tiempoGarantia = tiempoGarantia;
 		this.precioBase = precioBase;
 		this.stock = stock;
+		this.descuentoActivo = true;
+		this.descuento = 0;
 	}
 	
 	public UUID getId() {
@@ -130,13 +133,32 @@ public abstract class Producto implements Serializable {
 	}
 	
 	/**
-	 * Calcula el precio final. El descuento reduce el precio base.
-	 * Fórmula: precioBase × (1 - descuento). Ej: 10% descuento → multiplica por 0.90.
+	 * Calcula el precio final. Si el descuento está activo, reduce el precio base.
+	 * Si está inactivo, devuelve el precio base sin descuento.
 	 */
 	public double calcularPrecio() {
+		if (!descuentoActivo) return precioBase;
 		return precioBase * (1 - descuento);
 	}
 
+	public boolean isDescuentoActivo() {
+		return descuentoActivo;
+	}
+
+	public void setDescuentoActivo(boolean activo) {
+		this.descuentoActivo = activo;
+		if (!activo) this.descuento = 0;
+	}
+
+	public void activarDescuento() {
+		this.descuentoActivo = true;
+	}
+
 	public abstract double asignarDescuento();
+
+	public void desactivarDescuento() {
+		descuentoActivo = false;
+		descuento = 0;
+	}
 
 }

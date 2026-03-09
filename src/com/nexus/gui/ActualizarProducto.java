@@ -54,6 +54,7 @@ public class ActualizarProducto extends JFrame {
     private JTextField txtFechaLanzamiento;
     private JTextField txtPlataforma;
     private JTextField txtTamano;
+    private JCheckBox chkDescuentoActivo;
 
     private JPanel panelForm;
 
@@ -66,13 +67,14 @@ public class ActualizarProducto extends JFrame {
         setTitle("Nexus Store - Actualizar Producto");
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         com.nexus.NexusApplication.addGuardarAlCerrar(this, controlador);
-        setBounds(100, 100, 580, 640);
+        setBounds(100, 100, UITheme.VENTANA_FORMULARIO_ANCHO, UITheme.VENTANA_FORMULARIO_ALTO);
         setResizable(true);
         setLocationRelativeTo(null);
 
         JPanel contentPane = new JPanel();
-        contentPane.setBorder(new EmptyBorder(15, 15, 15, 15));
-        contentPane.setLayout(new BorderLayout(5, 5));
+        contentPane.setBackground(UITheme.FONDO_PANEL);
+        contentPane.setBorder(new EmptyBorder(UITheme.MARGEN, UITheme.MARGEN, UITheme.MARGEN, UITheme.MARGEN));
+        contentPane.setLayout(new BorderLayout(UITheme.ESPACIADO, UITheme.ESPACIADO));
         setContentPane(contentPane);
 
         JPanel panelSuperior = new JPanel(new FlowLayout(FlowLayout.LEFT));
@@ -124,7 +126,7 @@ public class ActualizarProducto extends JFrame {
                 productoActual = controlador.searchProducto(sel);
                 esHardware = productoActual instanceof Hardware;
                 getContentPane().removeAll();
-                getContentPane().setLayout(new BorderLayout(5, 5));
+                getContentPane().setLayout(new BorderLayout(UITheme.ESPACIADO, UITheme.ESPACIADO));
                 getContentPane().add(panelSuperiorDesde(contentPane), BorderLayout.NORTH);
                 construirFormulario();
                 getContentPane().add(panelBotonesDesde(contentPane), BorderLayout.SOUTH);
@@ -158,7 +160,8 @@ public class ActualizarProducto extends JFrame {
     }
 
     private void construirFormulario() {
-        panelForm = new JPanel(new GridLayout(0, 1, 0, 8));
+        panelForm = new JPanel(new GridLayout(0, 1, 0, UITheme.ESPACIADO));
+        panelForm.setBackground(UITheme.FONDO_PANEL);
 
         txtNombre = crearTextField(35);
         txtNombre.setText(productoActual.getNombre());
@@ -188,6 +191,11 @@ public class ActualizarProducto extends JFrame {
             txtStock.setToolTipText("No tiene permisos para modificar el stock.");
         }
         panelForm.add(crearFila("Stock: ", txtStock));
+
+        JPanel rowDescuento = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        chkDescuentoActivo = new JCheckBox("Activar descuento", productoActual.isDescuentoActivo());
+        rowDescuento.add(chkDescuentoActivo);
+        panelForm.add(rowDescuento);
 
         if (esHardware) {
             Hardware h = (Hardware) productoActual;
@@ -275,6 +283,11 @@ public class ActualizarProducto extends JFrame {
             JOptionPane.showMessageDialog(this, "La categoría es obligatoria.", "Campo requerido", JOptionPane.WARNING_MESSAGE);
             return;
         }
+        if (tiempoStr == null || tiempoStr.isBlank() || precioStr == null || precioStr.isBlank()
+                || stockStr == null || stockStr.isBlank()) {
+            JOptionPane.showMessageDialog(this, "Complete los campos numéricos (tiempo garantía, precio base, stock).", "Campos requeridos", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
 
         int tiempoGarantia;
         double precioBase;
@@ -309,8 +322,9 @@ public class ActualizarProducto extends JFrame {
                 actualizarVideojuegoDesdeForm(nombre, desc, cat, tiempoGarantia, precioBase, stock);
             }
             Producto actualizado = controlador.searchProducto(nombre);
-            int descuentoPct = (int) Math.round(actualizado.getDescuento() * 100);
-            String msg = String.format("Producto actualizado correctamente.%nSe asignó un descuento del %d%% según stock y características.", descuentoPct);
+            String msg = actualizado.isDescuentoActivo()
+                    ? String.format("Producto actualizado correctamente.%nSe asignó un descuento del %d%% según stock y características.", (int) Math.round(actualizado.getDescuento() * 100))
+                    : "Producto actualizado correctamente. Descuento desactivado.";
             JOptionPane.showMessageDialog(this, msg, "Éxito", JOptionPane.INFORMATION_MESSAGE);
             new GestionarProductos().setVisible(true);
             dispose();
@@ -328,13 +342,17 @@ public class ActualizarProducto extends JFrame {
         if (fabricante == null || fabricante.isBlank()) {
             throw new EParametroNulo("fabricante");
         }
+        String consumoStr = txtConsumo != null ? txtConsumo.getText() : null;
+        if (consumoStr == null || consumoStr.isBlank()) {
+            throw new ECantidadNegativa("El consumo es obligatorio.");
+        }
         float consumo;
         try {
-            consumo = Float.parseFloat(txtConsumo.getText().trim());
+            consumo = Float.parseFloat(consumoStr.trim());
         } catch (NumberFormatException e) {
-            throw new ECantidadNegativa("El consumo debe ser un número válido.");
+            throw new ECantidadNegativa("El consumo debe ser un número válido (ej: 150 o 85.5).");
         }
-        controlador.actualizarHardware(nombre, desc, cat, tiempoGarantia, precioBase, stock, consumo, fabricante);
+        controlador.actualizarHardware(nombre, desc, cat, tiempoGarantia, precioBase, stock, consumo, fabricante, chkDescuentoActivo.isSelected());
     }
 
     private void actualizarVideojuegoDesdeForm(String nombre, String desc, String cat, int tiempoGarantia, double precioBase, int stock) throws EProductoNoEncontrado, EParametroNulo, ECantidadNegativa, EValorNegativo, EFormatoInvalido {
@@ -350,11 +368,15 @@ public class ActualizarProducto extends JFrame {
         if (plataforma == null || plataforma.isBlank()) {
             throw new EParametroNulo("plataforma");
         }
+        String tamanoStr = txtTamano != null ? txtTamano.getText() : null;
+        if (tamanoStr == null || tamanoStr.isBlank()) {
+            throw new ECantidadNegativa("El tamaño es obligatorio.");
+        }
         double tamano;
         try {
-            tamano = Double.parseDouble(txtTamano.getText().trim());
+            tamano = Double.parseDouble(tamanoStr.trim());
         } catch (NumberFormatException e) {
-            throw new ECantidadNegativa("El tamaño debe ser un número válido.");
+            throw new ECantidadNegativa("El tamaño debe ser un número válido (ej: 50 o 12.5).");
         }
         Date fechaLanzamiento = null;
         String fechaStr = txtFechaLanzamiento.getText();
@@ -366,6 +388,6 @@ public class ActualizarProducto extends JFrame {
             }
         }
         controlador.actualizarVideojuego(nombre, desc, cat, tiempoGarantia, precioBase, stock,
-                desarrollador.trim(), genero.trim(), chkMultijugador.isSelected(), fechaLanzamiento, plataforma, tamano);
+                desarrollador.trim(), genero.trim(), chkMultijugador.isSelected(), fechaLanzamiento, plataforma, tamano, chkDescuentoActivo.isSelected());
     }
 }
