@@ -1,10 +1,11 @@
-package com.nexus.GUI;
+package com.nexus.gui;
 
 import com.nexus.controller.StoreController;
 import com.nexus.exceptions.ECantidadNegativa;
 import com.nexus.exceptions.EParametroNulo;
 import com.nexus.exceptions.EProductoYaExiste;
 import com.nexus.exceptions.EValorNegativo;
+import com.nexus.model.entities.Producto;
 
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -130,17 +131,34 @@ public class AgregarHardware extends JFrame {
         float consumo;
         try {
             tiempoGarantia = Integer.parseInt(tiempoStr.trim());
+        } catch (NumberFormatException e) {
+            JOptionPane.showMessageDialog(this, "El tiempo de garantía debe ser un número entero válido (ej: 12).", "Tiempo de garantía inválido", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        try {
             precioBase = Double.parseDouble(precioStr.trim());
+        } catch (NumberFormatException e) {
+            JOptionPane.showMessageDialog(this, "El precio base debe ser un número válido (ej: 100000 o 99.99).", "Precio base inválido", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        try {
             stock = Integer.parseInt(stockStr.trim());
+        } catch (NumberFormatException e) {
+            JOptionPane.showMessageDialog(this, "El stock debe ser un número entero válido (ej: 10).", "Stock inválido", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        try {
             consumo = Float.parseFloat(consumoStr.trim());
         } catch (NumberFormatException e) {
-            JOptionPane.showMessageDialog(this, "Verifique que tiempo, precio, stock y consumo sean números válidos.", "Formato inválido", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "El consumo debe ser un número válido en vatios (ej: 150 o 85.5).", "Consumo inválido", JOptionPane.ERROR_MESSAGE);
             return;
         }
 
         try {
-            controlador.addHardware(nombre, descripcion != null ? descripcion : "", categoria, tiempoGarantia, precioBase, stock, consumo, fabricante);
-            JOptionPane.showMessageDialog(this, "Hardware agregado correctamente.", "Éxito", JOptionPane.INFORMATION_MESSAGE);
+            Producto producto = controlador.addHardware(nombre, descripcion != null ? descripcion : "", categoria, tiempoGarantia, precioBase, stock, consumo, fabricante);
+            int descuentoPct = (int) Math.round(producto.getDescuento() * 100);
+            String msg = String.format("Hardware agregado correctamente.%nSe aplicó un descuento del %d%% (según stock y consumo).", descuentoPct);
+            JOptionPane.showMessageDialog(this, msg, "Éxito", JOptionPane.INFORMATION_MESSAGE);
             new GestionarProductos().setVisible(true);
             dispose();
         } catch (EProductoYaExiste ex) {

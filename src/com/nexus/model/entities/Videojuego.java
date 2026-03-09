@@ -15,23 +15,23 @@ import java.util.Date;
 public class Videojuego extends Producto implements Serializable {
 
     private static final long serialVersionUID = -576859584434L;
-    private String[] desarrolladores;
-    private String[] generos;
+    private String desarrollador;
+    private String genero;
     private boolean multijugador;
     private Date fechaLanzamiento;
     private String plataforma;
     private double tamano;  // GB
 
 
-    public Videojuego(String nombre, String descripcion, String categoria, int tiempoGarantia, double precioBase, int stock, String[] desarrolladores, String[] generos, boolean multijugador, Date fechaLanzamiento, String plataforma, double tamano) throws EParametroNulo, ECantidadNegativa, EValorNegativo {
+    public Videojuego(String nombre, String descripcion, String categoria, int tiempoGarantia, double precioBase, int stock, String desarrollador, String genero, boolean multijugador, Date fechaLanzamiento, String plataforma, double tamano) throws EParametroNulo, ECantidadNegativa, EValorNegativo {
 
         super(nombre, descripcion, categoria, tiempoGarantia, precioBase, stock);
-        if(desarrolladores == null || desarrolladores.length == 0) throw new EParametroNulo("desarrolladores");
-        if(generos == null || generos.length == 0) throw new EParametroNulo("generos");
-        if(plataforma == null || plataforma.isBlank()) throw new EParametroNulo("plataforma");
+        if (desarrollador == null || desarrollador.isBlank()) throw new EParametroNulo("desarrollador");
+        if (genero == null || genero.isBlank()) throw new EParametroNulo("genero");
+        if (plataforma == null || plataforma.isBlank()) throw new EParametroNulo("plataforma");
         if (tamano < 0) throw new ECantidadNegativa("El peso en GB del videojuego no puede ser negativo");
-        this.desarrolladores = desarrolladores;
-        this.generos = generos;
+        this.desarrollador = desarrollador;
+        this.genero = genero;
         this.multijugador = multijugador;
         this.fechaLanzamiento = fechaLanzamiento;
         this.plataforma = plataforma;
@@ -39,12 +39,12 @@ public class Videojuego extends Producto implements Serializable {
         asignarDescuento();
     }
 
-    public String[] getDesarrolladores() {
-        return desarrolladores;
+    public String getDesarrollador() {
+        return desarrollador;
     }
 
-    public String[] getGeneros() {
-        return generos;
+    public String getGenero() {
+        return genero;
     }
 
     public boolean getMultijugador() {
@@ -63,12 +63,12 @@ public class Videojuego extends Producto implements Serializable {
         return tamano;
     }
 
-    public void setDesarrolladores(String[] desarrolladores) {
-        this.desarrolladores = desarrolladores;
+    public void setDesarrollador(String desarrollador) {
+        this.desarrollador = desarrollador;
     }
 
-    public void setGeneros(String[] generos) {
-        this.generos = generos;
+    public void setGenero(String genero) {
+        this.genero = genero;
     }
     public void setModoMultijugador(boolean multijugador) {
         this.multijugador = multijugador;
@@ -86,36 +86,16 @@ public class Videojuego extends Producto implements Serializable {
         this.tamano = tamano;
     }
 
-    
-
-    public String obtenerInfoJuego() {
-        return nombre + " - " + plataforma + " - " + calcularPrecio();
-    }
-
-    public boolean verificarDisponibilidad() {
-        return stock > 0;
-    }
-
 
     @Override
-    public void asignarDescuento() {
-        if(fechaLanzamiento != null){
-            long hoy = System.currentTimeMillis();
-            long lanzamiento = fechaLanzamiento.getTime();
-
-            long diferencia = hoy - lanzamiento;
-
-            long años = diferencia / (1000L * 60 * 60 * 24 * 365);
-
-            if (años >= 2) {
-                descuento = 0.20; // 20%
-            } else {
-                descuento = 0.05; // 5%
-            }
-        } else {
-            descuento = 0.05;
+    public double asignarDescuento() {
+        double pct = stock <= 5 ? 0.05 : (stock <= 15 ? 0.10 : 0.15);
+        if (fechaLanzamiento != null) {
+            long años = (System.currentTimeMillis() - fechaLanzamiento.getTime()) / (1000L * 60 * 60 * 24 * 365);
+            if (años >= 2) pct += 0.05;
         }
-
+        descuento = Math.min(pct, 0.20);
+        return descuento;
     }
 
 

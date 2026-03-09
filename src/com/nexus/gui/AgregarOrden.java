@@ -1,4 +1,4 @@
-package com.nexus.GUI;
+package com.nexus.gui;
 
 import com.nexus.controller.StoreController;
 import com.nexus.exceptions.EClienteNoEncontrado;
@@ -20,6 +20,7 @@ import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
+import java.util.UUID;
 
 /**
  * Pantalla para crear una nueva orden asignando un cliente.
@@ -138,7 +139,7 @@ public class AgregarOrden extends JFrame {
         MetodoPago metodoPago = (MetodoPago) cmbMetodoPago.getSelectedItem();
 
         try {
-            var idOrden = controlador.addOrden(tipoDoc, numDoc, metodoPago);
+            UUID idOrden = controlador.addOrden(tipoDoc, numDoc, metodoPago);
             String msg = "Orden creada correctamente.\nCliente asignado.\n\n"
                     + "ID orden: " + idOrden.toString().substring(0, 8) + "...\n\n"
                     + "Puede añadir productos a la orden desde 'Añadir Item a la Orden'.";

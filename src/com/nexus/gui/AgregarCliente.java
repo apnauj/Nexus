@@ -1,4 +1,4 @@
-package com.nexus.GUI;
+package com.nexus.gui;
 
 import com.nexus.controller.StoreController;
 import com.nexus.exceptions.EClienteYaExiste;
@@ -150,6 +150,22 @@ public class AgregarCliente extends JFrame {
         nombre = nombre.trim();
         apellido = apellido.trim();
         email = email.trim();
+
+        if (email.contains(" ") || email.contains("\t")) {
+            JOptionPane.showMessageDialog(this, "El email no puede contener espacios.", "Formato inválido", JOptionPane.WARNING_MESSAGE);
+            txtEmail.requestFocus();
+            return;
+        }
+        if (!email.matches("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$")) {
+            JOptionPane.showMessageDialog(this, "El formato del email es inválido. Debe ser: nombre@dominio.ext (ej: usuario@correo.com)", "Formato inválido", JOptionPane.WARNING_MESSAGE);
+            txtEmail.requestFocus();
+            return;
+        }
+        if (!numDoc.matches("\\d{1,10}")) {
+            JOptionPane.showMessageDialog(this, "El documento debe ser numérico y tener máximo 10 dígitos.", "Formato inválido", JOptionPane.WARNING_MESSAGE);
+            txtNumDoc.requestFocus();
+            return;
+        }
 
         TipoDocumento tipoDoc = (TipoDocumento) cmbTipoDoc.getSelectedItem();
 

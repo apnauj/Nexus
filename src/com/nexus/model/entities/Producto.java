@@ -132,11 +132,14 @@ public abstract class Producto implements Serializable {
 		this.categoria=categoria;
 	}
 	
+	/**
+	 * Calcula el precio final. El descuento reduce el precio base.
+	 * Fórmula: precioBase × (1 - descuento). Ej: 10% descuento → multiplica por 0.90.
+	 */
 	public double calcularPrecio() {
-		return precioBase +(precioBase*tiempoGarantia*0.15)-(precioBase*descuento);
+		return precioBase * (1 - descuento);
 	}
-	
 
-	abstract void asignarDescuento(); 
+	public abstract double asignarDescuento();
 
 }

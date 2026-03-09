@@ -42,12 +42,11 @@ public class Hardware extends Producto implements Serializable {
     }
 
     @Override
-    public void asignarDescuento() {
-        if (consumo < 100) { //mas consumo, menor descuento
-            descuento = 0.12;  // 12%
-        } else {
-            descuento = 0.05;  // 5%
-        }
+    public double asignarDescuento() {
+        double pct = (stock <= 5) ? 0.05 : ((stock <= 15) ? 0.10 : 0.15);
+        if (consumo < 100) pct += 0.03;
+        descuento = Math.min(pct, 0.20);
+        return descuento;
     }
 
     public void escribirHardware(String dir) throws IOException {

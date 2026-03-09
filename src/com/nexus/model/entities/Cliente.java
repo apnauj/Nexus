@@ -44,9 +44,12 @@ public class Cliente implements Serializable{
     }
 
     private void validarEmail(String email) throws EFormatoInvalido {
-        // Verifica que contenga '@' y '.'
-        if (!email.contains("@") || !email.contains(".")) {
-            throw new EFormatoInvalido("El formato del email es inválido (debe contener @ y .)");
+        if (email.contains(" ") || email.contains("\t")) {
+            throw new EFormatoInvalido("El email no puede contener espacios.");
+        }
+        // Formato: local@dominio.ext (un @, dominio con al menos un punto)
+        if (!email.matches("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$")) {
+            throw new EFormatoInvalido("El formato del email es inválido. Debe ser: nombre@dominio.ext (ej: usuario@correo.com)");
         }
     }
 

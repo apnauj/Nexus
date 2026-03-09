@@ -1,12 +1,10 @@
-package com.nexus.GUI;
+package com.nexus.gui;
 
 import com.nexus.controller.StoreController;
-import com.nexus.exceptions.ECantidadNegativa;
 import com.nexus.exceptions.EEstadoOrdenInvalido;
 import com.nexus.exceptions.EOrdenNoEncontrada;
 import com.nexus.exceptions.EParametroNulo;
 import com.nexus.exceptions.EProductoNoEncontrado;
-import com.nexus.exceptions.EStockInsuficiente;
 import com.nexus.model.entities.Orden;
 
 import javax.swing.JButton;
@@ -15,29 +13,27 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.JTextField;
 import javax.swing.border.EmptyBorder;
 import java.awt.BorderLayout;
-import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.GridLayout;
 import java.util.UUID;
 
 /**
- * Pantalla para modificar la cantidad de un producto en una orden pendiente.
+ * Pantalla para eliminar un item de una orden pendiente.
+ * Usa los métodos del controlador para obtener órdenes y productos (sin List/ArrayList).
  */
-public class ModificarCantidadItem extends JFrame {
+public class EliminarItemOrden extends JFrame {
 
     private static final long serialVersionUID = 1L;
     private StoreController controlador;
     private JComboBox<String> cmbOrden;
     private JComboBox<String> cmbProducto;
-    private JTextField txtCantidad;
     private Orden[] ordenesPendientes;
     private String[] opcionesProductosEnOrden;
 
-    public ModificarCantidadItem() {
+    public EliminarItemOrden() {
         controlador = StoreController.getInstance();
 
         if (controlador.getCurrentUser() == null) {
@@ -47,10 +43,10 @@ public class ModificarCantidadItem extends JFrame {
             return;
         }
 
-        setTitle("Nexus Store - Modificar Cantidad de Item");
+        setTitle("Nexus Store - Eliminar Item de Orden");
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         com.nexus.NexusApplication.addGuardarAlCerrar(this, controlador);
-        setBounds(100, 100, 480, 320);
+        setBounds(100, 100, 480, 280);
         setLocationRelativeTo(null);
         setResizable(false);
 
@@ -72,7 +68,7 @@ public class ModificarCantidadItem extends JFrame {
         String[] opcionesOrden = controlador.getOpcionesOrdenesPendientes();
 
         JPanel panelForm = new JPanel(new GridLayout(0, 1, 0, 10));
-        panelForm.setPreferredSize(new Dimension(420, 160));
+        panelForm.setPreferredSize(new Dimension(420, 120));
 
         if (opcionesOrden.length == 0) {
             panelForm.add(new JLabel("No hay órdenes pendientes. Cree una orden y añada items primero."));
@@ -86,32 +82,24 @@ public class ModificarCantidadItem extends JFrame {
             panelForm.add(rowOrden);
 
             JPanel rowProducto = new JPanel(new FlowLayout(FlowLayout.LEFT));
-            rowProducto.add(new JLabel("Producto: "));
+            rowProducto.add(new JLabel("Producto a eliminar: "));
             opcionesProductosEnOrden = obtenerProductosEnOrdenSeleccionada();
             cmbProducto = new JComboBox<>(opcionesProductosEnOrden);
             cmbProducto.setPreferredSize(new Dimension(280, 25));
             rowProducto.add(cmbProducto);
             panelForm.add(rowProducto);
-
-            JPanel rowCantidad = new JPanel(new FlowLayout(FlowLayout.LEFT));
-            rowCantidad.add(new JLabel("Nueva cantidad: "));
-            txtCantidad = new JTextField(8);
-            txtCantidad.setForeground(Color.BLACK);
-            txtCantidad.setBackground(Color.WHITE);
-            txtCantidad.setCaretColor(Color.BLACK);
-            rowCantidad.add(txtCantidad);
-            panelForm.add(rowCantidad);
         }
 
         contentPane.add(panelForm, BorderLayout.CENTER);
 
         JPanel panelBotones = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        JButton btnModificar = new JButton("Modificar cantidad");
-        btnModificar.addActionListener(e -> modificarCantidad());
-        panelBotones.add(btnModificar);
+        JButton btnEliminar = new JButton("Eliminar de la orden");
+        btnEliminar.addActionListener(e -> eliminarItem());
+        panelBotones.add(btnEliminar);
         contentPane.add(panelBotones, BorderLayout.SOUTH);
     }
 
+    //TODO: pasar al controller
     private String[] obtenerProductosEnOrdenSeleccionada() {
         if (ordenesPendientes == null || ordenesPendientes.length == 0) return new String[0];
         int idx = cmbOrden != null ? cmbOrden.getSelectedIndex() : 0;
@@ -123,7 +111,7 @@ public class ModificarCantidadItem extends JFrame {
             return new String[0];
         }
     }
-
+    //TODO: deberia estar en el controller
     private void actualizarProductosEnOrden() {
         if (cmbOrden == null || cmbProducto == null) return;
         opcionesProductosEnOrden = obtenerProductosEnOrdenSeleccionada();
@@ -133,7 +121,7 @@ public class ModificarCantidadItem extends JFrame {
         }
     }
 
-    private void modificarCantidad() {
+    private void eliminarItem() {
         if (ordenesPendientes == null || ordenesPendientes.length == 0) {
             JOptionPane.showMessageDialog(this, "No hay órdenes pendientes disponibles.", "Sin órdenes", JOptionPane.WARNING_MESSAGE);
             return;
@@ -143,7 +131,7 @@ public class ModificarCantidadItem extends JFrame {
             return;
         }
         if (cmbProducto == null) {
-            JOptionPane.showMessageDialog(this, "No hay productos para modificar.", "Sin productos", JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(this, "No hay productos para eliminar.", "Sin productos", JOptionPane.WARNING_MESSAGE);
             return;
         }
 
@@ -153,36 +141,15 @@ public class ModificarCantidadItem extends JFrame {
             return;
         }
 
-        String cantidadStr = txtCantidad.getText();
-        if (cantidadStr == null || cantidadStr.isBlank()) {
-            JOptionPane.showMessageDialog(this, "Ingrese la nueva cantidad.", "Campo requerido", JOptionPane.WARNING_MESSAGE);
-            txtCantidad.requestFocus();
-            return;
-        }
-
-        int cantidad;
-        try {
-            cantidad = Integer.parseInt(cantidadStr.trim());
-            if (cantidad <= 0) throw new NumberFormatException("Debe ser positivo");
-        } catch (NumberFormatException e) {
-            JOptionPane.showMessageDialog(this, "La cantidad debe ser un número entero positivo.", "Formato inválido", JOptionPane.WARNING_MESSAGE);
-            txtCantidad.requestFocus();
-            return;
-        }
-
         int idxOrden = cmbOrden.getSelectedIndex();
         UUID idOrden = ordenesPendientes[idxOrden].getIdPedido();
 
         try {
-            controlador.modificarCantidadItem(idOrden, nombreProducto, cantidad);
-            JOptionPane.showMessageDialog(this, "Cantidad modificada correctamente.", "Éxito", JOptionPane.INFORMATION_MESSAGE);
+            controlador.removeItemOrden(idOrden, nombreProducto);
+            JOptionPane.showMessageDialog(this, "Item eliminado correctamente.", "Éxito", JOptionPane.INFORMATION_MESSAGE);
             new GestionarOrdenes().setVisible(true);
             dispose();
-        } catch (EOrdenNoEncontrada | EProductoNoEncontrado ex) {
-            JOptionPane.showMessageDialog(this, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
-        } catch (EStockInsuficiente ex) {
-            JOptionPane.showMessageDialog(this, ex.getMessage(), "Stock insuficiente", JOptionPane.ERROR_MESSAGE);
-        } catch (ECantidadNegativa | EEstadoOrdenInvalido | EParametroNulo ex) {
+        } catch (EOrdenNoEncontrada | EProductoNoEncontrado | EParametroNulo | EEstadoOrdenInvalido ex) {
             JOptionPane.showMessageDialog(this, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(this, "Error: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);

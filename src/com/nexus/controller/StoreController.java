@@ -157,11 +157,15 @@ public class StoreController {
         if (tipoDoc == null) throw new EParametroNulo("tipoDoc");
         if (numDoc == null || numDoc.isBlank()) throw new EParametroNulo("numDoc");
         if (nombre == null || nombre.isBlank()) throw new EParametroNulo("nombre");
-        if(apellido == null || apellido.isBlank()) throw new EParametroNulo("apellido");
-        if(email == null || email.isBlank()) throw new EParametroNulo("email");
+        if (apellido == null || apellido.isBlank()) throw new EParametroNulo("apellido");
+        if (email == null || email.isBlank()) throw new EParametroNulo("email");
         if (existeCliente(tipoDoc, numDoc)) throw new EClienteYaExiste(tipoDoc, numDoc);
 
-        Cliente nuevoCliente = new Cliente(tipoDoc, numDoc, nombre, apellido, email);
+        String emailTrimmed = email.trim();
+        if (emailTrimmed.contains(" ") || emailTrimmed.contains("\t")) throw new EFormatoInvalido("El email no puede contener espacios.");
+        if (!emailTrimmed.matches("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$")) throw new EFormatoInvalido("El formato del email es inválido. Debe ser: nombre@dominio.ext (ej: usuario@correo.com)");
+
+        Cliente nuevoCliente = new Cliente(tipoDoc, numDoc, nombre, apellido, emailTrimmed);
         this.clientes = Arrays.copyOf(this.clientes, this.clientes.length + 1);
         this.clientes[this.clientes.length - 1] = nuevoCliente;
     }
@@ -181,28 +185,35 @@ public class StoreController {
     }
 
     /**
-     * Añadir Hardware con sus respectivas validaciones
+     * Añade un producto tipo Hardware con sus respectivas validaciones.
+     * El descuento se asigna automáticamente según stock y consumo.
+     *
+     * @return el producto creado (para obtener el descuento aplicado)
      */
-    public void addHardware (String nombre, String descripcion, String categoria, int tiempoGarantia, double precioBase, int stock, float consumo, String fabricante) throws EProductoYaExiste, EParametroNulo, ECantidadNegativa, EValorNegativo {
+    public Producto addHardware(String nombre, String descripcion, String categoria, int tiempoGarantia, double precioBase, int stock, float consumo, String fabricante) throws EProductoYaExiste, EParametroNulo, ECantidadNegativa, EValorNegativo {
         if (nombre == null || nombre.isBlank()) throw new EParametroNulo("nombre");
         if (existeProducto(nombre)) throw new EProductoYaExiste(nombre);
 
-        Producto nuevoHardware = new Hardware(nombre, descripcion, categoria, tiempoGarantia, precioBase, stock, consumo, fabricante);
+        Hardware nuevoHardware = new Hardware(nombre, descripcion, categoria, tiempoGarantia, precioBase, stock, consumo, fabricante);
         this.productos = Arrays.copyOf(this.productos, this.productos.length + 1);
         this.productos[this.productos.length - 1] = nuevoHardware;
+        return nuevoHardware;
     }
 
     /**
-     * Añadir Videojuego con sus respectivas validaciones
+     * Añade un producto tipo Videojuego con sus respectivas validaciones.
+     * El descuento se asigna automáticamente según stock y antigüedad.
+     *
+     * @return el producto creado (para obtener el descuento aplicado)
      */
-    public void addVideojuego(String nombre, String descripcion, String categoria, int tiempoGarantia, double precioBase, int stock, String[] desarrolladores, String[] generos, boolean multijugador, Date fechaLanzamiento, String plataforma, double tamano) throws EProductoYaExiste, EParametroNulo, ECantidadNegativa, EValorNegativo {
+    public Producto addVideojuego(String nombre, String descripcion, String categoria, int tiempoGarantia, double precioBase, int stock, String desarrollador, String genero, boolean multijugador, Date fechaLanzamiento, String plataforma, double tamano) throws EProductoYaExiste, EParametroNulo, ECantidadNegativa, EValorNegativo {
         if (nombre == null || nombre.isBlank()) throw new EParametroNulo("nombre");
-        if (existeProducto(nombre)) {
-            throw new EProductoYaExiste(nombre);
-        }
-        Producto nuevoVideojuego = new Videojuego(nombre, descripcion, categoria, tiempoGarantia, precioBase, stock, desarrolladores, generos, multijugador, fechaLanzamiento, plataforma, tamano);
+        if (existeProducto(nombre)) throw new EProductoYaExiste(nombre);
+
+        Videojuego nuevoVideojuego = new Videojuego(nombre, descripcion, categoria, tiempoGarantia, precioBase, stock, desarrollador, genero, multijugador, fechaLanzamiento, plataforma, tamano);
         this.productos = Arrays.copyOf(this.productos, this.productos.length + 1);
         this.productos[this.productos.length - 1] = nuevoVideojuego;
+        return nuevoVideojuego;
     }
 
     // --- Métodos auxiliares de existencia ---
@@ -495,7 +506,9 @@ public class StoreController {
     }
 
     /**
-     * Decrementa el stock en el arreglo real de productos para cada item de la orden aprobada. */
+     * Decrementa el stock en el arreglo real de productos para cada item de la orden aprobada.
+     * Recalcula el descuento de cada producto tras el cambio de stock.
+     */
     private void decrementarStockEnProductos(Orden orden) throws EValorNegativo, EProductoNoEncontrado, EParametroNulo, EStockInsuficiente {
         OrdenItem[] items = orden.getItems();
         if (items == null) return;
@@ -506,6 +519,7 @@ public class StoreController {
                 throw new EStockInsuficiente(pReal);
             }
             pReal.setStock(pReal.getStock() - item.getCantidad());
+            pReal.asignarDescuento();
         }
     }
 
@@ -555,12 +569,14 @@ public class StoreController {
         if (apellido == null || apellido.isBlank()) throw new EParametroNulo("apellido", "El apellido no puede ser null o vacío.");
         if (email == null || email.isBlank()) throw new EParametroNulo("email", "El email no puede ser null o vacío.");
         if (!numDoc.trim().matches("\\d{1,10}")) throw new EFormatoInvalido("El documento debe ser numérico y tener máximo 10 dígitos.");
-        if (!email.contains("@") || !email.contains(".")) throw new EFormatoInvalido("El formato del email es inválido (debe contener @ y .)");
+        String emailTrimmed = email.trim();
+        if (emailTrimmed.contains(" ") || emailTrimmed.contains("\t")) throw new EFormatoInvalido("El email no puede contener espacios.");
+        if (!emailTrimmed.matches("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$")) throw new EFormatoInvalido("El formato del email es inválido. Debe ser: nombre@dominio.ext (ej: usuario@correo.com)");
 
         Cliente c = searchCliente(tipoDoc, numDoc.trim());
         c.setNombre(nombre.trim());
         c.setApellido(apellido.trim());
-        c.setEmail(email.trim());
+        c.setEmail(emailTrimmed);
     }
     	
     /**
@@ -573,11 +589,11 @@ public class StoreController {
 
         if (nombre == null || nombre.isBlank()) throw new EParametroNulo("nombre", "El nombre del producto no puede ser null o vacío.");
         if (categoria == null || categoria.isBlank()) throw new EParametroNulo("categoria", "La categoría no puede ser null o vacía.");
-        if (precioBase < 0) throw new EValorNegativo("El precio base no puede ser negativo, usted registro: " + precioBase);
-        if (stock < 0) throw new EValorNegativo("El stock no puede ser negativo, el stock registrado fue: " + stock);
-        if (tiempoGarantia < 0) throw new EValorNegativo("El tiempo de garantia no puede ser negativo, el valor registrado del tiempo de garantia es: " + tiempoGarantia);
-        if (consumo < 0) throw new ECantidadNegativa("El consumo debe ser mayor que 0");
-        if (fabricante == null || fabricante.isBlank()) throw new EParametroNulo("fabricante");
+        if (tiempoGarantia < 1) throw new EValorNegativo("El tiempo de garantía debe ser al menos 1 mes. Valor ingresado: " + tiempoGarantia);
+        if (precioBase <= 0) throw new EValorNegativo("El precio base debe ser mayor que 0. Valor ingresado: " + precioBase);
+        if (stock < 0) throw new EValorNegativo("El stock no puede ser negativo. Valor ingresado: " + stock);
+        if (consumo <= 0) throw new ECantidadNegativa("El consumo debe ser mayor que 0 W. Valor ingresado: " + consumo);
+        if (fabricante == null || fabricante.isBlank()) throw new EParametroNulo("fabricante", "El fabricante no puede estar vacío.");
 
         Producto p = searchProducto(nombre);
         if (!(p instanceof Hardware hardware)) {
@@ -598,19 +614,19 @@ public class StoreController {
      * Aplica las mismas validaciones que el constructor de Videojuego.
      */
     public void actualizarVideojuego(String nombre, String descripcion, String categoria,
-            int tiempoGarantia, double precioBase, int stock, String[] desarrolladores, String[] generos,
+            int tiempoGarantia, double precioBase, int stock, String desarrollador, String genero,
             boolean multijugador, Date fechaLanzamiento, String plataforma, double tamano)
             throws EProductoNoEncontrado, EParametroNulo, ECantidadNegativa, EValorNegativo {
 
         if (nombre == null || nombre.isBlank()) throw new EParametroNulo("nombre", "El nombre del producto no puede ser null o vacío.");
         if (categoria == null || categoria.isBlank()) throw new EParametroNulo("categoria", "La categoría no puede ser null o vacía.");
-        if (precioBase < 0) throw new EValorNegativo("El precio base no puede ser negativo, usted registro: " + precioBase);
-        if (stock < 0) throw new EValorNegativo("El stock no puede ser negativo, el stock registrado fue: " + stock);
-        if (tiempoGarantia < 0) throw new EValorNegativo("El tiempo de garantia no puede ser negativo, el valor registrado del tiempo de garantia es: " + tiempoGarantia);
-        if (desarrolladores == null || desarrolladores.length == 0) throw new EParametroNulo("desarrolladores");
-        if (generos == null || generos.length == 0) throw new EParametroNulo("generos");
-        if (plataforma == null || plataforma.isBlank()) throw new EParametroNulo("plataforma");
-        if (tamano < 0) throw new ECantidadNegativa("El peso en GB del videojuego no puede ser negativo");
+        if (tiempoGarantia < 1) throw new EValorNegativo("El tiempo de garantía debe ser al menos 1 mes. Valor ingresado: " + tiempoGarantia);
+        if (precioBase <= 0) throw new EValorNegativo("El precio base debe ser mayor que 0. Valor ingresado: " + precioBase);
+        if (stock < 0) throw new EValorNegativo("El stock no puede ser negativo. Valor ingresado: " + stock);
+        if (desarrollador == null || desarrollador.isBlank()) throw new EParametroNulo("desarrollador", "El desarrollador no puede estar vacío.");
+        if (genero == null || genero.isBlank()) throw new EParametroNulo("genero", "El género no puede estar vacío.");
+        if (plataforma == null || plataforma.isBlank()) throw new EParametroNulo("plataforma", "La plataforma no puede estar vacía.");
+        if (tamano < 0) throw new ECantidadNegativa("El tamaño en GB no puede ser negativo. Valor ingresado: " + tamano);
 
         Producto p = searchProducto(nombre);
         if (!(p instanceof Videojuego videojuego)) {
@@ -621,8 +637,8 @@ public class StoreController {
         videojuego.setPrecioBase(precioBase);
         videojuego.setStock(stock);
         videojuego.setTiempoGarantia(tiempoGarantia);
-        videojuego.setDesarrolladores(desarrolladores);
-        videojuego.setGeneros(generos);
+        videojuego.setDesarrollador(desarrollador);
+        videojuego.setGenero(genero);
         videojuego.setModoMultijugador(multijugador);
         videojuego.setFechaLanzamiento(fechaLanzamiento);
         videojuego.setPlataforma(plataforma);

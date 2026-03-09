@@ -1,10 +1,11 @@
-package com.nexus.GUI;
+package com.nexus.gui;
 
 import com.nexus.controller.StoreController;
 import com.nexus.exceptions.ECantidadNegativa;
 import com.nexus.exceptions.EParametroNulo;
 import com.nexus.exceptions.EProductoYaExiste;
 import com.nexus.exceptions.EValorNegativo;
+import com.nexus.model.entities.Producto;
 
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
@@ -21,7 +22,6 @@ import java.awt.Color;
 import java.awt.FlowLayout;
 import java.awt.GridLayout;
 import java.text.SimpleDateFormat;
-import java.util.Arrays;
 import java.util.Date;
 
 /**
@@ -37,8 +37,8 @@ public class AgregarVideoJuegos extends JFrame {
     private JTextField txtTiempoGarantia;
     private JTextField txtPrecioBase;
     private JTextField txtStock;
-    private JTextField txtDesarrolladores;
-    private JTextField txtGeneros;
+    private JTextField txtDesarrollador;
+    private JTextField txtGenero;
     private JCheckBox chkMultijugador;
     private JTextField txtFechaLanzamiento;
     private JTextField txtPlataforma;
@@ -83,8 +83,8 @@ public class AgregarVideoJuegos extends JFrame {
         panelForm.add(crearFila("Tiempo garantía (meses): ", txtTiempoGarantia = crearTextField(6)));
         panelForm.add(crearFila("Precio base: ", txtPrecioBase = crearTextField(12)));
         panelForm.add(crearFila("Stock: ", txtStock = crearTextField(6)));
-        panelForm.add(crearFilaDosLineas("Desarrolladores (separados por coma):", txtDesarrolladores = crearTextField(38)));
-        panelForm.add(crearFilaDosLineas("Géneros (separados por coma):", txtGeneros = crearTextField(38)));
+        panelForm.add(crearFila("Desarrollador: ", txtDesarrollador = crearTextField(28)));
+        panelForm.add(crearFila("Género: ", txtGenero = crearTextField(22)));
         JPanel rowMult = new JPanel(new FlowLayout(FlowLayout.LEFT));
         rowMult.add(new JLabel("Multijugador: "));
         chkMultijugador = new JCheckBox();
@@ -137,8 +137,8 @@ public class AgregarVideoJuegos extends JFrame {
         String tiempoStr = txtTiempoGarantia.getText();
         String precioStr = txtPrecioBase.getText();
         String stockStr = txtStock.getText();
-        String devStr = txtDesarrolladores.getText();
-        String genStr = txtGeneros.getText();
+        String desarrollador = txtDesarrollador.getText();
+        String genero = txtGenero.getText();
         String plataforma = txtPlataforma.getText();
         String fechaStr = txtFechaLanzamiento.getText();
         String tamanoStr = txtTamano.getText();
@@ -155,13 +155,12 @@ public class AgregarVideoJuegos extends JFrame {
             JOptionPane.showMessageDialog(this, "Ingrese la plataforma.", "Campo requerido", JOptionPane.WARNING_MESSAGE);
             return;
         }
-        if (devStr == null) devStr = "";
-        if (genStr == null) genStr = "";
-
-        String[] desarrolladores = Arrays.stream(devStr.trim().split(",")).map(String::trim).filter(s -> !s.isEmpty()).toArray(String[]::new);
-        String[] generos = Arrays.stream(genStr.trim().split(",")).map(String::trim).filter(s -> !s.isEmpty()).toArray(String[]::new);
-        if (desarrolladores.length == 0 || generos.length == 0) {
-            JOptionPane.showMessageDialog(this, "Ingrese al menos un desarrollador y un género.", "Campo requerido", JOptionPane.WARNING_MESSAGE);
+        if (desarrollador == null || desarrollador.isBlank()) {
+            JOptionPane.showMessageDialog(this, "Ingrese el desarrollador.", "Campo requerido", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        if (genero == null || genero.isBlank()) {
+            JOptionPane.showMessageDialog(this, "Ingrese el género.", "Campo requerido", JOptionPane.WARNING_MESSAGE);
             return;
         }
 
@@ -169,11 +168,26 @@ public class AgregarVideoJuegos extends JFrame {
         double precioBase, tamano;
         try {
             tiempoGarantia = Integer.parseInt(tiempoStr.trim());
+        } catch (NumberFormatException e) {
+            JOptionPane.showMessageDialog(this, "El tiempo de garantía debe ser un número entero válido (ej: 12).", "Tiempo de garantía inválido", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        try {
             precioBase = Double.parseDouble(precioStr.trim());
+        } catch (NumberFormatException e) {
+            JOptionPane.showMessageDialog(this, "El precio base debe ser un número válido (ej: 100000 o 99.99).", "Precio base inválido", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        try {
             stock = Integer.parseInt(stockStr.trim());
+        } catch (NumberFormatException e) {
+            JOptionPane.showMessageDialog(this, "El stock debe ser un número entero válido (ej: 10).", "Stock inválido", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        try {
             tamano = Double.parseDouble(tamanoStr.trim());
         } catch (NumberFormatException e) {
-            JOptionPane.showMessageDialog(this, "Verifique que tiempo, precio, stock y tamaño sean números válidos.", "Formato inválido", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "El tamaño debe ser un número válido en GB (ej: 50 o 12.5).", "Tamaño inválido", JOptionPane.ERROR_MESSAGE);
             return;
         }
 
@@ -188,9 +202,11 @@ public class AgregarVideoJuegos extends JFrame {
         }
 
         try {
-            controlador.addVideojuego(nombre, descripcion != null ? descripcion : "", categoria, tiempoGarantia, precioBase, stock,
-                    desarrolladores, generos, chkMultijugador.isSelected(), fechaLanzamiento, plataforma, tamano);
-            JOptionPane.showMessageDialog(this, "Videojuego agregado correctamente.", "Éxito", JOptionPane.INFORMATION_MESSAGE);
+            Producto producto = controlador.addVideojuego(nombre, descripcion != null ? descripcion : "", categoria, tiempoGarantia, precioBase, stock,
+                    desarrollador.trim(), genero.trim(), chkMultijugador.isSelected(), fechaLanzamiento, plataforma, tamano);
+            int descuentoPct = (int) Math.round(producto.getDescuento() * 100);
+            String msg = String.format("Videojuego agregado correctamente.%nSe aplicó un descuento del %d%% (según stock y antigüedad).", descuentoPct);
+            JOptionPane.showMessageDialog(this, msg, "Éxito", JOptionPane.INFORMATION_MESSAGE);
             new GestionarProductos().setVisible(true);
             dispose();
         } catch (EProductoYaExiste ex) {

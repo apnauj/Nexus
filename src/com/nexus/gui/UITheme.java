@@ -1,4 +1,4 @@
-package com.nexus.GUI;
+package com.nexus.gui;
 
 import java.awt.Color;
 import java.awt.Font;

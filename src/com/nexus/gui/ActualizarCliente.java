@@ -1,4 +1,4 @@
-package com.nexus.GUI;
+package com.nexus.gui;
 
 import com.nexus.controller.StoreController;
 import com.nexus.exceptions.EClienteNoEncontrado;
@@ -123,43 +123,59 @@ public class ActualizarCliente extends JFrame {
         t.setCaretColor(Color.BLACK);
         return t;
     }
-
+    //TODO: ENTENDER ESTE MÉTODO
     private void actualizar() {
+        //Obtiene el texto de número de documento
         String numDoc = txtNumDoc.getText();
+        //Si esta vacio no hace nada (sale del método) y hace un warning de que el documento es obligatorio. Esto no es una excepción pero es el primer filtro por parte de la interfaz
         if (numDoc == null || numDoc.isBlank()) {
             JOptionPane.showMessageDialog(this, "El número de documento es obligatorio.", "Campo requerido", JOptionPane.WARNING_MESSAGE);
             return;
         }
+        //Le quita los espacios al numero de documento
         numDoc = numDoc.trim();
+        //Si el número de documento no es un número o tiene más de 10 digitos se hace un warning justo como en el bloque de código anterior.
         if (!numDoc.matches("\\d{1,10}")) {
             JOptionPane.showMessageDialog(this, "El documento debe ser numérico (máximo 10 dígitos).", "Formato inválido", JOptionPane.WARNING_MESSAGE);
             return;
         }
 
+        //Se obtiene el tipo de documento
         TipoDocumento tipoDoc = (TipoDocumento) cmbTipoDoc.getSelectedItem();
+        //Se obtiene el nombre
         String nombre = txtNombre.getText();
+        //Se obtiene el apellido
         String apellido = txtApellido.getText();
+        //Se obtiene el email
         String email = txtEmail.getText();
 
+        // Advierte si el nombre esta vacio, como con el número de documento. No es excepción pero es la primera capa de verificación
         if (nombre == null || nombre.isBlank()) {
             JOptionPane.showMessageDialog(this, "El nombre es obligatorio.", "Campo requerido", JOptionPane.WARNING_MESSAGE);
             return;
         }
+        // Advierte si el apellido esta vacio, como con el número de documento. No es excepción pero es la primera capa de verificación
         if (apellido == null || apellido.isBlank()) {
             JOptionPane.showMessageDialog(this, "El apellido es obligatorio.", "Campo requerido", JOptionPane.WARNING_MESSAGE);
             return;
         }
+        // Advierte si el email esta vacio, como con el número de documento. No es excepción pero es la primera capa de verificación
         if (email == null || email.isBlank()) {
             JOptionPane.showMessageDialog(this, "El email es obligatorio.", "Campo requerido", JOptionPane.WARNING_MESSAGE);
             return;
         }
-        if (!email.contains("@") || !email.contains(".")) {
-            JOptionPane.showMessageDialog(this, "El formato del email es inválido (debe contener @ y .).", "Formato inválido", JOptionPane.WARNING_MESSAGE);
+        String emailTrimmed = email.trim();
+        if (emailTrimmed.contains(" ") || emailTrimmed.contains("\t")) {
+            JOptionPane.showMessageDialog(this, "El email no puede contener espacios.", "Formato inválido", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        if (!emailTrimmed.matches("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$")) {
+            JOptionPane.showMessageDialog(this, "El formato del email es inválido. Debe ser: nombre@dominio.ext (ej: usuario@correo.com)", "Formato inválido", JOptionPane.WARNING_MESSAGE);
             return;
         }
 
         try {
-            controlador.actualizarCliente(tipoDoc, numDoc, nombre.trim(), apellido.trim(), email.trim());
+            controlador.actualizarCliente(tipoDoc, numDoc, nombre.trim(), apellido.trim(), emailTrimmed);
             JOptionPane.showMessageDialog(this, "Cliente actualizado correctamente.", "Éxito", JOptionPane.INFORMATION_MESSAGE);
         } catch (EClienteNoEncontrado ex) {
             JOptionPane.showMessageDialog(this, ex.getMessage(), "Cliente no encontrado", JOptionPane.ERROR_MESSAGE);

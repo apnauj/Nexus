@@ -1,9 +1,10 @@
-package com.nexus.GUI;
+package com.nexus.gui;
 
 import com.nexus.controller.StoreController;
+import com.nexus.exceptions.EClienteNoEncontrado;
 import com.nexus.exceptions.EHistorialOrden;
 import com.nexus.exceptions.EParametroNulo;
-import com.nexus.exceptions.EProductoNoEncontrado;
+import com.nexus.model.enums.TipoDocumento;
 
 import javax.swing.JButton;
 import javax.swing.JComboBox;
@@ -11,22 +12,25 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JTextField;
 import javax.swing.border.EmptyBorder;
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.GridLayout;
 
 /**
- * Pantalla para eliminar un producto.
+ * Pantalla para eliminar un cliente.
  */
-public class EliminarProducto extends JFrame {
+public class EliminarCliente extends JFrame {
 
     private static final long serialVersionUID = 1L;
     private StoreController controlador;
-    private JComboBox<String> cmbProducto;
+    private JComboBox<TipoDocumento> cmbTipoDoc;
+    private JTextField txtNumDoc;
 
-    public EliminarProducto() {
+    public EliminarCliente() {
         controlador = StoreController.getInstance();
 
         if (controlador.getCurrentUser() == null) {
@@ -36,11 +40,11 @@ public class EliminarProducto extends JFrame {
             return;
         }
 
-        setTitle("Nexus Store - Eliminar Producto");
+        setTitle("Nexus Store - Eliminar Cliente");
         setLocationRelativeTo(null);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         com.nexus.NexusApplication.addGuardarAlCerrar(this, controlador);
-        setBounds(100, 100, 450, 200);
+        setBounds(100, 100, 450, 220);
         setResizable(false);
 
         JPanel contentPane = new JPanel();
@@ -51,58 +55,61 @@ public class EliminarProducto extends JFrame {
         JPanel panelSuperior = new JPanel(new FlowLayout(FlowLayout.LEFT));
         JButton btnRegresar = new JButton("Regresar");
         btnRegresar.addActionListener(e -> {
-            new GestionarProductos().setVisible(true);
+            new GestionarClientes().setVisible(true);
             dispose();
         });
         panelSuperior.add(btnRegresar);
         contentPane.add(panelSuperior, BorderLayout.NORTH);
 
         JPanel panelForm = new JPanel(new GridLayout(0, 1, 0, 10));
-        panelForm.setPreferredSize(new Dimension(380, 60));
+        panelForm.setPreferredSize(new Dimension(380, 80));
 
-        String[] nombresProductos = controlador.getNombresProductos();
-        if (nombresProductos.length == 0) {
-            panelForm.add(new JLabel("No hay productos registrados."));
-        } else {
-            JPanel row = new JPanel(new FlowLayout(FlowLayout.LEFT));
-            row.add(new JLabel("Producto a eliminar: "));
-            cmbProducto = new JComboBox<>(nombresProductos);
-            cmbProducto.setPreferredSize(new Dimension(250, 25));
-            row.add(cmbProducto);
-            panelForm.add(row);
-        }
+        JPanel row1 = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        row1.add(new JLabel("Tipo documento: "));
+        cmbTipoDoc = new JComboBox<>(TipoDocumento.values());
+        cmbTipoDoc.setPreferredSize(new Dimension(120, 25));
+        row1.add(cmbTipoDoc);
+        panelForm.add(row1);
+
+        JPanel row2 = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        row2.add(new JLabel("Número documento: "));
+        txtNumDoc = new JTextField(15);
+        txtNumDoc.setForeground(Color.BLACK);
+        txtNumDoc.setBackground(Color.WHITE);
+        txtNumDoc.setCaretColor(Color.BLACK);
+        row2.add(txtNumDoc);
+        panelForm.add(row2);
 
         contentPane.add(panelForm, BorderLayout.CENTER);
 
         JPanel panelBotones = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        JButton btnEliminar = new JButton("Eliminar Producto");
-        btnEliminar.addActionListener(e -> eliminarProducto());
+        JButton btnEliminar = new JButton("Eliminar Cliente");
+        btnEliminar.addActionListener(e -> eliminarCliente());
         panelBotones.add(btnEliminar);
         contentPane.add(panelBotones, BorderLayout.SOUTH);
     }
 
-    private void eliminarProducto() {
-        if (controlador.getNombresProductos().length == 0) {
-            JOptionPane.showMessageDialog(this, "No hay productos para eliminar.", "Sin productos", JOptionPane.WARNING_MESSAGE);
+    private void eliminarCliente() {
+        String numDoc = txtNumDoc.getText();
+        if (numDoc == null || numDoc.isBlank()) {
+            JOptionPane.showMessageDialog(this, "Ingrese el número de documento.", "Campo requerido", JOptionPane.WARNING_MESSAGE);
+            txtNumDoc.requestFocus();
             return;
         }
+        numDoc = numDoc.trim();
 
-        String nombre = (String) cmbProducto.getSelectedItem();
-        if (nombre == null || nombre.isBlank()) {
-            JOptionPane.showMessageDialog(this, "Seleccione un producto.", "Campo requerido", JOptionPane.WARNING_MESSAGE);
-            return;
-        }
-
-        int confirm = JOptionPane.showConfirmDialog(this, "¿Está seguro de eliminar el producto '" + nombre + "'?", "Confirmar", JOptionPane.YES_NO_OPTION);
+        int confirm = JOptionPane.showConfirmDialog(this, "¿Está seguro de eliminar este cliente?", "Confirmar", JOptionPane.YES_NO_OPTION);
         if (confirm != JOptionPane.YES_OPTION) return;
 
+        TipoDocumento tipoDoc = (TipoDocumento) cmbTipoDoc.getSelectedItem();
+
         try {
-            controlador.deleteProducto(nombre);
-            JOptionPane.showMessageDialog(this, "Producto eliminado correctamente.", "Éxito", JOptionPane.INFORMATION_MESSAGE);
-            new GestionarProductos().setVisible(true);
+            controlador.deleteCliente(tipoDoc, numDoc);
+            JOptionPane.showMessageDialog(this, "Cliente eliminado correctamente.", "Éxito", JOptionPane.INFORMATION_MESSAGE);
+            new GestionarClientes().setVisible(true);
             dispose();
-        } catch (EProductoNoEncontrado ex) {
-            JOptionPane.showMessageDialog(this, ex.getMessage(), "Producto no encontrado", JOptionPane.ERROR_MESSAGE);
+        } catch (EClienteNoEncontrado ex) {
+            JOptionPane.showMessageDialog(this, ex.getMessage(), "Cliente no encontrado", JOptionPane.ERROR_MESSAGE);
         } catch (EHistorialOrden ex) {
             JOptionPane.showMessageDialog(this, ex.getMessage(), "No se puede eliminar", JOptionPane.ERROR_MESSAGE);
         } catch (EParametroNulo ex) {

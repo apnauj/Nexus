@@ -1,9 +1,8 @@
-package com.nexus.GUI;
+package com.nexus.gui;
 
 import com.nexus.controller.StoreController;
 import com.nexus.model.entities.Hardware;
 import com.nexus.model.entities.Producto;
-import com.nexus.model.entities.Videojuego;
 import com.nexus.model.enums.Rol;
 
 import javax.swing.JButton;

@@ -1,9 +1,9 @@
-package com.nexus.GUI;
+package com.nexus.gui;
 
 import com.nexus.controller.StoreController;
 import com.nexus.exceptions.ECredencialesInvalidas;
 import com.nexus.exceptions.EParametroNulo;
-import com.nexus.model.entities.LoginService;
+import com.nexus.service.LoginService;
 import com.nexus.model.entities.Usuario;
 
 import javax.swing.JButton;
@@ -19,7 +19,6 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 
 /**
  * Pantalla de inicio de sesión.
