@@ -2,6 +2,7 @@ package com.nexus.GUI;
 
 import com.nexus.controller.StoreController;
 import com.nexus.exceptions.ECantidadNegativa;
+import com.nexus.exceptions.EFormatoInvalido;
 import com.nexus.exceptions.EParametroNulo;
 import com.nexus.exceptions.EProductoYaExiste;
 import com.nexus.exceptions.EValorNegativo;
@@ -133,7 +134,8 @@ public class AgregarHardware extends JFrame {
             precioBase = Double.parseDouble(precioStr.trim());
             stock = Integer.parseInt(stockStr.trim());
             consumo = Float.parseFloat(consumoStr.trim());
-        } catch (NumberFormatException e) {
+            if(tiempoGarantia < 0 || precioBase < 0 || stock < 0 || consumo < 0) throw new EFormatoInvalido("Verifique que tiempo, precio, stock y consumo sean números válidos.");
+        } catch (EFormatoInvalido e) {
             JOptionPane.showMessageDialog(this, "Verifique que tiempo, precio, stock y consumo sean números válidos.", "Formato inválido", JOptionPane.ERROR_MESSAGE);
             return;
         }

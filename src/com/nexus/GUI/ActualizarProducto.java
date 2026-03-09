@@ -2,6 +2,7 @@ package com.nexus.GUI;
 
 import com.nexus.controller.StoreController;
 import com.nexus.exceptions.ECantidadNegativa;
+import com.nexus.exceptions.EFormatoInvalido;
 import com.nexus.exceptions.EParametroNulo;
 import com.nexus.exceptions.EProductoNoEncontrado;
 import com.nexus.exceptions.EValorNegativo;
@@ -290,6 +291,7 @@ public class ActualizarProducto extends JFrame {
             tiempoGarantia = Integer.parseInt(tiempoStr.trim());
             precioBase = Double.parseDouble(precioStr.trim());
             stock = Integer.parseInt(stockStr.trim());
+            if(tiempoGarantia < 0 || precioBase < 0 || stock < 0) throw new EFormatoInvalido("Los numeros deben ser enteros positivos");
         } catch (EFormatoInvalido e) {
             JOptionPane.showMessageDialog(this, "Verifique que tiempo, precio y stock sean números válidos.", "Formato inválido", JOptionPane.ERROR_MESSAGE);
             return;
@@ -325,7 +327,8 @@ public class ActualizarProducto extends JFrame {
         float consumo;
         try {
             consumo = Float.parseFloat(txtConsumo.getText().trim());
-        } catch (NumberFormatException e) {
+            if(consumo < 0) throw new EFormatoInvalido("El consumo debe ser positivo");
+        } catch (EFormatoInvalido e) {
             throw new ECantidadNegativa("El consumo debe ser un número válido.");
         }
         controlador.actualizarHardware(nombre, desc, cat, tiempoGarantia, precioBase, stock, consumo, fabricante);
@@ -351,7 +354,8 @@ public class ActualizarProducto extends JFrame {
         double tamano;
         try {
             tamano = Double.parseDouble(txtTamano.getText().trim());
-        } catch (NumberFormatException e) {
+            if(tamano < 0) throw new EFormatoInvalido("El tamaño debe ser positivo");
+        } catch (EFormatoInvalido e) {
             throw new ECantidadNegativa("El tamaño debe ser un número válido.");
         }
         Date fechaLanzamiento = null;
