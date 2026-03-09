@@ -1,6 +1,7 @@
 package com.nexus.GUI;
 
 import com.nexus.controller.StoreController;
+import com.nexus.exceptions.EFormatoInvalido;
 import com.nexus.exceptions.EOrdenNoEncontrada;
 import com.nexus.exceptions.EParametroNulo;
 import com.nexus.exceptions.EProductoNoEncontrado;
