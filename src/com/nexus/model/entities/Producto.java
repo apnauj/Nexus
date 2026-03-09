@@ -52,7 +52,8 @@ public abstract class Producto implements Serializable {
 		return nombre;
 	}
 
-	public void setNombre(String nombre) {
+	public void setNombre(String nombre) throws EParametroNulo {
+		if (nombre == null || nombre.isBlank()) throw new EParametroNulo("nombre del producto");
 		this.nombre = nombre;
 	}
 	
@@ -60,7 +61,8 @@ public abstract class Producto implements Serializable {
 		return descripcion;
 	}
 	
-	public void setDescripcion(String descripcion) {
+	public void setDescripcion(String descripcion) throws EParametroNulo {
+		if (descripcion == null || descripcion.isBlank()) throw new EParametroNulo("descripción");
 		this.descripcion = descripcion;
 	}
 	
@@ -102,13 +104,6 @@ public abstract class Producto implements Serializable {
 	La única validación que debemos de hacer es que el descuento que debe de ser mayor que 0
 	*/
 	
-	public void setDescuento(double descuento) throws EValorNegativo {
-		if (descuento <= 0) {
-			throw new EValorNegativo("El valor del descuento no puede ser negativo");
-		}
-		this.descuento = descuento;
-	}
-	
 	public int getStock() {
 		return stock;
 	}
@@ -129,7 +124,8 @@ public abstract class Producto implements Serializable {
 	public String getCategoria() {
 		return categoria;
 	}
-	public void setCategoria(String categoria) {
+	public void setCategoria(String categoria) throws EParametroNulo {
+		if (categoria == null || categoria.isBlank()) throw new EParametroNulo("categoría");
 		this.categoria=categoria;
 	}
 	

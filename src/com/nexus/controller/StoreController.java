@@ -597,7 +597,7 @@ public class StoreController {
         if (tiempoGarantia < 1) throw new EValorNegativo("El tiempo de garantía debe ser al menos 1 mes. Valor ingresado: " + tiempoGarantia);
         if (precioBase <= 0) throw new EValorNegativo("El precio base debe ser mayor que 0. Valor ingresado: " + precioBase);
         if (stock < 0) throw new EValorNegativo("El stock no puede ser negativo. Valor ingresado: " + stock);
-        if (consumo <= 0) throw new ECantidadNegativa("El consumo debe ser mayor que 0 W. Valor ingresado: " + consumo);
+        if (consumo <= 0) throw new ECantidadNegativa("El consumo debe ser un número entero positivo. Valor ingresado: " + consumo);
         if (fabricante == null || fabricante.isBlank()) throw new EParametroNulo("fabricante");
 
         Producto p = searchProducto(nombre);

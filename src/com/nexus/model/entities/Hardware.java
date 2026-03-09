@@ -15,7 +15,7 @@ public class Hardware extends Producto implements Serializable {
 
     public Hardware (String nombre, String descripcion, String categoria, int tiempoGarantia, double precioBase, int stock, float consumo, String fabricante) throws EParametroNulo, ECantidadNegativa, EValorNegativo {
         super(nombre, descripcion, categoria, tiempoGarantia, precioBase, stock);
-        if(consumo<0) throw new ECantidadNegativa("El consumo debe ser mayor que 0");
+        if(consumo<0) throw new ECantidadNegativa("El consumo debe ser un número entero positivo");
         if (fabricante == null || fabricante.isBlank()) throw new EParametroNulo("fabricante");
 
         this.consumo = consumo;
@@ -28,10 +28,12 @@ public class Hardware extends Producto implements Serializable {
     public String getFabricante() {
         return fabricante;
     }
-    public void setFabricante(String fabricante) {
+    public void setFabricante(String fabricante) throws EParametroNulo {
+        if(fabricante == null || fabricante.isBlank()) throw new EParametroNulo("fabricante");
         this.fabricante = fabricante;
     }
-    public void setConsumo(float consumo) {
+    public void setConsumo(float consumo) throws EValorNegativo {
+        if(consumo < 0) throw new EValorNegativo("El consumo debe ser un número entero positivo");
         this.consumo = consumo;
     }
 
