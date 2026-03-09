@@ -98,7 +98,7 @@ public class EliminarItemOrden extends JFrame {
         panelBotones.add(btnEliminar);
         contentPane.add(panelBotones, BorderLayout.SOUTH);
     }
-
+    //Revisar para posible cambio
     private String[] obtenerProductosEnOrdenSeleccionada() {
         if (ordenesPendientes == null || ordenesPendientes.length == 0) return new String[0];
         int idx = cmbOrden != null ? cmbOrden.getSelectedIndex() : 0;
@@ -110,7 +110,7 @@ public class EliminarItemOrden extends JFrame {
             return new String[0];
         }
     }
-
+    //Lo mismo para este
     private void actualizarProductosEnOrden() {
         if (cmbOrden == null || cmbProducto == null) return;
         opcionesProductosEnOrden = obtenerProductosEnOrdenSeleccionada();
