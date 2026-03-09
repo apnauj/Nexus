@@ -2,6 +2,7 @@ package com.nexus.gui;
 
 import com.nexus.controller.StoreController;
 import com.nexus.exceptions.ECantidadNegativa;
+import com.nexus.exceptions.EFormatoInvalido;
 import com.nexus.exceptions.EParametroNulo;
 import com.nexus.exceptions.EProductoNoEncontrado;
 import com.nexus.exceptions.EValorNegativo;
@@ -315,7 +316,7 @@ public class ActualizarProducto extends JFrame {
             dispose();
         } catch (EProductoNoEncontrado ex) {
             JOptionPane.showMessageDialog(this, ex.getMessage(), "Producto no encontrado", JOptionPane.ERROR_MESSAGE);
-        } catch (EParametroNulo | EValorNegativo | ECantidadNegativa ex) {
+        } catch (EParametroNulo | EValorNegativo | ECantidadNegativa | EFormatoInvalido ex) {
             JOptionPane.showMessageDialog(this, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(this, "Error: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
@@ -325,7 +326,7 @@ public class ActualizarProducto extends JFrame {
     private void actualizarHardwareDesdeForm(String nombre, String desc, String cat, int tiempoGarantia, double precioBase, int stock) throws EProductoNoEncontrado, EParametroNulo, ECantidadNegativa, EValorNegativo {
         String fabricante = txtFabricante.getText();
         if (fabricante == null || fabricante.isBlank()) {
-            throw new EParametroNulo("fabricante", "El fabricante no puede estar vacío.");
+            throw new EParametroNulo("fabricante");
         }
         float consumo;
         try {
@@ -336,18 +337,18 @@ public class ActualizarProducto extends JFrame {
         controlador.actualizarHardware(nombre, desc, cat, tiempoGarantia, precioBase, stock, consumo, fabricante);
     }
 
-    private void actualizarVideojuegoDesdeForm(String nombre, String desc, String cat, int tiempoGarantia, double precioBase, int stock) throws EProductoNoEncontrado, EParametroNulo, ECantidadNegativa, EValorNegativo {
+    private void actualizarVideojuegoDesdeForm(String nombre, String desc, String cat, int tiempoGarantia, double precioBase, int stock) throws EProductoNoEncontrado, EParametroNulo, ECantidadNegativa, EValorNegativo, EFormatoInvalido {
         String desarrollador = txtDesarrollador.getText();
         String genero = txtGenero.getText();
         if (desarrollador == null || desarrollador.isBlank()) {
-            throw new EParametroNulo("desarrollador", "El desarrollador no puede estar vacío.");
+            throw new EParametroNulo("desarrollador");
         }
         if (genero == null || genero.isBlank()) {
-            throw new EParametroNulo("genero", "El género no puede estar vacío.");
+            throw new EParametroNulo("género");
         }
         String plataforma = txtPlataforma.getText();
         if (plataforma == null || plataforma.isBlank()) {
-            throw new EParametroNulo("plataforma", "La plataforma no puede estar vacía.");
+            throw new EParametroNulo("plataforma");
         }
         double tamano;
         try {
@@ -360,9 +361,9 @@ public class ActualizarProducto extends JFrame {
         if (fechaStr != null && !fechaStr.isBlank()) {
             try {
                 fechaLanzamiento = new SimpleDateFormat("dd/MM/yyyy").parse(fechaStr.trim());
-        } catch (Exception e) {
-            throw new EParametroNulo("fechaLanzamiento", "La fecha de lanzamiento debe estar en formato dd/MM/yyyy.");
-        }
+            } catch (Exception e) {
+                throw new EFormatoInvalido("La fecha de lanzamiento debe estar en formato dd/MM/yyyy.");
+            }
         }
         controlador.actualizarVideojuego(nombre, desc, cat, tiempoGarantia, precioBase, stock,
                 desarrollador.trim(), genero.trim(), chkMultijugador.isSelected(), fechaLanzamiento, plataforma, tamano);

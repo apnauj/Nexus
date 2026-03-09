@@ -19,11 +19,11 @@ public class Cliente implements Serializable{
     private Orden[] historial;
 
     public Cliente(TipoDocumento tipoDoc, String numDoc, String nombre, String apellido, String email) throws EParametroNulo, EFormatoInvalido {
-        if (tipoDoc == null) throw new EParametroNulo("tipoDoc");
-        if (numDoc == null || numDoc.isBlank()) throw new EParametroNulo("numDoc", "El número de documento no puede ser null o vacío.");
-        if (nombre == null || nombre.isBlank()) throw new EParametroNulo("nombre", "El nombre no puede ser null o vacío.");
-        if (apellido == null || apellido.isBlank()) throw new EParametroNulo("apellido","El apellido no puede ser null o vacio");
-        if (email == null || email.isBlank()) throw new EParametroNulo("email","El email no puede ser null o vacio");
+        if (tipoDoc == null) throw new EParametroNulo("tipo de documento");
+        if (numDoc == null || numDoc.isBlank()) throw new EParametroNulo("número de documento");
+        if (nombre == null || nombre.isBlank()) throw new EParametroNulo("nombre");
+        if (apellido == null || apellido.isBlank()) throw new EParametroNulo("apellido");
+        if (email == null || email.isBlank()) throw new EParametroNulo("email");
 
         validarEmail(email);
         validarDocumento(numDoc);
@@ -72,7 +72,7 @@ public class Cliente implements Serializable{
     }
     public void setNombre(String nombre) throws EParametroNulo {
         if (nombre == null || nombre.isBlank()) {
-            throw new EParametroNulo("nombre", "El nombre no puede ser null o vacío.");
+            throw new EParametroNulo("nombre");
         }
         this.nombre = nombre;
     }
@@ -81,7 +81,7 @@ public class Cliente implements Serializable{
     }
     public void setApellido(String apellido) throws EParametroNulo {
         if (apellido == null || apellido.isBlank()) {
-            throw new EParametroNulo("apellido", "El apellido no puede ser null o vacío.");
+            throw new EParametroNulo("apellido");
         }
         this.apellido = apellido;
     }

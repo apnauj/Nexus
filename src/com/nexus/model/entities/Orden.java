@@ -24,7 +24,7 @@ public class Orden implements Serializable {
     public Orden(Cliente cliente, String fecha, MetodoPago metodoPago) throws EParametroNulo {
         if (cliente == null) throw new EParametroNulo("cliente");
         if (fecha == null || fecha.isBlank()) throw new EParametroNulo("fecha");
-        if (metodoPago == null) throw new EParametroNulo("metodoPago");
+        if (metodoPago == null) throw new EParametroNulo("método de pago");
 
         this.idPedido = UUID.randomUUID();
         this.cliente = cliente;
@@ -88,7 +88,7 @@ public class Orden implements Serializable {
         }
         //Valida OrdenxItem es nulo
         if (a == null){
-            throw new EParametroNulo("No se permiten detalles nulos");
+            throw new EParametroNulo("item de la orden");
         } else {
             //Crea un espacio en el arreglo y agrega el producto
             if (items == null) items = new OrdenItem[0];

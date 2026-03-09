@@ -27,7 +27,7 @@ public class Videojuego extends Producto implements Serializable {
 
         super(nombre, descripcion, categoria, tiempoGarantia, precioBase, stock);
         if (desarrollador == null || desarrollador.isBlank()) throw new EParametroNulo("desarrollador");
-        if (genero == null || genero.isBlank()) throw new EParametroNulo("genero");
+        if (genero == null || genero.isBlank()) throw new EParametroNulo("género");
         if (plataforma == null || plataforma.isBlank()) throw new EParametroNulo("plataforma");
         if (tamano < 0) throw new ECantidadNegativa("El peso en GB del videojuego no puede ser negativo");
         this.desarrollador = desarrollador;
