@@ -4,6 +4,7 @@ import com.nexus.controller.StoreController;
 import com.nexus.exceptions.EClienteNoEncontrado;
 import com.nexus.exceptions.EFormatoInvalido;
 import com.nexus.exceptions.EParametroNulo;
+import com.nexus.model.entities.Cliente;
 import com.nexus.model.enums.TipoDocumento;
 
 import javax.swing.JButton;
@@ -93,9 +94,17 @@ public class ActualizarCliente extends JFrame {
 
         if (tipoDoc != null && numDoc != null && !numDoc.isBlank()) {
             cmbTipoDoc.setSelectedItem(tipoDoc);
-            txtNumDoc.setText(numDoc);
+            txtNumDoc.setText(numDoc.trim());
             txtNumDoc.setEditable(false);
             cmbTipoDoc.setEnabled(false);
+            try {
+                Cliente cliente = controlador.searchCliente(tipoDoc, numDoc.trim());
+                txtNombre.setText(cliente.getNombre() != null ? cliente.getNombre() : "");
+                txtApellido.setText(cliente.getApellido() != null ? cliente.getApellido() : "");
+                txtEmail.setText(cliente.getEmail() != null ? cliente.getEmail() : "");
+            } catch (EClienteNoEncontrado | EParametroNulo e) {
+                // No prellenar si no se encuentra
+            }
         }
 
         contentPane.add(panelForm, BorderLayout.CENTER);
@@ -132,16 +141,25 @@ public class ActualizarCliente extends JFrame {
         String apellido = txtApellido.getText();
         String email = txtEmail.getText();
 
-        if ((nombre == null || nombre.isBlank()) && (apellido == null || apellido.isBlank()) && (email == null || email.isBlank())) {
-            JOptionPane.showMessageDialog(this, "Ingrese al menos un campo a actualizar (nombre, apellido o email).", "Campos vacíos", JOptionPane.WARNING_MESSAGE);
+        if (nombre == null || nombre.isBlank()) {
+            JOptionPane.showMessageDialog(this, "El nombre es obligatorio.", "Campo requerido", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        if (apellido == null || apellido.isBlank()) {
+            JOptionPane.showMessageDialog(this, "El apellido es obligatorio.", "Campo requerido", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        if (email == null || email.isBlank()) {
+            JOptionPane.showMessageDialog(this, "El email es obligatorio.", "Campo requerido", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        if (!email.contains("@") || !email.contains(".")) {
+            JOptionPane.showMessageDialog(this, "El formato del email es inválido (debe contener @ y .).", "Formato inválido", JOptionPane.WARNING_MESSAGE);
             return;
         }
 
         try {
-            controlador.actualizarCliente(tipoDoc, numDoc,
-                    nombre != null && !nombre.isBlank() ? nombre.trim() : null,
-                    apellido != null && !apellido.isBlank() ? apellido.trim() : null,
-                    email != null && !email.isBlank() ? email.trim() : null);
+            controlador.actualizarCliente(tipoDoc, numDoc, nombre.trim(), apellido.trim(), email.trim());
             JOptionPane.showMessageDialog(this, "Cliente actualizado correctamente.", "Éxito", JOptionPane.INFORMATION_MESSAGE);
         } catch (EClienteNoEncontrado ex) {
             JOptionPane.showMessageDialog(this, ex.getMessage(), "Cliente no encontrado", JOptionPane.ERROR_MESSAGE);

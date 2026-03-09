@@ -100,6 +100,10 @@ public class GestionarOrdenes extends JFrame {
             btnEliminarItem.addActionListener(e -> abrirEliminarItemOrden());
             panelBotones.add(btnEliminarItem);
 
+            JButton btnModificarCantidad = new JButton("Modificar Cantidad de Item");
+            btnModificarCantidad.addActionListener(e -> abrirModificarCantidadItem());
+            panelBotones.add(btnModificarCantidad);
+
             JButton btnVerificarPago = new JButton("Registrar pago");
             btnVerificarPago.addActionListener(e -> verificarPagoOrden());
             panelBotones.add(btnVerificarPago);
@@ -162,6 +166,16 @@ public class GestionarOrdenes extends JFrame {
         try {
             EliminarItemOrden eio = new EliminarItemOrden();
             eio.setVisible(true);
+            dispose();
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Error: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private void abrirModificarCantidadItem() {
+        try {
+            ModificarCantidadItem mci = new ModificarCantidadItem();
+            mci.setVisible(true);
             dispose();
         } catch (Exception e) {
             JOptionPane.showMessageDialog(this, "Error: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);

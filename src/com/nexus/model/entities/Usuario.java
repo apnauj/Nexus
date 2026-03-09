@@ -13,18 +13,18 @@ import java.io.Serializable;
 import java.util.UUID;
 
 public class Usuario implements Serializable {
-    
-    private long serialVersionUID = -67675765756776L;
+
+    private static final long serialVersionUID = -67675765756776L;
     private final UUID id;
     private String username;
     private String password;
     private Rol rol;
 
-    public Usuario(String username, String password, Rol rol) throws EParametroNulo{
+    public Usuario(String username, String password, Rol rol) throws EParametroNulo, EFormatoInvalido {
         if (username == null || username.isBlank()) throw new EParametroNulo("username");
         if (password == null || password.isBlank()) throw new EParametroNulo("password", "La contraseña no puede ser null o vacio");
         if (rol == null) throw new EParametroNulo("rol");
-
+        validarPassword(password);
         this.id = UUID.randomUUID();
         this.username = username;
         this.password = password;

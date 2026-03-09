@@ -9,7 +9,7 @@ import com.nexus.exceptions.EParametroNulo;
 import com.nexus.model.enums.TipoDocumento;
 
 public class Cliente implements Serializable{
-    private long serialVersionUID = -78459984354675L;
+    private static final long serialVersionUID = -78459984354675L;
     private final UUID id;
     private TipoDocumento tipoDoc;
     private String numDoc;
@@ -19,21 +19,12 @@ public class Cliente implements Serializable{
     private Orden[] historial;
 
     public Cliente(TipoDocumento tipoDoc, String numDoc, String nombre, String apellido, String email) throws EParametroNulo, EFormatoInvalido {
-        if (tipoDoc == null) {
-            throw new EParametroNulo("tipoDoc");
-        }
-        if (numDoc == null || numDoc.isBlank()) {
-            throw new EParametroNulo("numDoc", "El número de documento no puede ser null o vacío.");
-        }
-        if (nombre == null || nombre.isBlank()) {
-            throw new EParametroNulo("nombre", "El nombre no puede ser null o vacío.");
-        }
-        if (apellido == null || apellido.isBlank()) {
-            throw new EParametroNulo("apellido","El apellido no puede ser null o vacio");
-        }
-        if (email == null || email.isBlank()) {
-            throw new EParametroNulo("email","El email no puede ser null o vacio");
-        }
+        if (tipoDoc == null) throw new EParametroNulo("tipoDoc");
+        if (numDoc == null || numDoc.isBlank()) throw new EParametroNulo("numDoc", "El número de documento no puede ser null o vacío.");
+        if (nombre == null || nombre.isBlank()) throw new EParametroNulo("nombre", "El nombre no puede ser null o vacío.");
+        if (apellido == null || apellido.isBlank()) throw new EParametroNulo("apellido","El apellido no puede ser null o vacio");
+        if (email == null || email.isBlank()) throw new EParametroNulo("email","El email no puede ser null o vacio");
+
         validarEmail(email);
         validarDocumento(numDoc);
         this.id = UUID.randomUUID();
@@ -76,13 +67,19 @@ public class Cliente implements Serializable{
     public String getNombre() {
         return nombre;
     }
-    public void setNombre(String nombre) {
+    public void setNombre(String nombre) throws EParametroNulo {
+        if (nombre == null || nombre.isBlank()) {
+            throw new EParametroNulo("nombre", "El nombre no puede ser null o vacío.");
+        }
         this.nombre = nombre;
     }
     public String getApellido() {
         return apellido;
     }
-    public void setApellido(String apellido) {
+    public void setApellido(String apellido) throws EParametroNulo {
+        if (apellido == null || apellido.isBlank()) {
+            throw new EParametroNulo("apellido", "El apellido no puede ser null o vacío.");
+        }
         this.apellido = apellido;
     }
     public String getEmail() {
@@ -104,7 +101,7 @@ public class Cliente implements Serializable{
     de un cliente
     */
     
-    public void AgregarCompras(Orden o) throws EParametroNulo{
+    public void agregarCompras(Orden o) throws EParametroNulo{
         if (o == null) {
             throw new EParametroNulo("orden");
         }
