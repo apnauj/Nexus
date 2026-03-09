@@ -338,8 +338,11 @@ public class ActualizarProducto extends JFrame {
         if (genStr == null) genStr = "";
         String[] desarrolladores = Arrays.stream(devStr.trim().split(",")).map(String::trim).filter(s -> !s.isEmpty()).toArray(String[]::new);
         String[] generos = Arrays.stream(genStr.trim().split(",")).map(String::trim).filter(s -> !s.isEmpty()).toArray(String[]::new);
-        if (desarrolladores.length == 0 || generos.length == 0) {
+        if (desarrolladores.length == 0) {
             throw new EParametroNulo("desarrolladores");
+        }
+        if(generos.length == 0) {
+        	throw new EParametroNulo("generos");
         }
         String plataforma = txtPlataforma.getText();
         if (plataforma == null || plataforma.isBlank()) {
