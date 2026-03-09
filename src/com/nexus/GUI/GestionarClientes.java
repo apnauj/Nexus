@@ -101,6 +101,7 @@ public class GestionarClientes extends JFrame {
         actualizarTabla();
     }
 
+    //Poner atención a este
     private void actualizarTabla() {
         modeloTabla.setRowCount(0);
         for (Cliente c : controlador.getClientes()) {
