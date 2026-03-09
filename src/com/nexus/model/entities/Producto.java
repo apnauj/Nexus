@@ -133,7 +133,7 @@ public abstract class Producto implements Serializable {
 	}
 	
 	public double calcularPrecio() {
-		return precioBase +(precioBase*tiempoGarantia*0.15)-(precioBase*descuento);
+		return precioBase +(precioBase*tiempoGarantia*0.015)-(precioBase*descuento);
 	}
 	
 

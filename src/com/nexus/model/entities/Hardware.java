@@ -43,9 +43,9 @@ public class Hardware extends Producto implements Serializable {
 
     @Override
     public void asignarDescuento() {
-        if (consumo < 100) { //mas consumo, menor descuento
+        if (stock > 100) { //mas stock, mayor descuento
             descuento = 0.12;  // 12%
-        } else {
+        } else if (stock > 50){
             descuento = 0.05;  // 5%
         }
     }
