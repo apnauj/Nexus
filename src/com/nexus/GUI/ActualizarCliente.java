@@ -131,6 +131,7 @@ public class ActualizarCliente extends JFrame {
             return;
         }
         numDoc = numDoc.trim();
+        //TODO Que significia el argumento de "matches"
         if (!numDoc.matches("\\d{1,10}")) {
             JOptionPane.showMessageDialog(this, "El documento debe ser numérico (máximo 10 dígitos).", "Formato inválido", JOptionPane.WARNING_MESSAGE);
             return;

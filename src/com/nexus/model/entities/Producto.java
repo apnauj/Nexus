@@ -41,7 +41,6 @@ public abstract class Producto implements Serializable {
 		this.tiempoGarantia = tiempoGarantia;
 		this.precioBase = precioBase;
 		this.stock = stock;
-		this.descuento = 0;
 	}
 	
 	public UUID getId() {
