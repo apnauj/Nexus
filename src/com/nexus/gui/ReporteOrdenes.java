@@ -80,7 +80,7 @@ public class ReporteOrdenes extends JFrame {
         panelSuperior.setOpaque(false);
         panelSuperior.add(lblTitulo, BorderLayout.CENTER);
 
-        JButton btnRegresar = new JButton("← Regresar");
+        JButton btnRegresar = UIComponents.crearBotonRegresar();
         btnRegresar.addActionListener(e -> {
             new MenuPrincipalFrame().setVisible(true);
             dispose();
@@ -112,10 +112,7 @@ public class ReporteOrdenes extends JFrame {
         txtFechaHasta.setToolTipText("Formato: dd/MM/yyyy");
         panelFiltro.add(txtFechaHasta);
 
-        JButton btnGenerar = new JButton("Generar Reporte");
-        btnGenerar.setBackground(UITheme.COLOR_PRINCIPAL);
-        btnGenerar.setForeground(Color.WHITE);
-        btnGenerar.setFocusPainted(false);
+        JButton btnGenerar = UIComponents.crearBotonPrincipal("Generar Reporte");
         btnGenerar.addActionListener(e -> generarReporte());
         panelFiltro.add(btnGenerar);
 
@@ -163,7 +160,7 @@ public class ReporteOrdenes extends JFrame {
         JPanel panelInferior = new JPanel(new BorderLayout(UITheme.ESPACIADO, UITheme.ESPACIADO));
         panelInferior.setOpaque(false);
 
-        JButton btnVerDetalle = new JButton("Ver detalle de orden");
+        JButton btnVerDetalle = UIComponents.crearBotonMenu("Ver detalle de orden");
         btnVerDetalle.addActionListener(e -> verDetalleOrden());
         JPanel panelBotones = new JPanel(new FlowLayout(FlowLayout.LEFT));
         panelBotones.setOpaque(false);
@@ -351,7 +348,7 @@ public class ReporteOrdenes extends JFrame {
 
             panelSur.add(panelTotales, BorderLayout.CENTER);
 
-            JButton btnCerrar = new JButton("Cerrar");
+            JButton btnCerrar = UIComponents.crearBotonLink("Cerrar");
             btnCerrar.addActionListener(e -> dispose());
             JPanel panelBtn = new JPanel(new FlowLayout(FlowLayout.RIGHT));
             panelBtn.setOpaque(false);

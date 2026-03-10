@@ -17,9 +17,11 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 import javax.swing.border.EmptyBorder;
 import java.awt.BorderLayout;
-import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.FlowLayout;
-import java.awt.GridLayout;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -59,18 +61,18 @@ public class AgregarVideoJuegos extends JFrame {
         setTitle("Nexus Store - Agregar Videojuego");
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         addGuardarAlCerrar(this, controlador);
-        setBounds(100, 100, UITheme.VENTANA_FORMULARIO_ANCHO, UITheme.VENTANA_FORMULARIO_ALTO);
+        setBounds(100, 100, 620, 640);
         setLocationRelativeTo(null);
         setResizable(true);
 
-        JPanel contentPane = new JPanel();
+        JPanel contentPane = new JPanel(new BorderLayout(UITheme.ESPACIADO, UITheme.ESPACIADO));
         contentPane.setBackground(UITheme.FONDO_PANEL);
         contentPane.setBorder(new EmptyBorder(UITheme.MARGEN, UITheme.MARGEN, UITheme.MARGEN, UITheme.MARGEN));
-        contentPane.setLayout(new BorderLayout(UITheme.ESPACIADO, UITheme.ESPACIADO));
         setContentPane(contentPane);
 
         JPanel panelSuperior = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        JButton btnRegresar = new JButton("Regresar");
+        panelSuperior.setOpaque(false);
+        JButton btnRegresar = UIComponents.crearBotonRegresar();
         btnRegresar.addActionListener(e -> {
             new GestionarProductos().setVisible(true);
             dispose();
@@ -78,63 +80,62 @@ public class AgregarVideoJuegos extends JFrame {
         panelSuperior.add(btnRegresar);
         contentPane.add(panelSuperior, BorderLayout.NORTH);
 
-        JPanel panelForm = new JPanel(new GridLayout(0, 1, 0, UITheme.ESPACIADO));
-        panelForm.setBackground(UITheme.FONDO_PANEL);
+        JPanel panelForm = UIComponents.crearPanelTarjeta();
+        panelForm.setLayout(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(6, 8, 6, 8);
+        gbc.anchor = GridBagConstraints.WEST;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.weightx = 1.0;
 
-        panelForm.add(crearFila("Nombre: ", txtNombre = crearTextField(28)));
-        panelForm.add(crearFila("Descripción: ", txtDescripcion = crearTextField(28)));
-        panelForm.add(crearFila("Categoría: ", txtCategoria = crearTextField(22)));
-        panelForm.add(crearFila("Tiempo garantía (meses): ", txtTiempoGarantia = crearTextField(6)));
-        panelForm.add(crearFila("Precio base: ", txtPrecioBase = crearTextField(12)));
-        panelForm.add(crearFila("Stock: ", txtStock = crearTextField(6)));
-        panelForm.add(crearFila("Desarrollador: ", txtDesarrollador = crearTextField(28)));
-        panelForm.add(crearFila("Género: ", txtGenero = crearTextField(22)));
+        int y = 0;
+        agregarFila(panelForm, gbc, y++, "Nombre:", txtNombre = UIComponents.crearCampoTexto(280));
+        agregarFila(panelForm, gbc, y++, "Descripción:", txtDescripcion = UIComponents.crearCampoTexto(280));
+        agregarFila(panelForm, gbc, y++, "Categoría:", txtCategoria = UIComponents.crearCampoTexto(200));
+        agregarFila(panelForm, gbc, y++, "Tiempo garantía (meses):", txtTiempoGarantia = UIComponents.crearCampoTexto(80));
+        agregarFila(panelForm, gbc, y++, "Precio base:", txtPrecioBase = UIComponents.crearCampoTexto(120));
+        agregarFila(panelForm, gbc, y++, "Stock:", txtStock = UIComponents.crearCampoTexto(80));
+        agregarFila(panelForm, gbc, y++, "Desarrollador:", txtDesarrollador = UIComponents.crearCampoTexto(220));
+        agregarFila(panelForm, gbc, y++, "Género:", txtGenero = UIComponents.crearCampoTexto(180));
+        gbc.gridx = 0; gbc.gridy = y++; gbc.gridwidth = 2;
         JPanel rowMult = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        rowMult.add(new JLabel("Multijugador: "));
+        rowMult.setOpaque(false);
+        rowMult.add(new JLabel("Multijugador:"));
         chkMultijugador = new JCheckBox();
         rowMult.add(chkMultijugador);
-        panelForm.add(rowMult);
-        panelForm.add(crearFila("Fecha lanzamiento (dd/MM/yyyy): ", txtFechaLanzamiento = crearTextField(12)));
-        panelForm.add(crearFila("Plataforma: ", txtPlataforma = crearTextField(15)));
-        panelForm.add(crearFila("Tamaño (GB): ", txtTamano = crearTextField(8)));
-        JPanel rowDescuento = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        panelForm.add(rowMult, gbc);
+        gbc.gridwidth = 1;
+        agregarFila(panelForm, gbc, y++, "Fecha lanzamiento (dd/MM/yyyy):", txtFechaLanzamiento = UIComponents.crearCampoTexto(120));
+        agregarFila(panelForm, gbc, y++, "Plataforma:", txtPlataforma = UIComponents.crearCampoTexto(150));
+        agregarFila(panelForm, gbc, y++, "Tamaño (GB):", txtTamano = UIComponents.crearCampoTexto(80));
+        gbc.gridx = 0; gbc.gridy = y; gbc.gridwidth = 2;
         chkDescuentoActivo = new JCheckBox("Activar descuento", true);
-        rowDescuento.add(chkDescuentoActivo);
-        panelForm.add(rowDescuento);
+        panelForm.add(chkDescuentoActivo, gbc);
 
         JScrollPane scrollForm = new JScrollPane(panelForm);
         scrollForm.setBorder(null);
+        panelForm.setBorder(javax.swing.BorderFactory.createCompoundBorder(
+                panelForm.getBorder(),
+                javax.swing.BorderFactory.createEmptyBorder(0, 0, 0, 20)));
         scrollForm.setVerticalScrollBarPolicy(javax.swing.ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED);
         scrollForm.setHorizontalScrollBarPolicy(javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
         contentPane.add(scrollForm, BorderLayout.CENTER);
 
         JPanel panelBotones = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        JButton btnAgregar = new JButton("Agregar Videojuego");
+        panelBotones.setOpaque(false);
+        JButton btnAgregar = UIComponents.crearBotonPrincipal("Agregar Videojuego");
         btnAgregar.addActionListener(e -> agregarVideojuego());
         panelBotones.add(btnAgregar);
         contentPane.add(panelBotones, BorderLayout.SOUTH);
     }
 
-    private JPanel crearFila(String label, JTextField field) {
-        JPanel row = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        row.add(new JLabel(label));
-        row.add(field);
-        return row;
-    }
-
-    private JPanel crearFilaDosLineas(String label, JTextField field) {
-        JPanel row = new JPanel(new java.awt.GridLayout(2, 1, 0, 2));
-        row.add(new JLabel(label));
-        row.add(field);
-        return row;
-    }
-
-    private JTextField crearTextField(int cols) {
-        JTextField t = new JTextField(cols);
-        t.setForeground(Color.BLACK);
-        t.setBackground(Color.WHITE);
-        t.setCaretColor(Color.BLACK);
-        return t;
+    private void agregarFila(JPanel parent, GridBagConstraints gbc, int y, String label, JTextField field) {
+        gbc.gridx = 0; gbc.gridy = y; gbc.gridwidth = 1; gbc.weightx = 0;
+        JLabel lbl = new JLabel(label);
+        lbl.setFont(UITheme.FONT_ETIQUETA);
+        parent.add(lbl, gbc);
+        gbc.gridx = 1; gbc.weightx = 1.0;
+        parent.add(field, gbc);
     }
 
     private void agregarVideojuego() {

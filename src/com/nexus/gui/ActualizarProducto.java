@@ -22,7 +22,6 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 import javax.swing.border.EmptyBorder;
 import java.awt.BorderLayout;
-import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.GridLayout;
@@ -58,16 +57,12 @@ public class ActualizarProducto extends JFrame {
 
     private JPanel panelForm;
 
-    public ActualizarProducto() {
-        this(null);
-    }
-
     public ActualizarProducto(String nombreProducto) {
         controlador = StoreController.getInstance();
         setTitle("Nexus Store - Actualizar Producto");
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         com.nexus.NexusApplication.addGuardarAlCerrar(this, controlador);
-        setBounds(100, 100, UITheme.VENTANA_FORMULARIO_ANCHO, UITheme.VENTANA_FORMULARIO_ALTO);
+        setBounds(100, 100, 560, 600);
         setResizable(true);
         setLocationRelativeTo(null);
 
@@ -78,7 +73,8 @@ public class ActualizarProducto extends JFrame {
         setContentPane(contentPane);
 
         JPanel panelSuperior = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        JButton btnRegresar = new JButton("Regresar");
+        panelSuperior.setOpaque(false);
+        JButton btnRegresar = UIComponents.crearBotonRegresar();
         btnRegresar.addActionListener(e -> {
             new GestionarProductos().setVisible(true);
             dispose();
@@ -102,20 +98,24 @@ public class ActualizarProducto extends JFrame {
         }
 
         JPanel panelBotones = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        JButton btnActualizar = new JButton("Actualizar");
+        panelBotones.setOpaque(false);
+        JButton btnActualizar = UIComponents.crearBotonPrincipal("Actualizar");
         btnActualizar.addActionListener(e -> actualizar());
         panelBotones.add(btnActualizar);
         contentPane.add(panelBotones, BorderLayout.SOUTH);
     }
 
     private void construirSelectorProducto(JPanel contentPane) {
-        JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        panel.add(new JLabel("Seleccione producto: "));
+        JPanel panel = UIComponents.crearPanelTarjeta();
+        panel.setLayout(new FlowLayout(FlowLayout.LEFT, 12, 12));
+        JLabel lbl = new JLabel("Seleccione producto:");
+        lbl.setFont(UITheme.FONT_ETIQUETA);
+        panel.add(lbl);
         String[] nombres = controlador.getNombresProductos();
         JComboBox<String> cmbProductos = new JComboBox<>(nombres.length > 0 ? nombres : new String[]{"(No hay productos)"});
-        cmbProductos.setPreferredSize(new Dimension(250, 25));
+        cmbProductos.setPreferredSize(new Dimension(280, 30));
         panel.add(cmbProductos);
-        JButton btnCargar = new JButton("Cargar");
+        JButton btnCargar = UIComponents.crearBotonPrincipal("Cargar");
         btnCargar.addActionListener(e -> {
             String sel = (String) cmbProductos.getSelectedItem();
             if (sel == null || sel.isBlank() || "(No hay productos)".equals(sel)) {
@@ -142,7 +142,8 @@ public class ActualizarProducto extends JFrame {
 
     private JPanel panelSuperiorDesde(JPanel contentPane) {
         JPanel p = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        JButton btnRegresar = new JButton("Regresar");
+        p.setOpaque(false);
+        JButton btnRegresar = UIComponents.crearBotonRegresar();
         btnRegresar.addActionListener(ev -> {
             new GestionarProductos().setVisible(true);
             dispose();
@@ -153,38 +154,39 @@ public class ActualizarProducto extends JFrame {
 
     private JPanel panelBotonesDesde(JPanel contentPane) {
         JPanel p = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        JButton btnActualizar = new JButton("Actualizar");
+        p.setOpaque(false);
+        JButton btnActualizar = UIComponents.crearBotonPrincipal("Actualizar");
         btnActualizar.addActionListener(e -> actualizar());
         p.add(btnActualizar);
         return p;
     }
 
     private void construirFormulario() {
-        panelForm = new JPanel(new GridLayout(0, 1, 0, UITheme.ESPACIADO));
-        panelForm.setBackground(UITheme.FONDO_PANEL);
+        panelForm = UIComponents.crearPanelTarjeta();
+        panelForm.setLayout(new GridLayout(0, 1, 0, UITheme.ESPACIADO));
 
-        txtNombre = crearTextField(35);
+        txtNombre = UIComponents.crearCampoTexto(320);
         txtNombre.setText(productoActual.getNombre());
         txtNombre.setEditable(false);
         panelForm.add(crearFilaDosLineas("Nombre del producto:", txtNombre));
 
-        txtDescripcion = crearTextField(35);
+        txtDescripcion = UIComponents.crearCampoTexto(320);
         txtDescripcion.setText(productoActual.getDescripcion() != null ? productoActual.getDescripcion() : "");
         panelForm.add(crearFila("Descripción: ", txtDescripcion));
 
-        txtCategoria = crearTextField(28);
+        txtCategoria = UIComponents.crearCampoTexto(250);
         txtCategoria.setText(productoActual.getCategoria() != null ? productoActual.getCategoria() : "");
         panelForm.add(crearFila("Categoría: ", txtCategoria));
 
-        txtTiempoGarantia = crearTextField(8);
+        txtTiempoGarantia = UIComponents.crearCampoTexto(80);
         txtTiempoGarantia.setText(String.valueOf(productoActual.getTiempoGarantia()));
         panelForm.add(crearFila("Tiempo garantía (meses): ", txtTiempoGarantia));
 
-        txtPrecioBase = crearTextField(12);
+        txtPrecioBase = UIComponents.crearCampoTexto(120);
         txtPrecioBase.setText(String.valueOf(productoActual.getPrecioBase()));
         panelForm.add(crearFila("Precio base: ", txtPrecioBase));
 
-        txtStock = crearTextField(8);
+        txtStock = UIComponents.crearCampoTexto(80);
         txtStock.setText(String.valueOf(productoActual.getStock()));
         if (controlador.getCurrentUser() != null && controlador.getCurrentUser().getRol() == Rol.EMPLEADO_VENTAS) {
             txtStock.setEnabled(false);
@@ -193,40 +195,42 @@ public class ActualizarProducto extends JFrame {
         panelForm.add(crearFila("Stock: ", txtStock));
 
         JPanel rowDescuento = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        rowDescuento.setOpaque(false);
         chkDescuentoActivo = new JCheckBox("Activar descuento", productoActual.isDescuentoActivo());
         rowDescuento.add(chkDescuentoActivo);
         panelForm.add(rowDescuento);
 
         if (esHardware) {
             Hardware h = (Hardware) productoActual;
-            txtConsumo = crearTextField(12);
+            txtConsumo = UIComponents.crearCampoTexto(100);
             txtConsumo.setText(String.valueOf(h.getConsumo()));
             panelForm.add(crearFilaDosLineas("Consumo (W):", txtConsumo));
-            txtFabricante = crearTextField(35);
+            txtFabricante = UIComponents.crearCampoTexto(280);
             txtFabricante.setText(h.getFabricante() != null ? h.getFabricante() : "");
             panelForm.add(crearFilaDosLineas("Fabricante:", txtFabricante));
         } else {
             Videojuego v = (Videojuego) productoActual;
-            txtDesarrollador = crearTextField(28);
+            txtDesarrollador = UIComponents.crearCampoTexto(220);
             txtDesarrollador.setText(v.getDesarrollador() != null ? v.getDesarrollador() : "");
             panelForm.add(crearFila("Desarrollador: ", txtDesarrollador));
-            txtGenero = crearTextField(22);
+            txtGenero = UIComponents.crearCampoTexto(180);
             txtGenero.setText(v.getGenero() != null ? v.getGenero() : "");
             panelForm.add(crearFila("Género: ", txtGenero));
             chkMultijugador = new JCheckBox();
             chkMultijugador.setSelected(v.getMultijugador());
             JPanel rowMult = new JPanel(new FlowLayout(FlowLayout.LEFT));
-            rowMult.add(new JLabel("Multijugador: "));
+            rowMult.setOpaque(false);
+            rowMult.add(new JLabel("Multijugador:"));
             rowMult.add(chkMultijugador);
             panelForm.add(rowMult);
-            txtFechaLanzamiento = crearTextField(12);
+            txtFechaLanzamiento = UIComponents.crearCampoTexto(120);
             Date f = v.getFechaLanzamiento();
             txtFechaLanzamiento.setText(f != null ? new SimpleDateFormat("dd/MM/yyyy").format(f) : "");
             panelForm.add(crearFila("Fecha lanzamiento (dd/MM/yyyy): ", txtFechaLanzamiento));
-            txtPlataforma = crearTextField(15);
+            txtPlataforma = UIComponents.crearCampoTexto(150);
             txtPlataforma.setText(v.getPlataforma() != null ? v.getPlataforma() : "");
             panelForm.add(crearFila("Plataforma: ", txtPlataforma));
-            txtTamano = crearTextField(8);
+            txtTamano = UIComponents.crearCampoTexto(80);
             txtTamano.setText(String.valueOf(v.getTamano()));
             panelForm.add(crearFila("Tamaño (GB): ", txtTamano));
         }
@@ -240,24 +244,22 @@ public class ActualizarProducto extends JFrame {
 
     private JPanel crearFila(String label, JTextField field) {
         JPanel row = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        row.add(new JLabel(label));
+        row.setOpaque(false);
+        JLabel lbl = new JLabel(label);
+        lbl.setFont(UITheme.FONT_ETIQUETA);
+        row.add(lbl);
         row.add(field);
         return row;
     }
 
     private JPanel crearFilaDosLineas(String label, JTextField field) {
         JPanel row = new JPanel(new GridLayout(2, 1, 0, 2));
-        row.add(new JLabel(label));
+        row.setOpaque(false);
+        JLabel lbl = new JLabel(label);
+        lbl.setFont(UITheme.FONT_ETIQUETA);
+        row.add(lbl);
         row.add(field);
         return row;
-    }
-
-    private JTextField crearTextField(int cols) {
-        JTextField t = new JTextField(cols);
-        t.setForeground(Color.BLACK);
-        t.setBackground(Color.WHITE);
-        t.setCaretColor(Color.BLACK);
-        return t;
     }
 
     //TODO: verificar este método y entenderlo
@@ -289,9 +291,8 @@ public class ActualizarProducto extends JFrame {
             return;
         }
 
-        int tiempoGarantia;
+        int tiempoGarantia, stock;
         double precioBase;
-        int stock;
         try {
             tiempoGarantia = Integer.parseInt(tiempoStr.trim());
         } catch (NumberFormatException e) {
@@ -315,12 +316,17 @@ public class ActualizarProducto extends JFrame {
             stock = productoActual.getStock();
         }
 
+        boolean exito;
+        if (esHardware) {
+            exito = actualizarHardwareDesdeForm(nombre, desc, cat, tiempoGarantia, precioBase, stock);
+        } else {
+            exito = actualizarVideojuegoDesdeForm(nombre, desc, cat, tiempoGarantia, precioBase, stock);
+        }
+        if (!exito) {
+            return;
+        }
+
         try {
-            if (esHardware) {
-                actualizarHardwareDesdeForm(nombre, desc, cat, tiempoGarantia, precioBase, stock);
-            } else {
-                actualizarVideojuegoDesdeForm(nombre, desc, cat, tiempoGarantia, precioBase, stock);
-            }
             Producto actualizado = controlador.searchProducto(nombre);
             String msg = actualizado.isDescuentoActivo()
                     ? String.format("Producto actualizado correctamente.%nSe asignó un descuento del %d%% según stock y características.", (int) Math.round(actualizado.getDescuento() * 100))
@@ -330,53 +336,82 @@ public class ActualizarProducto extends JFrame {
             dispose();
         } catch (EProductoNoEncontrado ex) {
             JOptionPane.showMessageDialog(this, ex.getMessage(), "Producto no encontrado", JOptionPane.ERROR_MESSAGE);
-        } catch (EParametroNulo | EValorNegativo | ECantidadNegativa | EFormatoInvalido ex) {
-            JOptionPane.showMessageDialog(this, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(this, "Error: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 
-    private void actualizarHardwareDesdeForm(String nombre, String desc, String cat, int tiempoGarantia, double precioBase, int stock) throws EProductoNoEncontrado, EParametroNulo, ECantidadNegativa, EValorNegativo {
+    /**
+     * Valida y ejecuta la actualización de hardware. Muestra errores al usuario.
+     * @return true si la actualización fue exitosa, false si hubo error de validación o del controlador
+     */
+    private boolean actualizarHardwareDesdeForm(String nombre, String desc, String cat, int tiempoGarantia, double precioBase, int stock) {
         String fabricante = txtFabricante.getText();
         if (fabricante == null || fabricante.isBlank()) {
-            throw new EParametroNulo("fabricante");
+            JOptionPane.showMessageDialog(this, "El fabricante es obligatorio.", "Campo requerido", JOptionPane.ERROR_MESSAGE);
+            return false;
         }
         String consumoStr = txtConsumo != null ? txtConsumo.getText() : null;
         if (consumoStr == null || consumoStr.isBlank()) {
-            throw new ECantidadNegativa("El consumo es obligatorio.");
+            JOptionPane.showMessageDialog(this, "El consumo es obligatorio.", "Campo requerido", JOptionPane.ERROR_MESSAGE);
+            return false;
         }
         float consumo;
         try {
             consumo = Float.parseFloat(consumoStr.trim());
         } catch (NumberFormatException e) {
-            throw new ECantidadNegativa("El consumo debe ser un número válido (ej: 150 o 85.5).");
+            JOptionPane.showMessageDialog(this, "El consumo debe ser un número válido (ej: 150 o 85.5).", "Consumo inválido", JOptionPane.ERROR_MESSAGE);
+            return false;
         }
-        controlador.actualizarHardware(nombre, desc, cat, tiempoGarantia, precioBase, stock, consumo, fabricante, chkDescuentoActivo.isSelected());
+
+        try {
+            controlador.actualizarHardware(nombre, desc, cat, tiempoGarantia, precioBase, stock, consumo, fabricante, chkDescuentoActivo.isSelected());
+            return true;
+        } catch (EProductoNoEncontrado ex) {
+            JOptionPane.showMessageDialog(this, ex.getMessage(), "Producto no encontrado", JOptionPane.ERROR_MESSAGE);
+            return false;
+        } catch (EParametroNulo | ECantidadNegativa | EValorNegativo ex) {
+            JOptionPane.showMessageDialog(this, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            return false;
+        }
+        catch (Exception ex) {
+            JOptionPane.showMessageDialog(this, "Error: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            return false;
+        }
     }
 
-    private void actualizarVideojuegoDesdeForm(String nombre, String desc, String cat, int tiempoGarantia, double precioBase, int stock) throws EProductoNoEncontrado, EParametroNulo, ECantidadNegativa, EValorNegativo, EFormatoInvalido {
+    /**
+     * Valida y ejecuta la actualización de videojuego. Muestra errores al usuario.
+     * @return true si la actualización fue exitosa, false si hubo error de validación o del controlador
+     */
+    private boolean actualizarVideojuegoDesdeForm(String nombre, String desc, String cat, int tiempoGarantia, double precioBase, int stock) {
         String desarrollador = txtDesarrollador.getText();
-        String genero = txtGenero.getText();
         if (desarrollador == null || desarrollador.isBlank()) {
-            throw new EParametroNulo("desarrollador");
+            JOptionPane.showMessageDialog(this, "El desarrollador es obligatorio.", "Campo requerido", JOptionPane.ERROR_MESSAGE);
+            return false;
         }
+        String genero = txtGenero.getText();
         if (genero == null || genero.isBlank()) {
-            throw new EParametroNulo("género");
+            JOptionPane.showMessageDialog(this, "El género es obligatorio.", "Campo requerido", JOptionPane.ERROR_MESSAGE);
+            return false;
         }
+        genero = genero.trim();
         String plataforma = txtPlataforma.getText();
         if (plataforma == null || plataforma.isBlank()) {
-            throw new EParametroNulo("plataforma");
+            JOptionPane.showMessageDialog(this, "La plataforma es obligatoria.", "Campo requerido", JOptionPane.ERROR_MESSAGE);
+            return false;
         }
         String tamanoStr = txtTamano != null ? txtTamano.getText() : null;
         if (tamanoStr == null || tamanoStr.isBlank()) {
-            throw new ECantidadNegativa("El tamaño es obligatorio.");
+            JOptionPane.showMessageDialog(this, "El tamaño es obligatorio.", "Campo requerido", JOptionPane.ERROR_MESSAGE);
+            return false;
         }
         double tamano;
         try {
             tamano = Double.parseDouble(tamanoStr.trim());
         } catch (NumberFormatException e) {
-            throw new ECantidadNegativa("El tamaño debe ser un número válido (ej: 50 o 12.5).");
+            JOptionPane.showMessageDialog(this, "El tamaño debe ser un número válido (ej: 50 o 12.5).", "Tamaño inválido", JOptionPane.ERROR_MESSAGE);
+            return false;
         }
         Date fechaLanzamiento = null;
         String fechaStr = txtFechaLanzamiento.getText();
@@ -384,10 +419,24 @@ public class ActualizarProducto extends JFrame {
             try {
                 fechaLanzamiento = new SimpleDateFormat("dd/MM/yyyy").parse(fechaStr.trim());
             } catch (Exception e) {
-                throw new EFormatoInvalido("La fecha de lanzamiento debe estar en formato dd/MM/yyyy.");
+                JOptionPane.showMessageDialog(this, "La fecha de lanzamiento debe estar en formato dd/MM/yyyy.", "Formato inválido", JOptionPane.ERROR_MESSAGE);
+                return false;
             }
         }
-        controlador.actualizarVideojuego(nombre, desc, cat, tiempoGarantia, precioBase, stock,
-                desarrollador.trim(), genero.trim(), chkMultijugador.isSelected(), fechaLanzamiento, plataforma, tamano, chkDescuentoActivo.isSelected());
+
+        try {
+            controlador.actualizarVideojuego(nombre, desc, cat, tiempoGarantia, precioBase, stock,
+                    desarrollador.trim(), genero, chkMultijugador.isSelected(), fechaLanzamiento, plataforma, tamano, chkDescuentoActivo.isSelected());
+            return true;
+        } catch (EProductoNoEncontrado ex) {
+            JOptionPane.showMessageDialog(this, ex.getMessage(), "Producto no encontrado", JOptionPane.ERROR_MESSAGE);
+            return false;
+        } catch (EParametroNulo | ECantidadNegativa | EValorNegativo ex) {
+            JOptionPane.showMessageDialog(this, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            return false;
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this, "Error: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            return false;
+        }
     }
 }

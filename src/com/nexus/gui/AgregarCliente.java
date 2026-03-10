@@ -15,10 +15,11 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.border.EmptyBorder;
 import java.awt.BorderLayout;
-import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
-import java.awt.GridLayout;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
 
 /**
  * Pantalla para agregar un nuevo cliente.
@@ -46,17 +47,18 @@ public class AgregarCliente extends JFrame {
         setTitle("Nexus Store - Agregar Cliente");
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         com.nexus.NexusApplication.addGuardarAlCerrar(this, controlador);
-        setBounds(100, 100, 480, 380);
-        setResizable(false);
-
-        JPanel contentPane = new JPanel();
-        contentPane.setBorder(new EmptyBorder(15, 15, 15, 15));
-        contentPane.setLayout(new BorderLayout(5, 5));
-        setContentPane(contentPane);
+        setBounds(100, 100, 520, 480);
+        setResizable(true);
         setLocationRelativeTo(null);
 
+        JPanel contentPane = new JPanel(new BorderLayout(UITheme.ESPACIADO, UITheme.ESPACIADO));
+        contentPane.setBackground(UITheme.FONDO_PANEL);
+        contentPane.setBorder(new EmptyBorder(UITheme.MARGEN, UITheme.MARGEN, UITheme.MARGEN, UITheme.MARGEN));
+        setContentPane(contentPane);
+
         JPanel panelSuperior = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        JButton btnRegresar = new JButton("Regresar");
+        panelSuperior.setOpaque(false);
+        JButton btnRegresar = UIComponents.crearBotonRegresar();
         btnRegresar.addActionListener(e -> {
             new GestionarClientes().setVisible(true);
             dispose();
@@ -64,56 +66,51 @@ public class AgregarCliente extends JFrame {
         panelSuperior.add(btnRegresar);
         contentPane.add(panelSuperior, BorderLayout.NORTH);
 
-        JPanel panelForm = new JPanel(new GridLayout(0, 1, 0, 8));
-        panelForm.setPreferredSize(new Dimension(420, 220));
+        JPanel panelForm = UIComponents.crearPanelTarjeta();
+        panelForm.setLayout(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(8, 8, 8, 8);
+        gbc.anchor = GridBagConstraints.WEST;
 
-        JPanel row1 = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        row1.add(new JLabel("Tipo documento: "));
+        gbc.gridx = 0; gbc.gridy = 0;
+        panelForm.add(new JLabel("Tipo documento:"), gbc);
         cmbTipoDoc = new JComboBox<>(TipoDocumento.values());
-        cmbTipoDoc.setPreferredSize(new Dimension(120, 25));
-        row1.add(cmbTipoDoc);
-        panelForm.add(row1);
+        cmbTipoDoc.setPreferredSize(new Dimension(140, 30));
+        gbc.gridx = 1;
+        panelForm.add(cmbTipoDoc, gbc);
 
-        JPanel row2 = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        row2.add(new JLabel("Número documento: "));
-        txtNumDoc = new JTextField(15);
-        txtNumDoc.setForeground(Color.BLACK);
-        txtNumDoc.setBackground(Color.WHITE);
-        txtNumDoc.setCaretColor(Color.BLACK);
-        row2.add(txtNumDoc);
-        panelForm.add(row2);
+        gbc.gridx = 0; gbc.gridy = 1;
+        panelForm.add(new JLabel("Número documento:"), gbc);
+        txtNumDoc = UIComponents.crearCampoTexto(200);
+        gbc.gridx = 1; gbc.fill = GridBagConstraints.HORIZONTAL; gbc.weightx = 1.0;
+        panelForm.add(txtNumDoc, gbc);
+        gbc.weightx = 0; gbc.fill = GridBagConstraints.NONE;
 
-        JPanel row3 = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        row3.add(new JLabel("Nombre: "));
-        txtNombre = new JTextField(20);
-        txtNombre.setForeground(Color.BLACK);
-        txtNombre.setBackground(Color.WHITE);
-        txtNombre.setCaretColor(Color.BLACK);
-        row3.add(txtNombre);
-        panelForm.add(row3);
+        gbc.gridx = 0; gbc.gridy = 2;
+        panelForm.add(new JLabel("Nombre:"), gbc);
+        txtNombre = UIComponents.crearCampoTexto(280);
+        gbc.gridx = 1; gbc.fill = GridBagConstraints.HORIZONTAL; gbc.weightx = 1.0;
+        panelForm.add(txtNombre, gbc);
+        gbc.weightx = 0; gbc.fill = GridBagConstraints.NONE;
 
-        JPanel row4 = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        row4.add(new JLabel("Apellido: "));
-        txtApellido = new JTextField(20);
-        txtApellido.setForeground(Color.BLACK);
-        txtApellido.setBackground(Color.WHITE);
-        txtApellido.setCaretColor(Color.BLACK);
-        row4.add(txtApellido);
-        panelForm.add(row4);
+        gbc.gridx = 0; gbc.gridy = 3;
+        panelForm.add(new JLabel("Apellido:"), gbc);
+        txtApellido = UIComponents.crearCampoTexto(280);
+        gbc.gridx = 1; gbc.fill = GridBagConstraints.HORIZONTAL; gbc.weightx = 1.0;
+        panelForm.add(txtApellido, gbc);
+        gbc.weightx = 0; gbc.fill = GridBagConstraints.NONE;
 
-        JPanel row5 = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        row5.add(new JLabel("Email: "));
-        txtEmail = new JTextField(25);
-        txtEmail.setForeground(Color.BLACK);
-        txtEmail.setBackground(Color.WHITE);
-        txtEmail.setCaretColor(Color.BLACK);
-        row5.add(txtEmail);
-        panelForm.add(row5);
+        gbc.gridx = 0; gbc.gridy = 4;
+        panelForm.add(new JLabel("Email:"), gbc);
+        txtEmail = UIComponents.crearCampoTexto(280);
+        gbc.gridx = 1; gbc.fill = GridBagConstraints.HORIZONTAL; gbc.weightx = 1.0;
+        panelForm.add(txtEmail, gbc);
 
         contentPane.add(panelForm, BorderLayout.CENTER);
 
         JPanel panelBotones = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        JButton btnAgregar = new JButton("Agregar Cliente");
+        panelBotones.setOpaque(false);
+        JButton btnAgregar = UIComponents.crearBotonPrincipal("Agregar Cliente");
         btnAgregar.addActionListener(e -> agregarCliente());
         panelBotones.add(btnAgregar);
         contentPane.add(panelBotones, BorderLayout.SOUTH);

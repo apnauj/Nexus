@@ -15,7 +15,9 @@ import javax.swing.border.EmptyBorder;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
-import java.awt.GridLayout;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
 
 /**
  * Pantalla para eliminar un usuario.
@@ -39,17 +41,18 @@ public class EliminarUsuario extends JFrame {
         setTitle("Nexus Store - Eliminar Usuario");
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         com.nexus.NexusApplication.addGuardarAlCerrar(this, controlador);
-        setBounds(100, 100, 450, 200);
-        setResizable(false);
+        setBounds(100, 100, 500, 280);
+        setResizable(true);
         setLocationRelativeTo(null);
 
-        JPanel contentPane = new JPanel();
-        contentPane.setBorder(new EmptyBorder(15, 15, 15, 15));
-        contentPane.setLayout(new BorderLayout(5, 5));
+        JPanel contentPane = new JPanel(new BorderLayout(UITheme.ESPACIADO, UITheme.ESPACIADO));
+        contentPane.setBackground(UITheme.FONDO_PANEL);
+        contentPane.setBorder(new EmptyBorder(UITheme.MARGEN, UITheme.MARGEN, UITheme.MARGEN, UITheme.MARGEN));
         setContentPane(contentPane);
 
         JPanel panelSuperior = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        JButton btnRegresar = new JButton("Regresar");
+        panelSuperior.setOpaque(false);
+        JButton btnRegresar = UIComponents.crearBotonRegresar();
         btnRegresar.addActionListener(e -> {
             new GestionarUsuarios().setVisible(true);
             dispose();
@@ -57,30 +60,38 @@ public class EliminarUsuario extends JFrame {
         panelSuperior.add(btnRegresar);
         contentPane.add(panelSuperior, BorderLayout.NORTH);
 
-        JPanel panelForm = new JPanel(new GridLayout(0, 1, 0, 10));
-        panelForm.setPreferredSize(new Dimension(380, 60));
+        JPanel panelForm = UIComponents.crearPanelTarjeta();
+        panelForm.setLayout(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(12, 12, 12, 12);
+        gbc.anchor = GridBagConstraints.WEST;
 
         Usuario[] usuarios = controlador.getUsuarios();
-        Usuario actual = controlador.getCurrentUser();
         if (usuarios.length == 0) {
-            panelForm.add(new JLabel("No hay usuarios registrados."));
+            JLabel lbl = new JLabel("No hay usuarios registrados.");
+            lbl.setFont(UITheme.FONT_NORMAL);
+            gbc.gridx = 0; gbc.gridy = 0;
+            panelForm.add(lbl, gbc);
         } else {
-            JPanel row = new JPanel(new FlowLayout(FlowLayout.LEFT));
-            row.add(new JLabel("Usuario a eliminar: "));
+            gbc.gridx = 0; gbc.gridy = 0;
+            JLabel lbl = new JLabel("Usuario a eliminar:");
+            lbl.setFont(UITheme.FONT_ETIQUETA);
+            panelForm.add(lbl, gbc);
             String[] nombres = new String[usuarios.length];
             for (int i = 0; i < usuarios.length; i++) {
                 nombres[i] = usuarios[i].getUsername();
             }
             cmbUsuario = new JComboBox<>(nombres);
-            cmbUsuario.setPreferredSize(new Dimension(200, 25));
-            row.add(cmbUsuario);
-            panelForm.add(row);
+            cmbUsuario.setPreferredSize(new Dimension(220, 30));
+            gbc.gridx = 1;
+            panelForm.add(cmbUsuario, gbc);
         }
 
         contentPane.add(panelForm, BorderLayout.CENTER);
 
         JPanel panelBotones = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        JButton btnEliminar = new JButton("Eliminar Usuario");
+        panelBotones.setOpaque(false);
+        JButton btnEliminar = UIComponents.crearBotonEliminar("Eliminar Usuario");
         btnEliminar.addActionListener(e -> eliminarUsuario());
         panelBotones.add(btnEliminar);
         contentPane.add(panelBotones, BorderLayout.SOUTH);

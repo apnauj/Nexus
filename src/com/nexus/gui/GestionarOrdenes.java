@@ -1,7 +1,6 @@
 package com.nexus.gui;
 
 import com.nexus.controller.StoreController;
-import com.nexus.exceptions.EFormatoInvalido;
 import com.nexus.exceptions.EOrdenNoEncontrada;
 import com.nexus.exceptions.EParametroNulo;
 import com.nexus.exceptions.EValorNegativo;
@@ -11,17 +10,27 @@ import com.nexus.model.entities.OrdenItem;
 import com.nexus.model.enums.Estado;
 import com.nexus.model.enums.Rol;
 
+import javax.swing.BorderFactory;
 import javax.swing.JButton;
+import javax.swing.JDialog;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
+import javax.swing.JTextField;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
 import java.awt.BorderLayout;
+import java.awt.Dimension;
 import java.awt.FlowLayout;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
 import java.awt.GridLayout;
+import java.awt.Dialog;
+import java.awt.Insets;
+import java.awt.Window;
 
 /**
  * Pantalla para gestionar órdenes.
@@ -62,7 +71,8 @@ public class GestionarOrdenes extends JFrame {
 
         // Panel superior: Regresar
         JPanel panelSuperior = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        JButton btnRegresar = new JButton("Regresar");
+        panelSuperior.setOpaque(false);
+        JButton btnRegresar = UIComponents.crearBotonRegresar();
         btnRegresar.addActionListener(e -> volverAlMenu());
         panelSuperior.add(btnRegresar);
         contentPane.add(panelSuperior, BorderLayout.NORTH);
@@ -79,42 +89,56 @@ public class GestionarOrdenes extends JFrame {
         tablaOrdenes.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
         tablaOrdenes.getTableHeader().setReorderingAllowed(false);
         tablaOrdenes.getTableHeader().setFont(UITheme.FONT_ENCABEZADO_TABLA);
+        tablaOrdenes.setRowHeight(24);
         JScrollPane scrollTabla = new JScrollPane(tablaOrdenes);
+        scrollTabla.setMinimumSize(new Dimension(400, 150)); // ~5 filas + header
         contentPane.add(scrollTabla, BorderLayout.CENTER);
 
         // Panel de botones según rol
         Rol rol = controlador.getCurrentUser().getRol();
         boolean puedeModificar = (rol == Rol.ADMIN || rol == Rol.EMPLEADO_VENTAS);
 
-        JPanel panelBotones = new JPanel(new GridLayout(0, 1, 5, 5));
-        contentPane.add(panelBotones, BorderLayout.SOUTH);
+        JPanel panelBotones = new JPanel(new GridBagLayout());
+        panelBotones.setOpaque(false);
+        GridBagConstraints gbcBtn = new GridBagConstraints();
+        gbcBtn.gridx = 0;
+        gbcBtn.gridy = 0;
+        gbcBtn.insets = new Insets(6, 0, 6, 0);
+        gbcBtn.fill = GridBagConstraints.HORIZONTAL;
+        gbcBtn.weightx = 1.0;
 
-        JButton btnVerDetalle = new JButton("Ver detalle de la orden");
+        JButton btnVerDetalle = UIComponents.crearBotonMenu("Ver detalle de la orden");
         btnVerDetalle.addActionListener(e -> mostrarDetalleOrden());
-        panelBotones.add(btnVerDetalle);
+        panelBotones.add(btnVerDetalle, gbcBtn);
+        gbcBtn.gridy++;
 
         if (puedeModificar) {
-            JButton btnAñadirOrden = new JButton("Añadir Orden");
+            JButton btnAñadirOrden = UIComponents.crearBotonMenu("Añadir Orden");
             btnAñadirOrden.addActionListener(e -> abrirAgregarOrden());
-            panelBotones.add(btnAñadirOrden);
+            panelBotones.add(btnAñadirOrden, gbcBtn);
+            gbcBtn.gridy++;
 
-            JButton btnAñadirItem = new JButton("Añadir Item a la Orden");
+            JButton btnAñadirItem = UIComponents.crearBotonMenu("Añadir Item a la Orden");
             btnAñadirItem.addActionListener(e -> abrirAgregarItemOrden());
-            panelBotones.add(btnAñadirItem);
+            panelBotones.add(btnAñadirItem, gbcBtn);
+            gbcBtn.gridy++;
 
-            JButton btnEliminarItem = new JButton("Eliminar Item de la Orden");
+            JButton btnEliminarItem = UIComponents.crearBotonMenu("Eliminar Item de la Orden");
             btnEliminarItem.addActionListener(e -> abrirEliminarItemOrden());
-            panelBotones.add(btnEliminarItem);
+            panelBotones.add(btnEliminarItem, gbcBtn);
+            gbcBtn.gridy++;
 
-            JButton btnModificarCantidad = new JButton("Modificar Cantidad de Item");
+            JButton btnModificarCantidad = UIComponents.crearBotonMenu("Modificar Cantidad de Item");
             btnModificarCantidad.addActionListener(e -> abrirModificarCantidadItem());
-            panelBotones.add(btnModificarCantidad);
+            panelBotones.add(btnModificarCantidad, gbcBtn);
+            gbcBtn.gridy++;
 
-            JButton btnVerificarPago = new JButton("Registrar pago");
+            JButton btnVerificarPago = UIComponents.crearBotonPrincipal("Registrar pago");
             btnVerificarPago.addActionListener(e -> verificarPagoOrden());
-            panelBotones.add(btnVerificarPago);
+            panelBotones.add(btnVerificarPago, gbcBtn);
         }
 
+        contentPane.add(panelBotones, BorderLayout.SOUTH);
         actualizarTabla();
     }
 
@@ -159,42 +183,8 @@ public class GestionarOrdenes extends JFrame {
         Orden o = ordenes[fila];
         if (o == null) return;
 
-        Cliente c = o.getCliente();
-        String clienteStr = (c != null) ? c.getNombre() + " " + c.getApellido() : "-";
-        double total = o.getTotal();
-        if (o.getItems() != null && o.getItems().length > 0 && total == 0) {
-            total = o.calcularTotal();
-        }
-        String metodoPagoStr = o.getMetodoPago() != null ? o.getMetodoPago().toString() : "-";
-        String totalStr = String.format("%.2f", total);
-        String valorPagadoStr = String.format("%.2f", o.getValorPagado());
-        String cambioStr = String.format("%.2f", o.getCambio());
-
-        String msg = "ID: " + o.getIdPedido() + "\n"
-                + "Cliente: " + clienteStr + "\n"
-                + "Fecha: " + o.getFecha() + "\n"
-                + "Estado: " + o.getEstado() + "\n"
-                + "Método de pago: " + metodoPagoStr + "\n"
-                + "Total: $" + totalStr + "\n"
-                + "Valor pagado: $" + valorPagadoStr + "\n"
-                + "Cambio: $" + cambioStr + "\n\n"
-                + "--- Items de la orden ---\n";
-
-        OrdenItem[] items = o.getItems();
-        if (items != null && items.length > 0) {
-            for (OrdenItem item : items) {
-                if (item != null && item.getProducto() != null) {
-                    String nomProd = item.getProducto().getNombre();
-                    double subtotal = item.calcularSubtotal();
-                    msg = msg + "  • " + nomProd + " x " + item.getCantidad()
-                            + " = $" + String.format("%.2f", subtotal) + "\n";
-                }
-            }
-        } else {
-            msg = msg + "  (Sin items)\n";
-        }
-
-        JOptionPane.showMessageDialog(this, msg, "Detalle de la orden", JOptionPane.INFORMATION_MESSAGE);
+        DetalleOrdenDialog dlg = new DetalleOrdenDialog(this, o);
+        dlg.setVisible(true);
     }
 
     private void abrirAgregarOrden() {
@@ -269,18 +259,19 @@ public class GestionarOrdenes extends JFrame {
             totalOrden = orden.calcularTotal();
         }
 
-        String input = JOptionPane.showInputDialog(this,
-                "Total a pagar: $" + String.format("%.2f", totalOrden) + "\n\nValor pagado por el cliente:",
-                "Verificar pago", JOptionPane.QUESTION_MESSAGE);
-        if (input == null || input.isBlank()) {
+        VerificarPagoDialog dlg = new VerificarPagoDialog(this, totalOrden);
+        dlg.setVisible(true);
+        Double valorPagado = dlg.getValorPagado();
+        if (valorPagado == null) {
+            return;
+        }
+
+        if (valorPagado < 0) {
+            JOptionPane.showMessageDialog(this, "El valor no puede ser negativo.", "Formato inválido", JOptionPane.ERROR_MESSAGE);
             return;
         }
 
         try {
-            double valorPagado = Double.parseDouble(input.trim());
-            if (valorPagado < 0) {
-                throw new EFormatoInvalido("El valor no puede ser negativo");
-            }
             controlador.verificarPago(orden.getIdPedido(), valorPagado);
 
             // Obtener la orden actualizada para mostrar valor pagado y cambio
@@ -298,12 +289,6 @@ public class GestionarOrdenes extends JFrame {
             }
             JOptionPane.showMessageDialog(this, msg, "Resultado del pago", JOptionPane.INFORMATION_MESSAGE);
             actualizarTabla();
-        } catch (NumberFormatException e) {
-            JOptionPane.showMessageDialog(this, "Ingrese un valor numérico válido (ej: 150000 o 99.50).",
-                    "Formato inválido", JOptionPane.ERROR_MESSAGE);
-        } catch (EFormatoInvalido e) {
-            JOptionPane.showMessageDialog(this, "El valor no puede ser negativo.",
-                    "Formato inválido", JOptionPane.ERROR_MESSAGE);
         } catch (EOrdenNoEncontrada | EParametroNulo | EValorNegativo ex) {
             JOptionPane.showMessageDialog(this, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         } catch (Exception ex) {
@@ -311,4 +296,187 @@ public class GestionarOrdenes extends JFrame {
         }
     }
 
+    /**
+     * Diálogo modal para verificar pago de una orden.
+     */
+    private static class VerificarPagoDialog extends JDialog {
+        private Double valorPagadoResultado;
+
+        VerificarPagoDialog(Window parent, double totalOrden) {
+            super(parent, "Verificar pago", Dialog.ModalityType.APPLICATION_MODAL);
+            setSize(420, 220);
+            setLocationRelativeTo(parent);
+            setResizable(false);
+            setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+
+            JPanel content = new JPanel(new BorderLayout(UITheme.ESPACIADO, UITheme.ESPACIADO));
+            content.setBackground(UITheme.FONDO_PANEL);
+            content.setBorder(new EmptyBorder(UITheme.MARGEN, UITheme.MARGEN, UITheme.MARGEN, UITheme.MARGEN));
+            setContentPane(content);
+
+            JPanel panelForm = UIComponents.crearPanelTarjeta();
+            panelForm.setLayout(new java.awt.GridBagLayout());
+            java.awt.GridBagConstraints gbc = new java.awt.GridBagConstraints();
+            gbc.insets = new java.awt.Insets(10, 10, 10, 10);
+            gbc.anchor = java.awt.GridBagConstraints.WEST;
+
+            gbc.gridx = 0; gbc.gridy = 0; gbc.gridwidth = 2;
+            JLabel lblTotal = new JLabel("Total a pagar: $" + String.format("%.2f", totalOrden));
+            lblTotal.setFont(UITheme.FONT_SUBTITULO);
+            lblTotal.setForeground(UITheme.COLOR_PRINCIPAL);
+            panelForm.add(lblTotal, gbc);
+            gbc.gridwidth = 1;
+
+            gbc.gridy = 1;
+            JLabel lblValor = new JLabel("Valor pagado por el cliente:");
+            lblValor.setFont(UITheme.FONT_ETIQUETA);
+            panelForm.add(lblValor, gbc);
+            JTextField txtValor = UIComponents.crearCampoTexto(180);
+            gbc.gridx = 1;
+            panelForm.add(txtValor, gbc);
+
+            content.add(panelForm, BorderLayout.CENTER);
+
+            JPanel panelBtn = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
+            panelBtn.setOpaque(false);
+            JButton btnCancelar = UIComponents.crearBotonLink("Cancelar");
+            btnCancelar.addActionListener(e -> {
+                valorPagadoResultado = null;
+                dispose();
+            });
+            JButton btnVerificar = UIComponents.crearBotonPrincipal("Verificar");
+            btnVerificar.addActionListener(e -> {
+                String txt = txtValor.getText();
+                if (txt == null || txt.isBlank()) {
+                    JOptionPane.showMessageDialog(this, "Ingrese el valor pagado.", "Campo requerido", JOptionPane.WARNING_MESSAGE);
+                    return;
+                }
+                try {
+                    double val = Double.parseDouble(txt.trim());
+                    valorPagadoResultado = val;
+                    dispose();
+                } catch (NumberFormatException ex) {
+                    JOptionPane.showMessageDialog(this, "Ingrese un valor numérico válido (ej: 150000 o 99.50).", "Formato inválido", JOptionPane.ERROR_MESSAGE);
+                }
+            });
+            panelBtn.add(btnCancelar);
+            panelBtn.add(btnVerificar);
+            content.add(panelBtn, BorderLayout.SOUTH);
+        }
+
+        Double getValorPagado() {
+            return valorPagadoResultado;
+        }
+    }
+
+    /**
+     * Diálogo modal para mostrar el detalle de una orden.
+     */
+    private static class DetalleOrdenDialog extends JDialog {
+        DetalleOrdenDialog(Window parent, Orden orden) {
+            super(parent, "Detalle de la orden", Dialog.ModalityType.APPLICATION_MODAL);
+            setSize(520, 420);
+            setLocationRelativeTo(parent);
+            setResizable(true);
+            setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+
+            JPanel content = new JPanel(new BorderLayout(UITheme.ESPACIADO, UITheme.ESPACIADO));
+            content.setBackground(UITheme.FONDO_PANEL);
+            content.setBorder(new EmptyBorder(UITheme.MARGEN, UITheme.MARGEN, UITheme.MARGEN, UITheme.MARGEN));
+            setContentPane(content);
+
+            JPanel panelInfo = new JPanel(new java.awt.GridLayout(5, 2, 8, 6));
+            panelInfo.setBackground(java.awt.Color.WHITE);
+            panelInfo.setBorder(BorderFactory.createCompoundBorder(
+                    BorderFactory.createLineBorder(UITheme.BORDE),
+                    new EmptyBorder(12, 12, 12, 12)));
+
+            Cliente c = orden.getCliente();
+            String clienteStr = (c != null) ? c.getNombre() + " " + c.getApellido() : "-";
+
+            agregarFilaInfo(panelInfo, "ID:", orden.getIdPedido().toString());
+            agregarFilaInfo(panelInfo, "Cliente:", clienteStr);
+            agregarFilaInfo(panelInfo, "Fecha:", orden.getFecha());
+            agregarFilaInfo(panelInfo, "Estado:", orden.getEstado().toString());
+            agregarFilaInfo(panelInfo, "Método de pago:", orden.getMetodoPago() != null ? orden.getMetodoPago().toString() : "-");
+
+            content.add(panelInfo, BorderLayout.NORTH);
+
+            String[] cols = { "Producto", "Cant.", "P. Unit.", "Subtotal" };
+            javax.swing.table.DefaultTableModel modelItems = new javax.swing.table.DefaultTableModel(cols, 0) {
+                @Override
+                public boolean isCellEditable(int row, int column) { return false; }
+            };
+
+            OrdenItem[] items = orden.getItems();
+            double totalOrden = 0;
+            if (items != null && items.length > 0) {
+                for (OrdenItem item : items) {
+                    String nombreProd = item.getProducto() != null ? item.getProducto().getNombre() : "?";
+                    int cant = item.getCantidad();
+                    double subtotal = item.calcularSubtotal();
+                    totalOrden += subtotal;
+                    double pUnit = cant > 0 ? subtotal / cant : 0;
+                    modelItems.addRow(new Object[]{
+                            nombreProd, cant,
+                            String.format("$%.2f", pUnit),
+                            String.format("$%.2f", subtotal)
+                    });
+                }
+            }
+
+            JTable tablaItems = new JTable(modelItems);
+            tablaItems.setRowHeight(24);
+            tablaItems.setFont(UITheme.FONT_NORMAL);
+            tablaItems.getTableHeader().setFont(UITheme.FONT_ENCABEZADO_TABLA);
+            tablaItems.setShowGrid(true);
+            tablaItems.setGridColor(UITheme.BORDE);
+            JScrollPane scrollItems = new JScrollPane(tablaItems);
+            scrollItems.setPreferredSize(new Dimension(0, 140));
+            content.add(scrollItems, BorderLayout.CENTER);
+
+            JPanel panelSur = new JPanel(new BorderLayout(0, 8));
+            panelSur.setOpaque(false);
+
+            JPanel panelTotales = new JPanel(new GridBagLayout());
+            panelTotales.setOpaque(false);
+            GridBagConstraints gbc = new GridBagConstraints();
+            gbc.anchor = GridBagConstraints.EAST;
+            gbc.insets = new Insets(4, 0, 4, 0);
+
+            JLabel lblTotal = new JLabel("Total: $" + String.format("%.2f", totalOrden));
+            lblTotal.setFont(UITheme.FONT_SUBTITULO);
+            panelTotales.add(lblTotal, gbc);
+            gbc.gridy = 1;
+            JLabel lblPagado = new JLabel("Valor pagado: $" + String.format("%.2f", orden.getValorPagado()));
+            lblPagado.setFont(UITheme.FONT_NORMAL);
+            panelTotales.add(lblPagado, gbc);
+            gbc.gridy = 2;
+            JLabel lblCambio = new JLabel("Cambio: $" + String.format("%.2f", orden.getCambio()));
+            lblCambio.setFont(UITheme.FONT_NORMAL);
+            panelTotales.add(lblCambio, gbc);
+
+            panelSur.add(panelTotales, BorderLayout.CENTER);
+
+            JButton btnCerrar = UIComponents.crearBotonLink("Cerrar");
+            btnCerrar.addActionListener(e -> dispose());
+            JPanel panelBtn = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+            panelBtn.setOpaque(false);
+            panelBtn.add(btnCerrar);
+            panelSur.add(panelBtn, BorderLayout.SOUTH);
+
+            content.add(panelSur, BorderLayout.SOUTH);
+        }
+
+        private void agregarFilaInfo(JPanel p, String etiqueta, String valor) {
+            JLabel lbl = new JLabel(etiqueta);
+            lbl.setFont(UITheme.FONT_ETIQUETA);
+            lbl.setForeground(UITheme.TEXTO_SECUNDARIO);
+            p.add(lbl);
+            JLabel val = new JLabel(valor);
+            val.setFont(UITheme.FONT_NORMAL);
+            val.setToolTipText(valor != null && valor.length() > 40 ? valor : null);
+            p.add(val);
+        }
+    }
 }

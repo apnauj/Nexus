@@ -18,7 +18,6 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.border.EmptyBorder;
 import java.awt.BorderLayout;
-import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.GridLayout;
@@ -50,17 +49,18 @@ public class ModificarCantidadItem extends JFrame {
         setTitle("Nexus Store - Modificar Cantidad de Item");
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         com.nexus.NexusApplication.addGuardarAlCerrar(this, controlador);
-        setBounds(100, 100, 480, 320);
+        setBounds(100, 100, 520, 360);
         setLocationRelativeTo(null);
         setResizable(false);
 
-        JPanel contentPane = new JPanel();
-        contentPane.setBorder(new EmptyBorder(15, 15, 15, 15));
-        contentPane.setLayout(new BorderLayout(5, 5));
+        JPanel contentPane = new JPanel(new BorderLayout(UITheme.ESPACIADO, UITheme.ESPACIADO));
+        contentPane.setBackground(UITheme.FONDO_PANEL);
+        contentPane.setBorder(new EmptyBorder(UITheme.MARGEN, UITheme.MARGEN, UITheme.MARGEN, UITheme.MARGEN));
         setContentPane(contentPane);
 
         JPanel panelSuperior = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        JButton btnRegresar = new JButton("Regresar");
+        panelSuperior.setOpaque(false);
+        JButton btnRegresar = UIComponents.crearBotonRegresar();
         btnRegresar.addActionListener(e -> {
             new GestionarOrdenes().setVisible(true);
             dispose();
@@ -71,34 +71,44 @@ public class ModificarCantidadItem extends JFrame {
         ordenesPendientes = controlador.getOrdenesPendientes();
         String[] opcionesOrden = controlador.getOpcionesOrdenesPendientes();
 
-        JPanel panelForm = new JPanel(new GridLayout(0, 1, 0, 10));
-        panelForm.setPreferredSize(new Dimension(420, 160));
+        JPanel panelForm = UIComponents.crearPanelTarjeta();
+        panelForm.setLayout(new GridLayout(0, 1, 0, 10));
+        panelForm.setPreferredSize(new Dimension(420, 180));
 
         if (opcionesOrden.length == 0) {
-            panelForm.add(new JLabel("No hay órdenes pendientes. Cree una orden y añada items primero."));
+            JLabel lbl = new JLabel("No hay órdenes pendientes. Cree una orden y añada items primero.");
+            lbl.setFont(UITheme.FONT_NORMAL);
+            lbl.setForeground(UITheme.TEXTO_SECUNDARIO);
+            panelForm.add(lbl);
         } else {
             JPanel rowOrden = new JPanel(new FlowLayout(FlowLayout.LEFT));
-            rowOrden.add(new JLabel("Orden: "));
+            rowOrden.setOpaque(false);
+            JLabel lblOrden = new JLabel("Orden:");
+            lblOrden.setFont(UITheme.FONT_ETIQUETA);
+            rowOrden.add(lblOrden);
             cmbOrden = new JComboBox<>(opcionesOrden);
-            cmbOrden.setPreferredSize(new Dimension(280, 25));
+            cmbOrden.setPreferredSize(new Dimension(300, 30));
             cmbOrden.addActionListener(e -> actualizarProductosEnOrden());
             rowOrden.add(cmbOrden);
             panelForm.add(rowOrden);
 
             JPanel rowProducto = new JPanel(new FlowLayout(FlowLayout.LEFT));
-            rowProducto.add(new JLabel("Producto: "));
+            rowProducto.setOpaque(false);
+            JLabel lblProd = new JLabel("Producto:");
+            lblProd.setFont(UITheme.FONT_ETIQUETA);
+            rowProducto.add(lblProd);
             opcionesProductosEnOrden = obtenerProductosEnOrdenSeleccionada();
             cmbProducto = new JComboBox<>(opcionesProductosEnOrden);
-            cmbProducto.setPreferredSize(new Dimension(280, 25));
+            cmbProducto.setPreferredSize(new Dimension(300, 30));
             rowProducto.add(cmbProducto);
             panelForm.add(rowProducto);
 
             JPanel rowCantidad = new JPanel(new FlowLayout(FlowLayout.LEFT));
-            rowCantidad.add(new JLabel("Nueva cantidad: "));
-            txtCantidad = new JTextField(8);
-            txtCantidad.setForeground(Color.BLACK);
-            txtCantidad.setBackground(Color.WHITE);
-            txtCantidad.setCaretColor(Color.BLACK);
+            rowCantidad.setOpaque(false);
+            JLabel lblCant = new JLabel("Nueva cantidad:");
+            lblCant.setFont(UITheme.FONT_ETIQUETA);
+            rowCantidad.add(lblCant);
+            txtCantidad = UIComponents.crearCampoTexto(100);
             rowCantidad.add(txtCantidad);
             panelForm.add(rowCantidad);
         }
@@ -106,7 +116,8 @@ public class ModificarCantidadItem extends JFrame {
         contentPane.add(panelForm, BorderLayout.CENTER);
 
         JPanel panelBotones = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        JButton btnModificar = new JButton("Modificar cantidad");
+        panelBotones.setOpaque(false);
+        JButton btnModificar = UIComponents.crearBotonPrincipal("Modificar cantidad");
         btnModificar.addActionListener(e -> modificarCantidad());
         panelBotones.add(btnModificar);
         contentPane.add(panelBotones, BorderLayout.SOUTH);
@@ -163,8 +174,12 @@ public class ModificarCantidadItem extends JFrame {
         int cantidad;
         try {
             cantidad = Integer.parseInt(cantidadStr.trim());
-            if (cantidad <= 0) throw new NumberFormatException("Debe ser positivo");
         } catch (NumberFormatException e) {
+            JOptionPane.showMessageDialog(this, "La cantidad debe ser un número entero positivo.", "Formato inválido", JOptionPane.WARNING_MESSAGE);
+            txtCantidad.requestFocus();
+            return;
+        }
+        if (cantidad <= 0) {
             JOptionPane.showMessageDialog(this, "La cantidad debe ser un número entero positivo.", "Formato inválido", JOptionPane.WARNING_MESSAGE);
             txtCantidad.requestFocus();
             return;

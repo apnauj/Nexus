@@ -193,7 +193,6 @@ public class StoreController {
          * 7. $          : Indica el fin de la cadena. Asegura que no haya texto extra después del dominio.
          */
         if (!emailTrimmed.matches("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$")) throw new EFormatoInvalido("El formato del email es inválido. Debe ser: nombre@dominio.ext (ej: usuario@correo.com)");
-
         Cliente nuevoCliente = new Cliente(tipoDoc, numDoc, nombre, apellido, emailTrimmed);
         this.clientes = Arrays.copyOf(this.clientes, this.clientes.length + 1);
         this.clientes[this.clientes.length - 1] = nuevoCliente;
@@ -372,12 +371,13 @@ public class StoreController {
     public void deleteProducto(String nombre) throws EProductoNoEncontrado, EHistorialOrden, EParametroNulo {
         if (nombre == null || nombre.isBlank()) throw new EParametroNulo("nombre del producto");
         Producto p = searchProducto(nombre);
+
         int i = 0;
-
-
         while (i < ordenes.length) {
 
             OrdenItem[] items = ordenes[i].getItems();
+
+            //Orden --> items --> productos
 
             int j = 0;
 
@@ -637,10 +637,7 @@ public class StoreController {
         hardware.setConsumo(consumo);
         hardware.setFabricante(fabricante);
         if (descuentoActivo) {
-            hardware.setDescuentoActivo(true);
             hardware.asignarDescuento();
-        } else {
-            hardware.desactivarDescuento();
         }
     }
 
@@ -679,10 +676,7 @@ public class StoreController {
         videojuego.setPlataforma(plataforma);
         videojuego.setTamano(tamano);
         if (descuentoActivo) {
-            videojuego.setDescuentoActivo(true);
             videojuego.asignarDescuento();
-        } else {
-            videojuego.desactivarDescuento();
         }
     }
 

@@ -1,0 +1,52 @@
+---
+description: Prohibir throws en la capa de interfaz (com.nexus.gui)
+globs: src/com/nexus/gui/**/*.java
+alwaysApply: false
+---
+
+# Regla: No throws en la capa GUI
+
+## ⚠️ IMPORTANTE
+
+Las clases del paquete `com.nexus.gui` **NO deben** declarar ni propagar excepciones mediante `throws` o `throw`.
+
+## Prohibido
+
+- **`throws` en firmas de métodos**: Ningún método de la GUI debe declarar `throws` en su firma.
+- **`throw new`**: No se permite lanzar excepciones explícitamente en la capa de interfaz.
+
+## Correcto
+
+- **Validación + JOptionPane**: Ante errores de validación, mostrar `JOptionPane.showMessageDialog(...)` y retornar (o `return false` si el método devuelve boolean).
+- **Try-catch en llamadas al controlador**: Todas las llamadas a `StoreController` que puedan lanzar excepciones deben estar envueltas en `try-catch`. Capturar las excepciones y mostrar el mensaje al usuario con `JOptionPane`.
+
+## Ejemplo
+
+```java
+// ❌ MAL
+private void actualizar() throws EProductoNoEncontrado {
+    controlador.actualizarProducto(...);
+}
+
+private void validar() {
+    if (valor < 0) throw new EFormatoInvalido("...");
+}
+
+// ✅ BIEN
+private void actualizar() {
+    try {
+        controlador.actualizarProducto(...);
+        JOptionPane.showMessageDialog(this, "Éxito", ...);
+    } catch (EProductoNoEncontrado ex) {
+        JOptionPane.showMessageDialog(this, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+    }
+}
+
+private boolean validar() {
+    if (valor < 0) {
+        JOptionPane.showMessageDialog(this, "El valor no puede ser negativo.", "Error", JOptionPane.ERROR_MESSAGE);
+        return false;
+    }
+    return true;
+}
+```

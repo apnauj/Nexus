@@ -47,8 +47,8 @@ public final class UITheme {
     public static final int VENTANA_FORMULARIO_ALTO = 520;
     /** Ancho estándar para ventanas con tabla */
     public static final int VENTANA_TABLA_ANCHO = 750;
-    /** Alto estándar para ventanas con tabla */
-    public static final int VENTANA_TABLA_ALTO = 450;
+    /** Alto estándar para ventanas con tabla (permite ver ~5 filas) */
+    public static final int VENTANA_TABLA_ALTO = 520;
 
     /** Margen estándar */
     public static final int MARGEN = 16;

@@ -17,9 +17,11 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.border.EmptyBorder;
 import java.awt.BorderLayout;
-import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.FlowLayout;
-import java.awt.GridLayout;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
 
 /**
  * Pantalla para agregar un producto tipo Hardware.
@@ -51,18 +53,18 @@ public class AgregarHardware extends JFrame {
         setTitle("Nexus Store - Agregar Hardware");
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         com.nexus.NexusApplication.addGuardarAlCerrar(this, controlador);
-        setBounds(100, 100, UITheme.VENTANA_FORMULARIO_ANCHO, UITheme.VENTANA_FORMULARIO_ALTO);
+        setBounds(100, 100, 560, 580);
         setResizable(true);
         setLocationRelativeTo(null);
 
-        JPanel contentPane = new JPanel();
+        JPanel contentPane = new JPanel(new BorderLayout(UITheme.ESPACIADO, UITheme.ESPACIADO));
         contentPane.setBackground(UITheme.FONDO_PANEL);
         contentPane.setBorder(new EmptyBorder(UITheme.MARGEN, UITheme.MARGEN, UITheme.MARGEN, UITheme.MARGEN));
-        contentPane.setLayout(new BorderLayout(UITheme.ESPACIADO, UITheme.ESPACIADO));
         setContentPane(contentPane);
 
         JPanel panelSuperior = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        JButton btnRegresar = new JButton("Regresar");
+        panelSuperior.setOpaque(false);
+        JButton btnRegresar = UIComponents.crearBotonRegresar();
         btnRegresar.addActionListener(e -> {
             new GestionarProductos().setVisible(true);
             dispose();
@@ -70,21 +72,26 @@ public class AgregarHardware extends JFrame {
         panelSuperior.add(btnRegresar);
         contentPane.add(panelSuperior, BorderLayout.NORTH);
 
-        JPanel panelForm = new JPanel(new GridLayout(0, 1, 0, UITheme.ESPACIADO));
-        panelForm.setBackground(UITheme.FONDO_PANEL);
+        JPanel panelForm = UIComponents.crearPanelTarjeta();
+        panelForm.setLayout(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(6, 8, 6, 8);
+        gbc.anchor = GridBagConstraints.WEST;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.weightx = 1.0;
 
-        panelForm.add(crearFila("Nombre: ", txtNombre = crearTextField(25)));
-        panelForm.add(crearFila("Descripción: ", txtDescripcion = crearTextField(25)));
-        panelForm.add(crearFila("Categoría: ", txtCategoria = crearTextField(20)));
-        panelForm.add(crearFila("Tiempo garantía (meses): ", txtTiempoGarantia = crearTextField(5)));
-        panelForm.add(crearFila("Precio base: ", txtPrecioBase = crearTextField(10)));
-        panelForm.add(crearFila("Stock: ", txtStock = crearTextField(5)));
-        panelForm.add(crearFila("Consumo (W): ", txtConsumo = crearTextField(8)));
-        panelForm.add(crearFila("Fabricante: ", txtFabricante = crearTextField(20)));
-        JPanel rowDescuento = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        int y = 0;
+        agregarFila(panelForm, gbc, y++, "Nombre:", txtNombre = UIComponents.crearCampoTexto(280));
+        agregarFila(panelForm, gbc, y++, "Descripción:", txtDescripcion = UIComponents.crearCampoTexto(280));
+        agregarFila(panelForm, gbc, y++, "Categoría:", txtCategoria = UIComponents.crearCampoTexto(200));
+        agregarFila(panelForm, gbc, y++, "Tiempo garantía (meses):", txtTiempoGarantia = UIComponents.crearCampoTexto(80));
+        agregarFila(panelForm, gbc, y++, "Precio base:", txtPrecioBase = UIComponents.crearCampoTexto(120));
+        agregarFila(panelForm, gbc, y++, "Stock:", txtStock = UIComponents.crearCampoTexto(80));
+        agregarFila(panelForm, gbc, y++, "Consumo (W):", txtConsumo = UIComponents.crearCampoTexto(100));
+        agregarFila(panelForm, gbc, y++, "Fabricante:", txtFabricante = UIComponents.crearCampoTexto(200));
+        gbc.gridx = 0; gbc.gridy = y; gbc.gridwidth = 2;
         chkDescuentoActivo = new JCheckBox("Activar descuento", true);
-        rowDescuento.add(chkDescuentoActivo);
-        panelForm.add(rowDescuento);
+        panelForm.add(chkDescuentoActivo, gbc);
 
         JScrollPane scrollForm = new JScrollPane(panelForm);
         scrollForm.setBorder(null);
@@ -93,25 +100,20 @@ public class AgregarHardware extends JFrame {
         contentPane.add(scrollForm, BorderLayout.CENTER);
 
         JPanel panelBotones = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        JButton btnAgregar = new JButton("Agregar Hardware");
+        panelBotones.setOpaque(false);
+        JButton btnAgregar = UIComponents.crearBotonPrincipal("Agregar Hardware");
         btnAgregar.addActionListener(e -> agregarHardware());
         panelBotones.add(btnAgregar);
         contentPane.add(panelBotones, BorderLayout.SOUTH);
     }
 
-    private JPanel crearFila(String label, JTextField field) {
-        JPanel row = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        row.add(new JLabel(label));
-        row.add(field);
-        return row;
-    }
-
-    private JTextField crearTextField(int cols) {
-        JTextField t = new JTextField(cols);
-        t.setForeground(Color.BLACK);
-        t.setBackground(Color.WHITE);
-        t.setCaretColor(Color.BLACK);
-        return t;
+    private void agregarFila(JPanel parent, GridBagConstraints gbc, int y, String label, JTextField field) {
+        gbc.gridx = 0; gbc.gridy = y; gbc.gridwidth = 1; gbc.weightx = 0;
+        JLabel lbl = new JLabel(label);
+        lbl.setFont(UITheme.FONT_ETIQUETA);
+        parent.add(lbl, gbc);
+        gbc.gridx = 1; gbc.weightx = 1.0;
+        parent.add(field, gbc);
     }
 
     private void agregarHardware() {

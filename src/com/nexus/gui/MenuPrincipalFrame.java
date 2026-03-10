@@ -4,25 +4,12 @@ import com.nexus.controller.StoreController;
 import com.nexus.model.enums.Rol;
 import com.nexus.model.entities.Usuario;
 
-import javax.swing.JButton;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.SwingConstants;
+import javax.swing.*;
 import javax.swing.border.EmptyBorder;
-import java.awt.BorderLayout;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.GridLayout;
-import java.awt.Insets;
+import java.awt.*;
 
 /**
- * Menú principal de la aplicación.
- * Muestra botones según el rol del usuario:
- * - ADMIN: acceso total (Órdenes, Productos, Clientes, Usuarios)
- * - EMPLEADO_VENTAS: solo CRUD Órdenes y CRUD Clientes
- * - GESTOR_INVENTARIO: solo ver Órdenes y CRUD Productos
+ * Menú principal de la aplicación con estética mejorada.
  */
 public class MenuPrincipalFrame extends JFrame {
 
@@ -43,152 +30,125 @@ public class MenuPrincipalFrame extends JFrame {
             return;
         }
 
-        setTitle("Nexus Store - Menú principal (" + usuarioActual.getUsername() + ")");
+        setTitle("Nexus Store - Panel de Control");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         com.nexus.NexusApplication.addGuardarAlCerrar(this, controlador);
-        setBounds(100, 100, 500, 400);
+        setBounds(100, 100, 550, 500); // Un poco más ancho para las tarjetas
         setResizable(false);
         setLocationRelativeTo(null);
 
-        contentPane = new JPanel();
+        contentPane = new JPanel(new BorderLayout(0, 20));
         contentPane.setBackground(UITheme.FONDO_PANEL);
-        contentPane.setBorder(new EmptyBorder(UITheme.MARGEN, UITheme.MARGEN, UITheme.MARGEN, UITheme.MARGEN));
+        contentPane.setBorder(new EmptyBorder(30, 40, 30, 40));
         setContentPane(contentPane);
-        contentPane.setLayout(new BorderLayout(0, UITheme.ESPACIADO));
 
-        // Panel superior: título y usuario
-        JPanel topPanel = new JPanel(new GridLayout(2, 1, 0, 4));
+        // --- PANEL SUPERIOR ---
+        JPanel topPanel = new JPanel(new GridLayout(2, 1, 0, 5));
         topPanel.setOpaque(false);
+
         JLabel lblTitulo = new JLabel("NEXUS STORE");
         lblTitulo.setFont(UITheme.FONT_TITULO);
         lblTitulo.setForeground(UITheme.COLOR_PRINCIPAL);
         lblTitulo.setHorizontalAlignment(SwingConstants.CENTER);
-        topPanel.add(lblTitulo);
 
-        JLabel lblUsuario = new JLabel("Usuario: " + usuarioActual.getUsername() + " (" + usuarioActual.getRol() + ")");
-        lblUsuario.setFont(UITheme.FONT_ETIQUETA);
+        JLabel lblUsuario = new JLabel("Bienvenido, " + usuarioActual.getUsername() + " [" + usuarioActual.getRol() + "]");
+        lblUsuario.setFont(new Font("SansSerif", Font.ITALIC, 13));
         lblUsuario.setForeground(UITheme.TEXTO_SECUNDARIO);
         lblUsuario.setHorizontalAlignment(SwingConstants.CENTER);
-        topPanel.add(lblUsuario);
 
+        topPanel.add(lblTitulo);
+        topPanel.add(lblUsuario);
         contentPane.add(topPanel, BorderLayout.NORTH);
 
-        // Panel central: botones según rol
+        // --- PANEL CENTRAL (BOTONES) ---
         JPanel centerPanel = new JPanel(new GridBagLayout());
+        centerPanel.setOpaque(false);
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.gridx = 0;
-        gbc.insets = new Insets(5, 10, 5, 10);
+        gbc.gridy = 0;
+        gbc.insets = new Insets(8, 0, 8, 0);
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.weightx = 1.0;
 
         Rol rol = usuarioActual.getRol();
 
-        // Gestionar Órdenes: ADMIN, EMPLEADO_VENTAS (CRUD), GESTOR_INVENTARIO (solo ver)
         if (rol == Rol.ADMIN || rol == Rol.EMPLEADO_VENTAS || rol == Rol.GESTOR_INVENTARIO) {
-            JButton btnOrdenes = new JButton("Gestionar Órdenes");
-            btnOrdenes.addActionListener(e -> abrirGestionarOrdenes());
-            gbc.gridy = 0;
-            centerPanel.add(btnOrdenes, gbc);
-        }
-
-        // Gestionar Productos: solo ADMIN y GESTOR_INVENTARIO (CRUD)
-        if (rol == Rol.ADMIN || rol == Rol.GESTOR_INVENTARIO) {
-            JButton btnProductos = new JButton("Gestionar Productos");
-            btnProductos.addActionListener(e -> abrirGestionarProductos());
+            JButton btn = UIComponents.crearBotonMenu("Gestionar Órdenes");
+            btn.addActionListener(e -> abrirGestionarOrdenes());
+            centerPanel.add(btn, gbc);
             gbc.gridy++;
-            centerPanel.add(btnProductos, gbc);
         }
 
-        // Reporte de órdenes: ADMIN y GESTOR_INVENTARIO
         if (rol == Rol.ADMIN || rol == Rol.GESTOR_INVENTARIO) {
-            JButton btnReporte = new JButton("Reporte de Órdenes");
-            btnReporte.addActionListener(e -> abrirReporteOrdenes());
+            JButton btn = UIComponents.crearBotonMenu("Gestionar Productos");
+            btn.addActionListener(e -> abrirGestionarProductos());
+            centerPanel.add(btn, gbc);
             gbc.gridy++;
-            centerPanel.add(btnReporte, gbc);
+
+            JButton btnRep = UIComponents.crearBotonMenu("Reporte de Órdenes");
+            btnRep.addActionListener(e -> abrirReporteOrdenes());
+            centerPanel.add(btnRep, gbc);
+            gbc.gridy++;
         }
 
-        // Gestionar Clientes: solo ADMIN y EMPLEADO_VENTAS (CRUD)
         if (rol == Rol.ADMIN || rol == Rol.EMPLEADO_VENTAS) {
-            JButton btnClientes = new JButton("Gestionar Clientes");
-            btnClientes.addActionListener(e -> abrirGestionarClientes());
+            JButton btn = UIComponents.crearBotonMenu("Gestionar Clientes");
+            btn.addActionListener(e -> abrirGestionarClientes());
+            centerPanel.add(btn, gbc);
             gbc.gridy++;
-            centerPanel.add(btnClientes, gbc);
         }
 
-        // Gestionar Usuarios: solo ADMIN
         if (rol == Rol.ADMIN) {
-            JButton btnUsuarios = new JButton("Gestionar Usuarios");
-            btnUsuarios.addActionListener(e -> abrirGestionarUsuarios());
+            JButton btn = UIComponents.crearBotonMenu("Gestionar Usuarios");
+            btn.addActionListener(e -> abrirGestionarUsuarios());
+            centerPanel.add(btn, gbc);
             gbc.gridy++;
-            centerPanel.add(btnUsuarios, gbc);
         }
 
         contentPane.add(centerPanel, BorderLayout.CENTER);
 
-        // Panel inferior: cerrar sesión
+        // --- PANEL INFERIOR ---
         JPanel bottomPanel = new JPanel();
-        JButton btnCerrarSesion = new JButton("Cerrar sesión");
-        btnCerrarSesion.addActionListener(e -> cerrarSesion());
-        bottomPanel.add(btnCerrarSesion);
+        bottomPanel.setOpaque(false);
 
+        JButton btnCerrarSesion = UIComponents.crearBotonEliminar("Cerrar sesión");
+        btnCerrarSesion.addActionListener(e -> cerrarSesion());
+
+        bottomPanel.add(btnCerrarSesion);
         contentPane.add(bottomPanel, BorderLayout.SOUTH);
     }
 
+    // --- MÉTODOS DE NAVEGACIÓN ---
     private void abrirGestionarOrdenes() {
-        try {
-            GestionarOrdenes go = new GestionarOrdenes();
-            go.setVisible(true);
-            dispose();
-        } catch (Exception e) {
-            JOptionPane.showMessageDialog(this, "Error: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
-        }
+        new GestionarOrdenes().setVisible(true);
+        dispose();
     }
 
     private void abrirGestionarProductos() {
-        try {
-            GestionarProductos gp = new GestionarProductos();
-            gp.setVisible(true);
-            dispose();
-        } catch (Exception e) {
-            JOptionPane.showMessageDialog(this, "Error: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
-        }
+        new GestionarProductos().setVisible(true);
+        dispose();
     }
 
     private void abrirReporteOrdenes() {
-        try {
-            ReporteOrdenes ro = new ReporteOrdenes();
-            ro.setVisible(true);
-            dispose();
-        } catch (Exception e) {
-            JOptionPane.showMessageDialog(this, "Error: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
-        }
+        new ReporteOrdenes().setVisible(true);
+        dispose();
     }
 
     private void abrirGestionarClientes() {
-        try {
-            GestionarClientes gc = new GestionarClientes();
-            gc.setVisible(true);
-            dispose();
-        } catch (Exception e) {
-            JOptionPane.showMessageDialog(this, "Error: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
-        }
+        new GestionarClientes().setVisible(true);
+        dispose();
     }
 
     private void abrirGestionarUsuarios() {
-        try {
-            GestionarUsuarios gu = new GestionarUsuarios();
-            gu.setVisible(true);
-            dispose();
-        } catch (Exception e) {
-            JOptionPane.showMessageDialog(this, "Error: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
-        }
+        new GestionarUsuarios().setVisible(true);
+        dispose();
     }
 
     private void cerrarSesion() {
         try {
             controlador.guardarFicheros();
         } catch (Exception e) {
-            JOptionPane.showMessageDialog(this, "Error al guardar: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Error al guardar: " + e.getMessage());
         }
         controlador.logout();
         new Login().setVisible(true);

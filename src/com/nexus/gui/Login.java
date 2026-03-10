@@ -6,26 +6,12 @@ import com.nexus.exceptions.EParametroNulo;
 import com.nexus.service.LoginService;
 import com.nexus.model.entities.Usuario;
 
-import javax.swing.JButton;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JPasswordField;
-import javax.swing.JTextField;
-import javax.swing.SwingConstants;
+import javax.swing.*;
 import javax.swing.border.EmptyBorder;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.Insets;
+import java.awt.*;
 import java.awt.event.ActionEvent;
+import java.awt.geom.RoundRectangle2D;
 
-/**
- * Pantalla de inicio de sesión.
- * Layout: JFrame con JPanel central, campos de usuario/contraseña y botón Entrar.
- * Al iniciar: carga ficheros y crea admin por defecto si no hay usuarios.
- * Al cerrar: guarda todos los ficheros.
- */
 public class Login extends JFrame {
 
     private static final long serialVersionUID = 1L;
@@ -36,7 +22,7 @@ public class Login extends JFrame {
     public Login() {
         setTitle("Nexus Store - Inicio de sesión");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setBounds(100, 100, 420, 300);
+        setBounds(100, 100, 420, 350);
         setLocationRelativeTo(null);
         setResizable(false);
 
@@ -45,102 +31,111 @@ public class Login extends JFrame {
         contentPane.setBorder(new EmptyBorder(UITheme.MARGEN, UITheme.MARGEN, UITheme.MARGEN, UITheme.MARGEN));
         setContentPane(contentPane);
 
+        // Panel tipo tarjeta
         JPanel formPanel = new JPanel(new GridBagLayout());
-        formPanel.setOpaque(false);
+        formPanel.setBackground(Color.WHITE);
+        formPanel.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(230, 230, 230), 1),
+                BorderFactory.createEmptyBorder(20, 25, 20, 25)
+        ));
+
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(4, 8, 4, 8);
-        gbc.anchor = GridBagConstraints.CENTER;
+        gbc.insets = new Insets(8, 8, 8, 8);
 
         // Título
         JLabel lblTitulo = new JLabel("NEXUS STORE");
         lblTitulo.setFont(UITheme.FONT_TITULO);
         lblTitulo.setForeground(UITheme.COLOR_PRINCIPAL);
-        lblTitulo.setHorizontalAlignment(SwingConstants.CENTER);
         gbc.gridwidth = 2;
-        gbc.gridx = 0;
-        gbc.gridy = 0;
-        gbc.insets = new Insets(0, 0, 24, 0);
+        gbc.gridx = 0; gbc.gridy = 0;
+        gbc.insets = new Insets(0, 0, 20, 0);
         formPanel.add(lblTitulo, gbc);
 
-        // Usuario
-        JLabel lblUsuario = new JLabel("Usuario:");
+        // Campos (con bordes limpios)
         gbc.gridwidth = 1;
-        gbc.anchor = GridBagConstraints.EAST;
-        gbc.insets = new Insets(0, 0, 8, 8);
-        gbc.gridx = 0;
-        gbc.gridy = 1;
-        formPanel.add(lblUsuario, gbc);
-
-        txtUsuario = new JTextField(18);
         gbc.fill = GridBagConstraints.HORIZONTAL;
-        gbc.weightx = 1.0;
-        gbc.insets = new Insets(0, 0, 8, 0);
-        gbc.gridx = 1;
-        formPanel.add(txtUsuario, gbc);
 
-        // Contraseña
-        JLabel lblPassword = new JLabel("Contraseña:");
-        gbc.fill = GridBagConstraints.NONE;
-        gbc.weightx = 0;
-        gbc.anchor = GridBagConstraints.EAST;
-        gbc.insets = new Insets(0, 0, 8, 8);
-        gbc.gridx = 0;
-        gbc.gridy = 2;
-        formPanel.add(lblPassword, gbc);
+        formPanel.add(new JLabel("Usuario:"), createGbc(0, 1));
+        txtUsuario = new JTextField(15);
+        txtUsuario.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(200, 200, 200)),
+                BorderFactory.createEmptyBorder(5, 7, 5, 7)));
+        formPanel.add(txtUsuario, createGbc(1, 1));
 
-        txtPassword = new JPasswordField(18);
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-        gbc.weightx = 1.0;
-        gbc.insets = new Insets(0, 0, 20, 0);
-        gbc.gridx = 1;
-        formPanel.add(txtPassword, gbc);
+        formPanel.add(new JLabel("Contraseña:"), createGbc(0, 2));
+        txtPassword = new JPasswordField(15);
+        txtPassword.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(200, 200, 200)),
+                BorderFactory.createEmptyBorder(5, 7, 5, 7)));
+        formPanel.add(txtPassword, createGbc(1, 2));
 
-        // Botón Entrar
-        JButton btnEntrar = new JButton("Entrar");
-        btnEntrar.setBackground(UITheme.COLOR_PRINCIPAL);
-        btnEntrar.setForeground(java.awt.Color.WHITE);
+        // --- EL BOTÓN REDISEÑADO ---
+        JButton btnEntrar = new JButton("Entrar") {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+                // Color de fondo (puedes usar UITheme.COLOR_PRINCIPAL)
+                g2.setColor(UITheme.COLOR_PRINCIPAL);
+
+                // Dibujar el botón redondeado (arcWidth: 15, arcHeight: 15)
+                g2.fill(new RoundRectangle2D.Float(0, 0, getWidth(), getHeight(), 15, 15));
+
+                // Texto
+                g2.setColor(Color.WHITE);
+                g2.setFont(getFont().deriveFont(Font.BOLD));
+                FontMetrics fm = g2.getFontMetrics();
+                int x = (getWidth() - fm.stringWidth(getText())) / 2;
+                int y = (getHeight() + fm.getAscent()) / 2 - 2;
+                g2.drawString(getText(), x, y);
+                g2.dispose();
+            }
+        };
+
+        // Propiedades necesarias para que el diseño custom funcione
+        btnEntrar.setContentAreaFilled(false);
+        btnEntrar.setBorderPainted(false);
         btnEntrar.setFocusPainted(false);
+        btnEntrar.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        btnEntrar.setPreferredSize(new Dimension(120, 35));
+
         gbc.gridwidth = 2;
+        gbc.gridx = 0; gbc.gridy = 3;
         gbc.fill = GridBagConstraints.NONE;
-        gbc.weightx = 0;
-        gbc.insets = new Insets(0, 0, 0, 0);
-        gbc.gridx = 0;
-        gbc.gridy = 3;
+        gbc.insets = new Insets(15, 0, 0, 0);
         formPanel.add(btnEntrar, gbc);
 
-        GridBagConstraints gbcCenter = new GridBagConstraints();
-        gbcCenter.anchor = GridBagConstraints.CENTER;
-        gbcCenter.weightx = 1.0;
-        gbcCenter.weighty = 1.0;
-        contentPane.add(formPanel, gbcCenter);
+        contentPane.add(formPanel);
 
         btnEntrar.addActionListener(this::onEntrar);
         txtPassword.addActionListener(this::onEntrar);
     }
 
-    private void onEntrar(ActionEvent e) {
-        String usuario = txtUsuario.getText();
-        String password = new String(txtPassword.getPassword());
+    private GridBagConstraints createGbc(int x, int y) {
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.gridx = x;
+        gbc.gridy = y;
+        gbc.insets = new Insets(5, 5, 5, 5);
+        return gbc;
+    }
 
+    private void onEntrar(ActionEvent e) {
+        String usuario = txtUsuario.getText().trim();
+        String password = new String(txtPassword.getPassword());
         try {
             StoreController ctrl = StoreController.getInstance();
             Usuario u = LoginService.login(usuario, password, ctrl.getUsuarios());
             ctrl.setCurrentUser(u);
-
-            MenuPrincipalFrame menu = new MenuPrincipalFrame();
-            menu.setVisible(true);
+            new MenuPrincipalFrame().setVisible(true);
             dispose();
         } catch (EParametroNulo ex) {
-            JOptionPane.showMessageDialog(this, "Complete todos los campos.",
-                    "Campos requeridos", JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Complete todos los campos.");
         } catch (ECredencialesInvalidas ex) {
-            JOptionPane.showMessageDialog(this, ex.getMessage(),
-                    "Credenciales inválidas", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, ex.getMessage());
             txtPassword.setText("");
-            txtPassword.requestFocus();
         } catch (Exception ex) {
-            JOptionPane.showMessageDialog(this, "Error inesperado: " + ex.getMessage(),
-                    "Error", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Error: " + ex.getMessage());
         }
     }
 }

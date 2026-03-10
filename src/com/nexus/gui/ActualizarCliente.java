@@ -16,9 +16,11 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.border.EmptyBorder;
 import java.awt.BorderLayout;
-import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.FlowLayout;
-import java.awt.GridLayout;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
 
 import static com.nexus.NexusApplication.addGuardarAlCerrar;
 
@@ -35,25 +37,24 @@ public class ActualizarCliente extends JFrame {
     private JTextField txtApellido;
     private JTextField txtEmail;
 
-    public ActualizarCliente() {
-        this(null, null);
-    }
 
     public ActualizarCliente(TipoDocumento tipoDoc, String numDoc) {
         controlador = StoreController.getInstance();
         setTitle("Nexus Store - Actualizar Cliente");
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         addGuardarAlCerrar(this, controlador);
-        setBounds(100, 100, 500, 320);
+        setBounds(100, 100, 540, 480);
         setLocationRelativeTo(null);
+        setResizable(true);
 
-        JPanel contentPane = new JPanel();
-        contentPane.setBorder(new EmptyBorder(15, 15, 15, 15));
-        contentPane.setLayout(new BorderLayout(5, 5));
+        JPanel contentPane = new JPanel(new BorderLayout(UITheme.ESPACIADO, UITheme.ESPACIADO));
+        contentPane.setBackground(UITheme.FONDO_PANEL);
+        contentPane.setBorder(new EmptyBorder(UITheme.MARGEN, UITheme.MARGEN, UITheme.MARGEN, UITheme.MARGEN));
         setContentPane(contentPane);
 
         JPanel panelSuperior = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        JButton btnRegresar = new JButton("Regresar");
+        panelSuperior.setOpaque(false);
+        JButton btnRegresar = UIComponents.crearBotonRegresar();
         btnRegresar.addActionListener(e -> {
             new GestionarClientes().setVisible(true);
             dispose();
@@ -61,38 +62,49 @@ public class ActualizarCliente extends JFrame {
         panelSuperior.add(btnRegresar);
         contentPane.add(panelSuperior, BorderLayout.NORTH);
 
-        JPanel panelForm = new JPanel(new GridLayout(0, 1, 0, 10));
+        JPanel panelForm = UIComponents.crearPanelTarjeta();
+        panelForm.setLayout(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(10, 10, 10, 10);
+        gbc.anchor = GridBagConstraints.WEST;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.weightx = 1.0;
 
-        JPanel row1 = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        row1.add(new JLabel("Tipo documento: "));
+        int y = 0;
+        gbc.gridx = 0; gbc.gridy = y;
+        panelForm.add(new JLabel("Tipo documento:"), gbc);
         cmbTipoDoc = new JComboBox<>(TipoDocumento.values());
-        cmbTipoDoc.setPreferredSize(new java.awt.Dimension(120, 25));
-        row1.add(cmbTipoDoc);
-        panelForm.add(row1);
+        cmbTipoDoc.setPreferredSize(new Dimension(140, 30));
+        gbc.gridx = 1; gbc.weightx = 0;
+        panelForm.add(cmbTipoDoc, gbc);
+        gbc.weightx = 1.0; y++;
 
-        JPanel row2 = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        row2.add(new JLabel("Número documento: "));
-        txtNumDoc = crearTextField(18);
-        row2.add(txtNumDoc);
-        panelForm.add(row2);
+        gbc.gridx = 0; gbc.gridy = y;
+        panelForm.add(new JLabel("Número documento:"), gbc);
+        txtNumDoc = UIComponents.crearCampoTexto(200);
+        gbc.gridx = 1;
+        panelForm.add(txtNumDoc, gbc);
+        y++;
 
-        JPanel row3 = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        row3.add(new JLabel("Nuevo nombre: "));
-        txtNombre = crearTextField(25);
-        row3.add(txtNombre);
-        panelForm.add(row3);
+        gbc.gridx = 0; gbc.gridy = y;
+        panelForm.add(new JLabel("Nuevo nombre:"), gbc);
+        txtNombre = UIComponents.crearCampoTexto(280);
+        gbc.gridx = 1;
+        panelForm.add(txtNombre, gbc);
+        y++;
 
-        JPanel row4 = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        row4.add(new JLabel("Nuevo apellido: "));
-        txtApellido = crearTextField(25);
-        row4.add(txtApellido);
-        panelForm.add(row4);
+        gbc.gridx = 0; gbc.gridy = y;
+        panelForm.add(new JLabel("Nuevo apellido:"), gbc);
+        txtApellido = UIComponents.crearCampoTexto(280);
+        gbc.gridx = 1;
+        panelForm.add(txtApellido, gbc);
+        y++;
 
-        JPanel row5 = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        row5.add(new JLabel("Nuevo email: "));
-        txtEmail = crearTextField(28);
-        row5.add(txtEmail);
-        panelForm.add(row5);
+        gbc.gridx = 0; gbc.gridy = y;
+        panelForm.add(new JLabel("Nuevo email:"), gbc);
+        txtEmail = UIComponents.crearCampoTexto(280);
+        gbc.gridx = 1;
+        panelForm.add(txtEmail, gbc);
 
         if (tipoDoc != null && numDoc != null && !numDoc.isBlank()) {
             cmbTipoDoc.setSelectedItem(tipoDoc);
@@ -112,19 +124,13 @@ public class ActualizarCliente extends JFrame {
         contentPane.add(panelForm, BorderLayout.CENTER);
 
         JPanel panelBotones = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        JButton btnActualizar = new JButton("Actualizar");
+        panelBotones.setOpaque(false);
+        JButton btnActualizar = UIComponents.crearBotonPrincipal("Actualizar");
         btnActualizar.addActionListener(e -> actualizar());
         panelBotones.add(btnActualizar);
         contentPane.add(panelBotones, BorderLayout.SOUTH);
     }
 
-    private JTextField crearTextField(int cols) {
-        JTextField t = new JTextField(cols);
-        t.setForeground(Color.BLACK);
-        t.setBackground(Color.WHITE);
-        t.setCaretColor(Color.BLACK);
-        return t;
-    }
     //TODO: ENTENDER ESTE MÉTODO
     private void actualizar() {
         //Obtiene el texto de número de documento

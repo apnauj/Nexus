@@ -1,22 +1,30 @@
 package com.nexus.gui;
 
 import com.nexus.controller.StoreController;
+import com.nexus.exceptions.EProductoNoEncontrado;
 import com.nexus.model.entities.Hardware;
 import com.nexus.model.entities.Producto;
 import com.nexus.model.entities.Videojuego;
 import com.nexus.model.enums.Rol;
 
+import javax.swing.BorderFactory;
 import javax.swing.JButton;
+import javax.swing.JDialog;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
+import javax.swing.SwingConstants;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
-import java.awt.BorderLayout;
-import java.awt.FlowLayout;
-import java.awt.GridLayout;
+import java.awt.*;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
+
+import static com.nexus.NexusApplication.addGuardarAlCerrar;
 
 /**
  * Pantalla para gestionar productos con tabla de visualización.
@@ -46,7 +54,7 @@ public class GestionarProductos extends JFrame {
 
         setTitle("Nexus Store - Gestionar Productos");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        com.nexus.NexusApplication.addGuardarAlCerrar(this, controlador);
+        addGuardarAlCerrar(this, controlador);
         setBounds(100, 100, UITheme.VENTANA_TABLA_ANCHO, UITheme.VENTANA_TABLA_ALTO);
         setLocationRelativeTo(null);
         setResizable(true);
@@ -58,7 +66,8 @@ public class GestionarProductos extends JFrame {
         setContentPane(contentPane);
 
         JPanel panelSuperior = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        JButton btnRegresar = new JButton("Regresar");
+        panelSuperior.setOpaque(false);
+        JButton btnRegresar = UIComponents.crearBotonRegresar();
         btnRegresar.addActionListener(e -> {
             new MenuPrincipalFrame().setVisible(true);
             dispose();
@@ -77,37 +86,54 @@ public class GestionarProductos extends JFrame {
         tablaProductos.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
         tablaProductos.getTableHeader().setReorderingAllowed(false);
         tablaProductos.getTableHeader().setFont(UITheme.FONT_ENCABEZADO_TABLA);
+        tablaProductos.setRowHeight(24);
         JScrollPane scrollTabla = new JScrollPane(tablaProductos);
+        scrollTabla.setMinimumSize(new Dimension(400, 150));
         contentPane.add(scrollTabla, BorderLayout.CENTER);
 
-        JPanel panelBotones = new JPanel(new GridLayout(0, 1, 5, 5));
-        contentPane.add(panelBotones, BorderLayout.SOUTH);
+        JPanel panelBotones = new JPanel(new GridBagLayout());
+        panelBotones.setOpaque(false);
+        GridBagConstraints gbcBtn = new GridBagConstraints();
+        gbcBtn.gridx = 0;
+        gbcBtn.gridy = 0;
+        gbcBtn.insets = new Insets(6, 0, 6, 0);
+        gbcBtn.fill = GridBagConstraints.HORIZONTAL;
+        gbcBtn.weightx = 1.0;
 
-        JButton btnAgregarHardware = new JButton("Añadir Hardware");
+        JButton btnAgregarHardware = UIComponents.crearBotonMenu("Añadir Hardware");
         btnAgregarHardware.addActionListener(e -> {
             new AgregarHardware().setVisible(true);
             dispose();
         });
-        panelBotones.add(btnAgregarHardware);
+        panelBotones.add(btnAgregarHardware, gbcBtn);
+        gbcBtn.gridy++;
 
-        JButton btnAgregarVideojuego = new JButton("Añadir Videojuego");
+        JButton btnAgregarVideojuego = UIComponents.crearBotonMenu("Añadir Videojuego");
         btnAgregarVideojuego.addActionListener(e -> {
             new AgregarVideoJuegos().setVisible(true);
             dispose();
         });
-        panelBotones.add(btnAgregarVideojuego);
+        panelBotones.add(btnAgregarVideojuego, gbcBtn);
+        gbcBtn.gridy++;
 
-        JButton btnVerDetalle = new JButton("Ver detalle del producto");
+        JButton btnVerDetalle = UIComponents.crearBotonMenu("Ver detalle del producto");
         btnVerDetalle.addActionListener(e -> mostrarDetalleProducto());
-        panelBotones.add(btnVerDetalle);
+        panelBotones.add(btnVerDetalle, gbcBtn);
+        gbcBtn.gridy++;
 
-        JButton btnEliminar = new JButton("Eliminar Producto");
-        btnEliminar.addActionListener(e -> eliminarSeleccionado());
-        panelBotones.add(btnEliminar);
-
-        JButton btnActualizar = new JButton("Actualizar Producto");
+        JButton btnActualizar = UIComponents.crearBotonMenu("Actualizar Producto");
         btnActualizar.addActionListener(e -> actualizarSeleccionado());
-        panelBotones.add(btnActualizar);
+        panelBotones.add(btnActualizar, gbcBtn);
+        gbcBtn.gridy++;
+
+        JPanel panelEliminar = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        panelEliminar.setOpaque(false);
+        JButton btnEliminar = UIComponents.crearBotonEliminar("Eliminar Producto");
+        btnEliminar.addActionListener(e -> eliminarSeleccionado());
+        panelEliminar.add(btnEliminar);
+        panelBotones.add(panelEliminar, gbcBtn);
+
+        contentPane.add(panelBotones, BorderLayout.SOUTH);
 
         actualizarTabla();
     }
@@ -141,44 +167,12 @@ public class GestionarProductos extends JFrame {
         Producto p;
         try {
             p = controlador.searchProducto(nombre);
-        } catch (com.nexus.exceptions.EProductoNoEncontrado ex) {
+        } catch (EProductoNoEncontrado ex) {
             return;
         }
 
-        String descripcionStr = p.getDescripcion() != null ? p.getDescripcion() : "-";
-        String categoriaStr = p.getCategoria() != null ? p.getCategoria() : "-";
-        String tipoStr = p instanceof Hardware ? "Hardware" : "Videojuego";
-        String descuentoStr = p.isDescuentoActivo() ? (int) Math.round(p.getDescuento() * 100) + "%" : "Inactivo";
-
-        String msg = "Nombre: " + p.getNombre() + "\n"
-                + "Descripción: " + descripcionStr + "\n"
-                + "Categoría: " + categoriaStr + "\n"
-                + "Tipo: " + tipoStr + "\n"
-                + "Precio base: $" + String.format("%.2f", p.getPrecioBase()) + "\n"
-                + "Descuento: " + descuentoStr + "\n"
-                + "Precio final: $" + String.format("%.2f", p.calcularPrecio()) + "\n"
-                + "Stock: " + p.getStock() + "\n"
-                + "Garantía: " + p.getTiempoGarantia() + " meses\n";
-
-        if (p instanceof Hardware h) {
-            String fabricanteStr = h.getFabricante() != null ? h.getFabricante() : "-";
-            msg = msg + "Consumo: " + h.getConsumo() + " W\n"
-                    + "Fabricante: " + fabricanteStr + "\n";
-        } else if (p instanceof Videojuego v) {
-            String desarrolladorStr = v.getDesarrollador() != null ? v.getDesarrollador() : "-";
-            String generoStr = v.getGenero() != null ? v.getGenero() : "-";
-            String plataformaStr = v.getPlataforma() != null ? v.getPlataforma() : "-";
-            msg = msg + "Desarrollador: " + desarrolladorStr + "\n"
-                    + "Género: " + generoStr + "\n"
-                    + "Multijugador: " + (v.getMultijugador() ? "Sí" : "No") + "\n"
-                    + "Plataforma: " + plataformaStr + "\n"
-                    + "Tamaño: " + v.getTamano() + " GB\n";
-            if (v.getFechaLanzamiento() != null) {
-                msg = msg + "Fecha lanzamiento: " + new java.text.SimpleDateFormat("dd/MM/yyyy").format(v.getFechaLanzamiento()) + "\n";
-            }
-        }
-
-        JOptionPane.showMessageDialog(this, msg, "Detalle del producto", JOptionPane.INFORMATION_MESSAGE);
+        DetalleProductoDialog dlg = new DetalleProductoDialog(this, p);
+        dlg.setVisible(true);
     }
 
     private String obtenerProductoSeleccionado() {
@@ -213,5 +207,90 @@ public class GestionarProductos extends JFrame {
         ActualizarProducto ap = new ActualizarProducto(nombre);
         ap.setVisible(true);
         dispose();
+    }
+
+    /**
+     * Diálogo modal para mostrar el detalle de un producto con estética consistente.
+     */
+    private static class DetalleProductoDialog extends JDialog {
+        DetalleProductoDialog(Window parent, Producto p) {
+            super(parent, "Detalle del producto", Dialog.ModalityType.APPLICATION_MODAL);
+            setSize(480, 420);
+            setLocationRelativeTo(parent);
+            setResizable(true);
+            setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+
+            JPanel content = new JPanel(new BorderLayout(UITheme.ESPACIADO, UITheme.ESPACIADO));
+            content.setBackground(UITheme.FONDO_PANEL);
+            content.setBorder(new EmptyBorder(UITheme.MARGEN, UITheme.MARGEN, UITheme.MARGEN, UITheme.MARGEN));
+            setContentPane(content);
+
+            JPanel panelInfo = new JPanel(new GridBagLayout());
+            panelInfo.setBackground(java.awt.Color.WHITE);
+            panelInfo.setBorder(BorderFactory.createCompoundBorder(
+                    BorderFactory.createLineBorder(UITheme.BORDE),
+                    new EmptyBorder(16, 20, 16, 20)));
+
+            GridBagConstraints gbc = new GridBagConstraints();
+            gbc.anchor = GridBagConstraints.WEST;
+            gbc.insets = new Insets(4, 0, 4, 16);
+
+            String descripcionStr = p.getDescripcion() != null ? p.getDescripcion() : "-";
+            String categoriaStr = p.getCategoria() != null ? p.getCategoria() : "-";
+            String tipoStr = p instanceof Hardware ? "Hardware" : "Videojuego";
+            String descuentoStr = p.isDescuentoActivo() ? (int) Math.round(p.getDescuento() * 100) + "%" : "Inactivo";
+
+            agregarFila(panelInfo, gbc, 0, "Nombre:", p.getNombre());
+            agregarFila(panelInfo, gbc, 1, "Descripción:", descripcionStr);
+            agregarFila(panelInfo, gbc, 2, "Categoría:", categoriaStr);
+            agregarFila(panelInfo, gbc, 3, "Tipo:", tipoStr);
+            agregarFila(panelInfo, gbc, 4, "Precio base:", "$" + String.format("%.2f", p.getPrecioBase()));
+            agregarFila(panelInfo, gbc, 5, "Descuento:", descuentoStr);
+            agregarFila(panelInfo, gbc, 6, "Precio final:", "$" + String.format("%.2f", p.calcularPrecio()));
+            agregarFila(panelInfo, gbc, 7, "Stock:", String.valueOf(p.getStock()));
+            agregarFila(panelInfo, gbc, 8, "Garantía:", p.getTiempoGarantia() + " meses");
+
+            if (p instanceof Hardware h) {
+                String fabricanteStr = h.getFabricante() != null ? h.getFabricante() : "-";
+                agregarFila(panelInfo, gbc, 9, "Consumo:", h.getConsumo() + " W");
+                agregarFila(panelInfo, gbc, 10, "Fabricante:", fabricanteStr);
+            } else if (p instanceof Videojuego v) {
+                String desarrolladorStr = v.getDesarrollador() != null ? v.getDesarrollador() : "-";
+                String generoStr = v.getGenero() != null ? v.getGenero() : "-";
+                String plataformaStr = v.getPlataforma() != null ? v.getPlataforma() : "-";
+                int row = 9;
+                agregarFila(panelInfo, gbc, row++, "Desarrollador:", desarrolladorStr);
+                agregarFila(panelInfo, gbc, row++, "Género:", generoStr);
+                agregarFila(panelInfo, gbc, row++, "Multijugador:", v.getMultijugador() ? "Sí" : "No");
+                agregarFila(panelInfo, gbc, row++, "Plataforma:", plataformaStr);
+                agregarFila(panelInfo, gbc, row++, "Tamaño:", v.getTamano() + " GB");
+                if (v.getFechaLanzamiento() != null) {
+                    agregarFila(panelInfo, gbc, row, "Fecha lanzamiento:",
+                            new java.text.SimpleDateFormat("dd/MM/yyyy").format(v.getFechaLanzamiento()));
+                }
+            }
+
+            content.add(new JScrollPane(panelInfo), BorderLayout.CENTER);
+
+            JButton btnCerrar = UIComponents.crearBotonLink("Cerrar");
+            btnCerrar.addActionListener(e -> dispose());
+            JPanel panelBtn = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+            panelBtn.setOpaque(false);
+            panelBtn.add(btnCerrar);
+            content.add(panelBtn, BorderLayout.SOUTH);
+        }
+
+        private void agregarFila(JPanel p, GridBagConstraints gbc, int y, String etiqueta, String valor) {
+            gbc.gridx = 0; gbc.gridy = y; gbc.weightx = 0;
+            JLabel lbl = new JLabel(etiqueta);
+            lbl.setFont(UITheme.FONT_ETIQUETA);
+            lbl.setForeground(UITheme.TEXTO_SECUNDARIO);
+            p.add(lbl, gbc);
+            gbc.gridx = 1; gbc.weightx = 1.0;
+            JLabel val = new JLabel(valor);
+            val.setFont(UITheme.FONT_NORMAL);
+            val.setToolTipText(valor != null && valor.length() > 50 ? valor : null);
+            p.add(val, gbc);
+        }
     }
 }
