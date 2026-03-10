@@ -1,6 +1,6 @@
 package com.nexus;
 
-import com.nexus.GUI.Login;
+import com.nexus.gui.Login;
 import com.nexus.controller.StoreController;
 
 import javax.swing.JFrame;

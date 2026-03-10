@@ -1,4 +1,4 @@
-package com.nexus.GUI;
+package com.nexus.gui;
 
 import com.nexus.controller.StoreController;
 import com.nexus.exceptions.EHistorialOrden;
@@ -40,16 +40,17 @@ public class EliminarProducto extends JFrame {
         setLocationRelativeTo(null);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         com.nexus.NexusApplication.addGuardarAlCerrar(this, controlador);
-        setBounds(100, 100, 450, 200);
-        setResizable(false);
+        setBounds(100, 100, 500, 260);
+        setResizable(true);
 
-        JPanel contentPane = new JPanel();
-        contentPane.setBorder(new EmptyBorder(15, 15, 15, 15));
-        contentPane.setLayout(new BorderLayout(5, 5));
+        JPanel contentPane = new JPanel(new BorderLayout(UITheme.ESPACIADO, UITheme.ESPACIADO));
+        contentPane.setBackground(UITheme.FONDO_PANEL);
+        contentPane.setBorder(new EmptyBorder(UITheme.MARGEN, UITheme.MARGEN, UITheme.MARGEN, UITheme.MARGEN));
         setContentPane(contentPane);
 
         JPanel panelSuperior = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        JButton btnRegresar = new JButton("Regresar");
+        panelSuperior.setOpaque(false);
+        JButton btnRegresar = UIComponents.crearBotonRegresar();
         btnRegresar.addActionListener(e -> {
             new GestionarProductos().setVisible(true);
             dispose();
@@ -57,8 +58,9 @@ public class EliminarProducto extends JFrame {
         panelSuperior.add(btnRegresar);
         contentPane.add(panelSuperior, BorderLayout.NORTH);
 
-        JPanel panelForm = new JPanel(new GridLayout(0, 1, 0, 10));
-        panelForm.setPreferredSize(new Dimension(380, 60));
+        JPanel panelForm = UIComponents.crearPanelTarjeta();
+        panelForm.setLayout(new GridLayout(0, 1, 0, 10));
+        panelForm.setPreferredSize(new Dimension(380, 80));
 
         String[] nombresProductos = controlador.getNombresProductos();
         if (nombresProductos.length == 0) {
@@ -67,7 +69,7 @@ public class EliminarProducto extends JFrame {
             JPanel row = new JPanel(new FlowLayout(FlowLayout.LEFT));
             row.add(new JLabel("Producto a eliminar: "));
             cmbProducto = new JComboBox<>(nombresProductos);
-            cmbProducto.setPreferredSize(new Dimension(250, 25));
+            cmbProducto.setPreferredSize(new Dimension(280, 30));
             row.add(cmbProducto);
             panelForm.add(row);
         }
@@ -75,7 +77,8 @@ public class EliminarProducto extends JFrame {
         contentPane.add(panelForm, BorderLayout.CENTER);
 
         JPanel panelBotones = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        JButton btnEliminar = new JButton("Eliminar Producto");
+        panelBotones.setOpaque(false);
+        JButton btnEliminar = UIComponents.crearBotonEliminar("Eliminar Producto");
         btnEliminar.addActionListener(e -> eliminarProducto());
         panelBotones.add(btnEliminar);
         contentPane.add(panelBotones, BorderLayout.SOUTH);

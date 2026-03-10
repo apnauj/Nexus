@@ -1,8 +1,9 @@
-package com.nexus.model.entities;
+package com.nexus.service;
 
 
 import com.nexus.exceptions.ECredencialesInvalidas;
 import com.nexus.exceptions.EParametroNulo;
+import com.nexus.model.entities.Usuario;
 
 public class LoginService {
 

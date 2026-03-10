@@ -22,6 +22,7 @@ public class Usuario implements Serializable {
 
     public Usuario(String username, String password, Rol rol) throws EParametroNulo, EFormatoInvalido {
         if (username == null || username.isBlank()) throw new EParametroNulo("username");
+        if (username.trim().contains(" ")) throw new EFormatoInvalido("El nombre de usuario no puede tener espacios en blanco");
         if (password == null || password.isBlank()) throw new EParametroNulo("password", "La contraseña no puede ser null o vacio");
         if (rol == null) throw new EParametroNulo("rol");
         validarPassword(password);
@@ -54,13 +55,6 @@ public class Usuario implements Serializable {
         return username;
     }
 
-    public void setUsername(String username) {
-        this.username = username;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
 
     /**
      * Verifica si la contraseña ingresada coincide con la almacenada.

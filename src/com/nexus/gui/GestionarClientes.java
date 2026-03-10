@@ -1,4 +1,4 @@
-package com.nexus.GUI;
+package com.nexus.gui;
 
 import com.nexus.controller.StoreController;
 import com.nexus.exceptions.EClienteNoEncontrado;
@@ -17,8 +17,12 @@ import javax.swing.JTable;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
 import java.awt.BorderLayout;
+import java.awt.Dimension;
 import java.awt.FlowLayout;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
 import java.awt.GridLayout;
+import java.awt.Insets;
 
 /**
  * Pantalla para gestionar clientes con tabla de visualización.
@@ -49,17 +53,19 @@ public class GestionarClientes extends JFrame {
         setTitle("Nexus Store - Gestionar Clientes");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         com.nexus.NexusApplication.addGuardarAlCerrar(this, controlador);
-        setBounds(100, 100, 750, 450);
+        setBounds(100, 100, UITheme.VENTANA_TABLA_ANCHO, UITheme.VENTANA_TABLA_ALTO);
         setLocationRelativeTo(null);
         setResizable(true);
 
         JPanel contentPane = new JPanel();
-        contentPane.setBorder(new EmptyBorder(10, 10, 10, 10));
-        contentPane.setLayout(new BorderLayout(5, 5));
+        contentPane.setBackground(UITheme.FONDO_PANEL);
+        contentPane.setBorder(new EmptyBorder(UITheme.MARGEN, UITheme.MARGEN, UITheme.MARGEN, UITheme.MARGEN));
+        contentPane.setLayout(new BorderLayout(UITheme.ESPACIADO, UITheme.ESPACIADO));
         setContentPane(contentPane);
 
         JPanel panelSuperior = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        JButton btnRegresar = new JButton("Regresar");
+        panelSuperior.setOpaque(false);
+        JButton btnRegresar = UIComponents.crearBotonRegresar();
         btnRegresar.addActionListener(e -> {
             new MenuPrincipalFrame().setVisible(true);
             dispose();
@@ -77,26 +83,42 @@ public class GestionarClientes extends JFrame {
         tablaClientes = new JTable(modeloTabla);
         tablaClientes.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
         tablaClientes.getTableHeader().setReorderingAllowed(false);
+        tablaClientes.getTableHeader().setFont(UITheme.FONT_ENCABEZADO_TABLA);
+        tablaClientes.setRowHeight(24);
         JScrollPane scrollTabla = new JScrollPane(tablaClientes);
+        scrollTabla.setMinimumSize(new Dimension(400, 150));
         contentPane.add(scrollTabla, BorderLayout.CENTER);
 
-        JPanel panelBotones = new JPanel(new GridLayout(0, 1, 5, 5));
-        contentPane.add(panelBotones, BorderLayout.SOUTH);
+        JPanel panelBotones = new JPanel(new GridBagLayout());
+        panelBotones.setOpaque(false);
+        GridBagConstraints gbcBtn = new GridBagConstraints();
+        gbcBtn.gridx = 0;
+        gbcBtn.gridy = 0;
+        gbcBtn.insets = new Insets(6, 0, 6, 0);
+        gbcBtn.fill = GridBagConstraints.HORIZONTAL;
+        gbcBtn.weightx = 1.0;
 
-        JButton btnAgregar = new JButton("Agregar Cliente");
+        JButton btnAgregar = UIComponents.crearBotonMenu("Agregar Cliente");
         btnAgregar.addActionListener(e -> {
             new AgregarCliente().setVisible(true);
             dispose();
         });
-        panelBotones.add(btnAgregar);
+        panelBotones.add(btnAgregar, gbcBtn);
+        gbcBtn.gridy++;
 
-        JButton btnEliminar = new JButton("Eliminar Cliente");
-        btnEliminar.addActionListener(e -> eliminarSeleccionado());
-        panelBotones.add(btnEliminar);
-
-        JButton btnActualizar = new JButton("Actualizar Cliente");
+        JButton btnActualizar = UIComponents.crearBotonMenu("Actualizar Cliente");
         btnActualizar.addActionListener(e -> actualizarSeleccionado());
-        panelBotones.add(btnActualizar);
+        panelBotones.add(btnActualizar, gbcBtn);
+        gbcBtn.gridy++;
+
+        JPanel panelEliminar = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        panelEliminar.setOpaque(false);
+        JButton btnEliminar = UIComponents.crearBotonEliminar("Eliminar Cliente");
+        btnEliminar.addActionListener(e -> eliminarSeleccionado());
+        panelEliminar.add(btnEliminar);
+        panelBotones.add(panelEliminar, gbcBtn);
+
+        contentPane.add(panelBotones, BorderLayout.SOUTH);
 
         actualizarTabla();
     }

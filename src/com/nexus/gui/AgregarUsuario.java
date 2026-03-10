@@ -1,4 +1,4 @@
-package com.nexus.GUI;
+package com.nexus.gui;
 
 import com.nexus.controller.StoreController;
 import com.nexus.exceptions.EParametroNulo;
@@ -15,9 +15,11 @@ import javax.swing.JPasswordField;
 import javax.swing.JTextField;
 import javax.swing.border.EmptyBorder;
 import java.awt.BorderLayout;
-import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.FlowLayout;
-import java.awt.GridLayout;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
 
 /**
  * Pantalla para agregar un nuevo usuario.
@@ -44,17 +46,18 @@ public class AgregarUsuario extends JFrame {
         setTitle("Nexus Store - Agregar Usuario");
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         com.nexus.NexusApplication.addGuardarAlCerrar(this, controlador);
-        setBounds(100, 100, 480, 320);
+        setBounds(100, 100, 520, 420);
         setLocationRelativeTo(null);
-        setResizable(false);
+        setResizable(true);
 
-        JPanel contentPane = new JPanel();
-        contentPane.setBorder(new EmptyBorder(15, 15, 15, 15));
-        contentPane.setLayout(new BorderLayout(5, 5));
+        JPanel contentPane = new JPanel(new BorderLayout(UITheme.ESPACIADO, UITheme.ESPACIADO));
+        contentPane.setBackground(UITheme.FONDO_PANEL);
+        contentPane.setBorder(new EmptyBorder(UITheme.MARGEN, UITheme.MARGEN, UITheme.MARGEN, UITheme.MARGEN));
         setContentPane(contentPane);
 
         JPanel panelSuperior = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        JButton btnRegresar = new JButton("Regresar");
+        panelSuperior.setOpaque(false);
+        JButton btnRegresar = UIComponents.crearBotonRegresar();
         btnRegresar.addActionListener(e -> {
             new GestionarUsuarios().setVisible(true);
             dispose();
@@ -62,49 +65,50 @@ public class AgregarUsuario extends JFrame {
         panelSuperior.add(btnRegresar);
         contentPane.add(panelSuperior, BorderLayout.NORTH);
 
-        JPanel panelForm = new JPanel(new GridLayout(0, 1, 0, 10));
+        JPanel panelForm = UIComponents.crearPanelTarjeta();
+        panelForm.setLayout(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(8, 8, 8, 8);
+        gbc.anchor = GridBagConstraints.WEST;
 
-        JPanel row1 = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        row1.add(new JLabel("Usuario: "));
-        txtUsername = crearTextField(25);
-        row1.add(txtUsername);
-        panelForm.add(row1);
+        gbc.gridx = 0; gbc.gridy = 0;
+        panelForm.add(new JLabel("Usuario:"), gbc);
+        txtUsername = UIComponents.crearCampoTexto(280);
+        gbc.gridx = 1; gbc.fill = GridBagConstraints.HORIZONTAL; gbc.weightx = 1.0;
+        panelForm.add(txtUsername, gbc);
+        gbc.weightx = 0; gbc.fill = GridBagConstraints.NONE;
 
-        JPanel row2 = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        row2.add(new JLabel("Contraseña: "));
-        txtPassword = new JPasswordField(25);
-        txtPassword.setForeground(Color.BLACK);
-        txtPassword.setBackground(Color.WHITE);
-        txtPassword.setCaretColor(Color.BLACK);
+        gbc.gridx = 0; gbc.gridy = 1;
+        panelForm.add(new JLabel("Contraseña:"), gbc);
+        txtPassword = UIComponents.crearCampoPassword(280);
         txtPassword.setToolTipText("8-16 caracteres, al menos 1 número y 1 mayúscula");
-        row2.add(txtPassword);
-        panelForm.add(row2);
+        gbc.gridx = 1; gbc.fill = GridBagConstraints.HORIZONTAL; gbc.weightx = 1.0;
+        panelForm.add(txtPassword, gbc);
+        gbc.weightx = 0; gbc.fill = GridBagConstraints.NONE;
 
-        JPanel rowHint = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        rowHint.add(new JLabel("(8-16 caracteres, 1 número, 1 mayúscula)"));
-        panelForm.add(rowHint);
+        gbc.gridx = 0; gbc.gridy = 2;
+        gbc.gridwidth = 2;
+        JLabel hint = new JLabel("(8-16 caracteres, 1 número, 1 mayúscula)");
+        hint.setFont(UITheme.FONT_ETIQUETA);
+        hint.setForeground(UITheme.TEXTO_SECUNDARIO);
+        panelForm.add(hint, gbc);
+        gbc.gridwidth = 1;
 
-        JPanel row3 = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        row3.add(new JLabel("Rol: "));
+        gbc.gridx = 0; gbc.gridy = 3;
+        panelForm.add(new JLabel("Rol:"), gbc);
         cmbRol = new JComboBox<>(Rol.values());
-        row3.add(cmbRol);
-        panelForm.add(row3);
+        cmbRol.setPreferredSize(new Dimension(140, 30));
+        gbc.gridx = 1;
+        panelForm.add(cmbRol, gbc);
 
         contentPane.add(panelForm, BorderLayout.CENTER);
 
         JPanel panelBotones = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        JButton btnAgregar = new JButton("Agregar Usuario");
+        panelBotones.setOpaque(false);
+        JButton btnAgregar = UIComponents.crearBotonPrincipal("Agregar Usuario");
         btnAgregar.addActionListener(e -> agregarUsuario());
         panelBotones.add(btnAgregar);
         contentPane.add(panelBotones, BorderLayout.SOUTH);
-    }
-
-    private JTextField crearTextField(int cols) {
-        JTextField t = new JTextField(cols);
-        t.setForeground(Color.BLACK);
-        t.setBackground(Color.WHITE);
-        t.setCaretColor(Color.BLACK);
-        return t;
     }
 
     private void agregarUsuario() {
@@ -113,6 +117,12 @@ public class AgregarUsuario extends JFrame {
 
         if (username == null || username.isBlank()) {
             JOptionPane.showMessageDialog(this, "Ingrese el nombre de usuario.", "Campo requerido", JOptionPane.WARNING_MESSAGE);
+            txtUsername.requestFocus();
+            return;
+        }
+
+        if(username.trim().contains(" ")){
+            JOptionPane.showMessageDialog(this, "El nombre de usuario no puede contener espacios", "Nombre invalido", JOptionPane.WARNING_MESSAGE);
             txtUsername.requestFocus();
             return;
         }

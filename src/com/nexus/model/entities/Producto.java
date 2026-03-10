@@ -1,5 +1,7 @@
 package com.nexus.model.entities;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.io.Serializable;
 import java.util.UUID;
 
@@ -17,6 +19,7 @@ public abstract class Producto implements Serializable {
 	protected double precioBase;
 	protected double descuento;
 	protected int stock;
+	protected boolean descuentoActivo;
 	
 	/*
 	Constructor de producto, este constructor recibe nombre, descripcion, categoria, tiempoGarantia
@@ -28,11 +31,12 @@ public abstract class Producto implements Serializable {
 	*/
 	
 	public Producto(String nombre, String descripcion, String categoria, int tiempoGarantia, double precioBase, int stock) throws EParametroNulo, EValorNegativo {
-		if (nombre == null || nombre.isBlank()) throw new EParametroNulo("nombre", "El nombre del producto no puede ser null o vacío.");
-		if (categoria == null || categoria.isBlank()) throw new EParametroNulo("categoria", "La categoría no puede ser null o vacía.");
+		if (nombre == null || nombre.isBlank()) throw new EParametroNulo("nombre del producto");
+		if (categoria == null || categoria.isBlank()) throw new EParametroNulo("categoría");
 		if (precioBase < 0) throw new EValorNegativo("El precio base no puede ser negativo, usted registro: "+precioBase);
 		if (stock < 0) throw new EValorNegativo("El stock no puede ser negativo, el stock registrado fue: " + stock);
 		if (tiempoGarantia <0) throw new EValorNegativo("El tiempo de garantia no puede ser negativo, el valor registrado del tiempo de garantia es: "+tiempoGarantia);
+		if (descripcion == null || descripcion.isBlank()) throw new EParametroNulo("descripción");
 			
 		this.id=UUID.randomUUID();
 		this.nombre = nombre;
@@ -41,6 +45,8 @@ public abstract class Producto implements Serializable {
 		this.tiempoGarantia = tiempoGarantia;
 		this.precioBase = precioBase;
 		this.stock = stock;
+		this.descuentoActivo = true;
+		this.descuento = 0;
 	}
 	
 	public UUID getId() {
@@ -51,7 +57,8 @@ public abstract class Producto implements Serializable {
 		return nombre;
 	}
 
-	public void setNombre(String nombre) {
+	public void setNombre(String nombre) throws EParametroNulo {
+		if (nombre == null || nombre.isBlank()) throw new EParametroNulo("nombre del producto");
 		this.nombre = nombre;
 	}
 	
@@ -59,7 +66,8 @@ public abstract class Producto implements Serializable {
 		return descripcion;
 	}
 	
-	public void setDescripcion(String descripcion) {
+	public void setDescripcion(String descripcion) throws EParametroNulo {
+		if (descripcion == null || descripcion.isBlank()) throw new EParametroNulo("descripción");
 		this.descripcion = descripcion;
 	}
 	
@@ -101,13 +109,6 @@ public abstract class Producto implements Serializable {
 	La única validación que debemos de hacer es que el descuento que debe de ser mayor que 0
 	*/
 	
-	public void setDescuento(double descuento) throws EValorNegativo {
-		if (descuento <= 0) {
-			throw new EValorNegativo("El valor del descuento no puede ser negativo");
-		}
-		this.descuento = descuento;
-	}
-	
 	public int getStock() {
 		return stock;
 	}
@@ -128,15 +129,38 @@ public abstract class Producto implements Serializable {
 	public String getCategoria() {
 		return categoria;
 	}
-	public void setCategoria(String categoria) {
+	public void setCategoria(String categoria) throws EParametroNulo {
+		if (categoria == null || categoria.isBlank()) throw new EParametroNulo("categoría");
 		this.categoria=categoria;
 	}
 	
+	/**
+	 * Calcula el precio final. Si el descuento está activo, reduce el precio base.
+	 * Si está inactivo, devuelve el precio base sin descuento.
+	 */
 	public double calcularPrecio() {
-		return precioBase +(precioBase*tiempoGarantia*0.015)-(precioBase*descuento);
+		if (!descuentoActivo) return precioBase;
+		return precioBase * (1 - descuento);
 	}
-	
 
-	abstract void asignarDescuento(); 
+	public boolean isDescuentoActivo() {
+		return descuentoActivo;
+	}
+
+	public void setDescuentoActivo(boolean activo) {
+		this.descuentoActivo = activo;
+		if (!activo) this.descuento = 0;
+	}
+
+	public void activarDescuento() {
+		this.descuentoActivo = true;
+	}
+
+	public abstract double asignarDescuento();
+
+	public void desactivarDescuento() {
+		descuentoActivo = false;
+		descuento = 0;
+	}
 
 }

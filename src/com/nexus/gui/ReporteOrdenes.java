@@ -1,4 +1,4 @@
-package com.nexus.GUI;
+package com.nexus.gui;
 
 import com.nexus.controller.StoreController;
 import com.nexus.model.entities.Cliente;
@@ -22,7 +22,6 @@ import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
 import java.awt.*;
-import java.awt.Dialog.ModalityType;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 
@@ -61,7 +60,7 @@ public class ReporteOrdenes extends JFrame {
         setTitle("Nexus Store - Reporte de Órdenes");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         com.nexus.NexusApplication.addGuardarAlCerrar(this, controlador);
-        setBounds(100, 100, 820, 560);
+        setBounds(100, 100, UITheme.VENTANA_TABLA_ANCHO, UITheme.VENTANA_TABLA_ALTO);
         setResizable(true);
         setLocationRelativeTo(null);
 
@@ -81,7 +80,7 @@ public class ReporteOrdenes extends JFrame {
         panelSuperior.setOpaque(false);
         panelSuperior.add(lblTitulo, BorderLayout.CENTER);
 
-        JButton btnRegresar = new JButton("← Regresar");
+        JButton btnRegresar = UIComponents.crearBotonRegresar();
         btnRegresar.addActionListener(e -> {
             new MenuPrincipalFrame().setVisible(true);
             dispose();
@@ -113,10 +112,7 @@ public class ReporteOrdenes extends JFrame {
         txtFechaHasta.setToolTipText("Formato: dd/MM/yyyy");
         panelFiltro.add(txtFechaHasta);
 
-        JButton btnGenerar = new JButton("Generar Reporte");
-        btnGenerar.setBackground(UITheme.COLOR_PRINCIPAL);
-        btnGenerar.setForeground(Color.WHITE);
-        btnGenerar.setFocusPainted(false);
+        JButton btnGenerar = UIComponents.crearBotonPrincipal("Generar Reporte");
         btnGenerar.addActionListener(e -> generarReporte());
         panelFiltro.add(btnGenerar);
 
@@ -144,7 +140,7 @@ public class ReporteOrdenes extends JFrame {
         tablaOrdenes.setBackground(Color.WHITE);
 
         JTableHeader header = tablaOrdenes.getTableHeader();
-        header.setFont(UITheme.FONT_SUBTITULO);
+        header.setFont(UITheme.FONT_ENCABEZADO_TABLA);
         header.setBackground(new Color(230, 240, 235));
         header.setForeground(UITheme.TEXTO);
         header.setOpaque(true);
@@ -164,7 +160,7 @@ public class ReporteOrdenes extends JFrame {
         JPanel panelInferior = new JPanel(new BorderLayout(UITheme.ESPACIADO, UITheme.ESPACIADO));
         panelInferior.setOpaque(false);
 
-        JButton btnVerDetalle = new JButton("Ver detalle de orden");
+        JButton btnVerDetalle = UIComponents.crearBotonMenu("Ver detalle de orden");
         btnVerDetalle.addActionListener(e -> verDetalleOrden());
         JPanel panelBotones = new JPanel(new FlowLayout(FlowLayout.LEFT));
         panelBotones.setOpaque(false);
@@ -319,7 +315,7 @@ public class ReporteOrdenes extends JFrame {
             JTable tablaItems = new JTable(modelItems);
             tablaItems.setRowHeight(24);
             tablaItems.setFont(UITheme.FONT_NORMAL);
-            tablaItems.getTableHeader().setFont(UITheme.FONT_ETIQUETA);
+            tablaItems.getTableHeader().setFont(UITheme.FONT_ENCABEZADO_TABLA);
             tablaItems.setShowGrid(true);
             tablaItems.setGridColor(UITheme.BORDE);
             JScrollPane scrollItems = new JScrollPane(tablaItems);
@@ -352,7 +348,7 @@ public class ReporteOrdenes extends JFrame {
 
             panelSur.add(panelTotales, BorderLayout.CENTER);
 
-            JButton btnCerrar = new JButton("Cerrar");
+            JButton btnCerrar = UIComponents.crearBotonLink("Cerrar");
             btnCerrar.addActionListener(e -> dispose());
             JPanel panelBtn = new JPanel(new FlowLayout(FlowLayout.RIGHT));
             panelBtn.setOpaque(false);

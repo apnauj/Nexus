@@ -1,4 +1,4 @@
-package com.nexus.GUI;
+package com.nexus.gui;
 
 import com.nexus.controller.StoreController;
 import com.nexus.exceptions.EClienteNoEncontrado;
@@ -14,12 +14,12 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.border.EmptyBorder;
-import java.awt.Color;
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
+import java.util.UUID;
 
 /**
  * Pantalla para crear una nueva orden asignando un cliente.
@@ -48,18 +48,18 @@ public class AgregarOrden extends JFrame {
         setTitle("Nexus Store - Añadir Orden (Asignar Cliente)");
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         com.nexus.NexusApplication.addGuardarAlCerrar(this, controlador);
-        setBounds(100, 100, 450, 280);
-        setResizable(false);
+        setBounds(100, 100, 520, 380);
+        setResizable(true);
         setLocationRelativeTo(null);
 
-        contentPane = new JPanel();
-        contentPane.setBorder(new EmptyBorder(15, 15, 15, 15));
-        contentPane.setLayout(new BorderLayout(5, 5));
+        contentPane = new JPanel(new BorderLayout(UITheme.ESPACIADO, UITheme.ESPACIADO));
+        contentPane.setBackground(UITheme.FONDO_PANEL);
+        contentPane.setBorder(new EmptyBorder(UITheme.MARGEN, UITheme.MARGEN, UITheme.MARGEN, UITheme.MARGEN));
         setContentPane(contentPane);
 
-        // Panel superior: Regresar
         JPanel panelSuperior = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        JButton btnRegresar = new JButton("Regresar");
+        panelSuperior.setOpaque(false);
+        JButton btnRegresar = UIComponents.crearBotonRegresar();
         btnRegresar.addActionListener(e -> {
             new GestionarOrdenes().setVisible(true);
             dispose();
@@ -67,13 +67,14 @@ public class AgregarOrden extends JFrame {
         panelSuperior.add(btnRegresar);
         contentPane.add(panelSuperior, BorderLayout.NORTH);
 
-        // Panel central: formulario de asignación de cliente
-        JPanel panelForm = new JPanel(new GridBagLayout());
+        JPanel panelForm = UIComponents.crearPanelTarjeta();
+        panelForm.setLayout(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(5, 5, 5, 5);
+        gbc.insets = new Insets(8, 8, 8, 8);
         gbc.anchor = GridBagConstraints.WEST;
 
         JLabel lblInfo = new JLabel("La orden debe asignarse a un cliente existente. Ingrese los datos del cliente:");
+        lblInfo.setForeground(UITheme.TEXTO_SECUNDARIO);
         gbc.gridwidth = 2;
         gbc.gridx = 0;
         gbc.gridy = 0;
@@ -89,10 +90,7 @@ public class AgregarOrden extends JFrame {
         gbc.gridx = 0;
         gbc.gridy = 2;
         panelForm.add(new JLabel("Número de documento:"), gbc);
-        txtNumDoc = new JTextField(15);
-        txtNumDoc.setForeground(Color.BLACK);
-        txtNumDoc.setBackground(Color.WHITE);
-        txtNumDoc.setCaretColor(Color.BLACK);
+        txtNumDoc = UIComponents.crearCampoTexto(200);
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.weightx = 1.0;
         gbc.gridx = 1;
@@ -109,9 +107,9 @@ public class AgregarOrden extends JFrame {
 
         contentPane.add(panelForm, BorderLayout.CENTER);
 
-        // Panel inferior: Crear orden
         JPanel panelBotones = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        JButton btnCrearOrden = new JButton("Crear Orden");
+        panelBotones.setOpaque(false);
+        JButton btnCrearOrden = UIComponents.crearBotonPrincipal("Crear Orden");
         btnCrearOrden.addActionListener(e -> crearOrden());
         panelBotones.add(btnCrearOrden);
         contentPane.add(panelBotones, BorderLayout.SOUTH);
@@ -138,10 +136,8 @@ public class AgregarOrden extends JFrame {
         MetodoPago metodoPago = (MetodoPago) cmbMetodoPago.getSelectedItem();
 
         try {
-            var idOrden = controlador.addOrden(tipoDoc, numDoc, metodoPago);
-            String msg = "Orden creada correctamente.\nCliente asignado.\n\n"
-                    + "ID orden: " + idOrden.toString().substring(0, 8) + "...\n\n"
-                    + "Puede añadir productos a la orden desde 'Añadir Item a la Orden'.";
+            UUID idOrden = controlador.addOrden(tipoDoc, numDoc, metodoPago);
+            String msg = "Orden creada correctamente.";
             JOptionPane.showMessageDialog(this, msg, "Orden creada", JOptionPane.INFORMATION_MESSAGE);
             new GestionarOrdenes().setVisible(true);
             dispose();

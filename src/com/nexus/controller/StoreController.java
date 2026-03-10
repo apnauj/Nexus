@@ -33,12 +33,16 @@ public class StoreController {
     /**
      * Obtiene la única instancia del controlador.
      * Carga los ficheros y crea el admin por defecto si no hay usuarios.
+     * synchronized lo único que hace es asegurarse de que solo se pueda obtener una instancia al tiempo
+     * de manera que sea imposible que dos métodos lleguen al mismo tiempo y se creen 2 instancias
      */
     public static synchronized StoreController getInstance() {
+        //Si no se ha creado se crea el storeController y se inicializa
         if (instance == null) {
             instance = new StoreController();
             instance.inicializar();
         }
+        //Si no, devolvemos el storeController actual
         return instance;
     }
 
@@ -46,7 +50,9 @@ public class StoreController {
     *Inicialización de los ficheros, verificación de que haya un usuario Admin
     */
     private void inicializar() {
+        //Carga los ficheros desde el directorio
         cargarFicheros();
+        //Se asegura de que haya admin, si no es así lo crea
         asegurarAdminExiste();
     }
 
@@ -55,20 +61,23 @@ public class StoreController {
      * Se crea si no hay usuarios o si ninguno tiene username "admin".
      */
     private void asegurarAdminExiste() {
+        //Si no hay usuarios crea el admin por defecto
         if (usuarios.length == 0) {
             crearAdminPorDefecto();
             return;
         }
-        for (Usuario u : usuarios) {
-            if ("admin".equalsIgnoreCase(u.getUsername())) {
-                return; // Ya existe admin
-            }
+        //Si no hay ningún usuario que se llame admin crea el admin por defecto
+        int i = 0;
+        while (i < usuarios.length && !"admin".equalsIgnoreCase(usuarios[i].getUsername())) {
+            i++;
         }
-        crearAdminPorDefecto();
+
+        if (i == usuarios.length) crearAdminPorDefecto();
+
     }
 
     /**
-     *  Si no existe un admin por defecto lo crea para poder iniciar el sistema desde 0 */
+     *  Crea el admin por defecto */
     private void crearAdminPorDefecto() {
         try {
             addUsuario("admin", "Admin123", Rol.ADMIN);
@@ -116,9 +125,9 @@ public class StoreController {
      * Devolvemos la el UUID en caso de haber completado el flujo exitosamente (para así reutilizar este UUID en otras operaciones de la interfaz mientras estamos trabjando con ella), de lo contrario se habría lanzado una excepción
     */
     public UUID addOrden(TipoDocumento tipoDoc, String numDoc, MetodoPago metodoPago) throws EClienteNoEncontrado, EParametroNulo {
-        if (tipoDoc == null) throw new EParametroNulo("tipoDoc");
-        if (numDoc == null || numDoc.isBlank()) throw new EParametroNulo("numDoc");
-        if (metodoPago == null) throw new EParametroNulo("metodoPago");
+        if (tipoDoc == null) throw new EParametroNulo("tipo de documento");
+        if (numDoc == null || numDoc.isBlank()) throw new EParametroNulo("número de documento");
+        if (metodoPago == null) throw new EParametroNulo("método de pago");
 
         Cliente cliente = searchCliente(tipoDoc, numDoc);
         DateTimeFormatter formateador = DateTimeFormatter.ofPattern("dd/MM/yyyy");
@@ -137,11 +146,20 @@ public class StoreController {
      * Verificamos que la orden este en estado pendiente, pues de no ser así no podemos añadir productos
      * Capturamos las posibles excepciones que puede producir añadir un item con
     */
-    public void addItemToOrden(UUID idOrden, String producto, int cantidad) throws EOrdenNoEncontrada, EProductoNoEncontrado, EStockInsuficiente, EParametroNulo, ECantidadNegativa, EEstadoOrdenInvalido {
-        if (idOrden == null) throw new EParametroNulo("idOrden");
+    public void addItemToOrden(UUID idOrden, String producto, int cantidad) throws EOrdenNoEncontrada, EProductoNoEncontrado, EStockInsuficiente, EParametroNulo, ECantidadNegativa, EEstadoOrdenInvalido, EValorNegativo {
+        if (idOrden == null) throw new EParametroNulo("ID de la orden");
         if (producto == null || producto.isBlank()) throw new EParametroNulo("producto");
+        if(cantidad <= 0) throw new EValorNegativo("La cantidad a añadir no puede ser 0 ni negativa");
         Orden o = searchOrden(idOrden);
         Producto p = searchProducto(producto);
+        //Validación de que el producto no este ya en la orden, pues en ese caso lo que se debe hacer es modificar la cantidad
+        int i = 0;
+        while(i < o.getItems().length){
+            if(o.getItems()[i].getProducto().getId().equals(p.getId())){
+                throw new EProductoRepeteido("El producto que intenta agregar ya está en la orden. Use 'Modificar cantidad' para cambiarlo.");
+            }
+            i++;
+        }
         if (o.getEstado() != Estado.PENDIENTE) {
             throw new EEstadoOrdenInvalido("Solo se pueden agregar items a órdenes pendientes");
         }
@@ -154,14 +172,28 @@ public class StoreController {
      * Añadir un cliente con sus respectivas validaciones
      */
     public void addCliente(TipoDocumento tipoDoc, String numDoc, String nombre, String apellido, String email) throws EClienteYaExiste, EParametroNulo, EFormatoInvalido {
-        if (tipoDoc == null) throw new EParametroNulo("tipoDoc");
-        if (numDoc == null || numDoc.isBlank()) throw new EParametroNulo("numDoc");
+        if (tipoDoc == null) throw new EParametroNulo("tipo de documento");
+        if (numDoc == null || numDoc.isBlank()) throw new EParametroNulo("número de documento");
         if (nombre == null || nombre.isBlank()) throw new EParametroNulo("nombre");
-        if(apellido == null || apellido.isBlank()) throw new EParametroNulo("apellido");
-        if(email == null || email.isBlank()) throw new EParametroNulo("email");
+        if (apellido == null || apellido.isBlank()) throw new EParametroNulo("apellido");
+        if (email == null || email.isBlank()) throw new EParametroNulo("email");
         if (existeCliente(tipoDoc, numDoc)) throw new EClienteYaExiste(tipoDoc, numDoc);
 
-        Cliente nuevoCliente = new Cliente(tipoDoc, numDoc, nombre, apellido, email);
+        String emailTrimmed = email.trim();
+        if (emailTrimmed.contains(" ") || emailTrimmed.contains("\t")) throw new EFormatoInvalido("El email no puede contener espacios.");
+        /**
+         * Validación de formato de email mediante una expresión regular (Regex).
+         * * Explicación del patrón "^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$":
+         * * 1. ^          : Indica el inicio de la cadena. Asegura que no haya texto previo.
+         * 2. [^\\s@]+   : (Local-part) Coincide con uno o más caracteres que NO sean espacios (\s) ni arrobas (@).
+         * 3. @          : Obliga la presencia del símbolo arroba literal.
+         * 4. [^\\s@]+   : (Domain) Coincide con uno o más caracteres que NO sean espacios ni arrobas.
+         * 5. \\.        : Obliga la presencia de un punto literal (se escapa con \\ porque el punto en regex significa "cualquier carácter").
+         * 6. [^\\s@]+   : (TLD/Ext) Coincide con uno o más caracteres finales (la extensión) que no sean espacios ni arrobas.
+         * 7. $          : Indica el fin de la cadena. Asegura que no haya texto extra después del dominio.
+         */
+        if (!emailTrimmed.matches("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$")) throw new EFormatoInvalido("El formato del email es inválido. Debe ser: nombre@dominio.ext (ej: usuario@correo.com)");
+        Cliente nuevoCliente = new Cliente(tipoDoc, numDoc, nombre, apellido, emailTrimmed);
         this.clientes = Arrays.copyOf(this.clientes, this.clientes.length + 1);
         this.clientes[this.clientes.length - 1] = nuevoCliente;
     }
@@ -170,8 +202,8 @@ public class StoreController {
      * Añadir un usuario con sus respectivas validaciones
      */
     public void addUsuario(String username, String password, Rol rol) throws EUsuarioYaExiste, EParametroNulo, EFormatoInvalido {
-        if (username == null || username.isBlank()) throw new EParametroNulo("username");
-        if (password == null) throw new EParametroNulo("password");
+        if (username == null || username.isBlank()) throw new EParametroNulo("nombre de usuario");
+        if (password == null) throw new EParametroNulo("contraseña");
         if (rol == null) throw new EParametroNulo("rol");
         if (existeUsuario(username)) throw new EUsuarioYaExiste(username);
 
@@ -181,28 +213,51 @@ public class StoreController {
     }
 
     /**
-     * Añadir Hardware con sus respectivas validaciones
+     * Añade un producto tipo Hardware con sus respectivas validaciones.
+     * El descuento se asigna automáticamente según stock y consumo.
+     *
+     * @return el producto creado (para obtener el descuento aplicado)
      */
-    public void addHardware (String nombre, String descripcion, String categoria, int tiempoGarantia, double precioBase, int stock, float consumo, String fabricante) throws EProductoYaExiste, EParametroNulo, ECantidadNegativa, EValorNegativo {
-        if (nombre == null || nombre.isBlank()) throw new EParametroNulo("nombre");
+    public Producto addHardware(String nombre, String descripcion, String categoria, int tiempoGarantia, double precioBase, int stock, float consumo, String fabricante, boolean descuentoActivo) throws EProductoYaExiste, EParametroNulo, ECantidadNegativa, EValorNegativo {
+        if (nombre == null || nombre.isBlank()) throw new EParametroNulo("nombre del producto");
+        if (categoria == null || categoria.isBlank()) throw new EParametroNulo("categoría");
+        if (precioBase < 0) throw new EValorNegativo("El precio base no puede ser negativo, usted registro: "+precioBase);
+        if (stock < 0) throw new EValorNegativo("El stock no puede ser negativo, el stock registrado fue: " + stock);
+        if (tiempoGarantia <0) throw new EValorNegativo("El tiempo de garantia no puede ser negativo, el valor registrado del tiempo de garantia es: "+tiempoGarantia);
+        if (descripcion == null || descripcion.isBlank()) throw new EParametroNulo("descripción");
+        if(consumo<0) throw new ECantidadNegativa("El consumo debe ser un número entero positivo");
+        if (fabricante == null || fabricante.isBlank()) throw new EParametroNulo("fabricante");
         if (existeProducto(nombre)) throw new EProductoYaExiste(nombre);
 
-        Producto nuevoHardware = new Hardware(nombre, descripcion, categoria, tiempoGarantia, precioBase, stock, consumo, fabricante);
+        Hardware nuevoHardware = new Hardware(nombre, descripcion, categoria, tiempoGarantia, precioBase, stock, consumo, fabricante, descuentoActivo);
         this.productos = Arrays.copyOf(this.productos, this.productos.length + 1);
         this.productos[this.productos.length - 1] = nuevoHardware;
+        return nuevoHardware;
     }
 
     /**
-     * Añadir Videojuego con sus respectivas validaciones
+     * Añade un producto tipo Videojuego con sus respectivas validaciones.
+     * El descuento se asigna automáticamente según stock y antigüedad.
+     *
+     * devuelve el producto creado (para obtener el descuento aplicado)
      */
-    public void addVideojuego(String nombre, String descripcion, String categoria, int tiempoGarantia, double precioBase, int stock, String[] desarrolladores, String[] generos, boolean multijugador, Date fechaLanzamiento, String plataforma, double tamano) throws EProductoYaExiste, EParametroNulo, ECantidadNegativa, EValorNegativo {
-        if (nombre == null || nombre.isBlank()) throw new EParametroNulo("nombre");
-        if (existeProducto(nombre)) {
-            throw new EProductoYaExiste(nombre);
-        }
-        Producto nuevoVideojuego = new Videojuego(nombre, descripcion, categoria, tiempoGarantia, precioBase, stock, desarrolladores, generos, multijugador, fechaLanzamiento, plataforma, tamano);
+    public Producto addVideojuego(String nombre, String descripcion, String categoria, int tiempoGarantia, double precioBase, int stock, String desarrollador, String genero, boolean multijugador, Date fechaLanzamiento, String plataforma, double tamano, boolean descuentoActivo) throws EProductoYaExiste, EParametroNulo, ECantidadNegativa, EValorNegativo {
+        if (nombre == null || nombre.isBlank()) throw new EParametroNulo("nombre del producto");
+        if (categoria == null || categoria.isBlank()) throw new EParametroNulo("categoría");
+        if (precioBase < 0) throw new EValorNegativo("El precio base no puede ser negativo, usted registro: "+precioBase);
+        if (stock < 0) throw new EValorNegativo("El stock no puede ser negativo, el stock registrado fue: " + stock);
+        if (tiempoGarantia <0) throw new EValorNegativo("El tiempo de garantia no puede ser negativo, el valor registrado del tiempo de garantia es: "+tiempoGarantia);
+        if (descripcion == null || descripcion.isBlank()) throw new EParametroNulo("descripción");
+        if (desarrollador == null || desarrollador.isBlank()) throw new EParametroNulo("desarrollador");
+        if (genero == null || genero.isBlank()) throw new EParametroNulo("genero");
+        if (plataforma == null || plataforma.isBlank()) throw new EParametroNulo("plataforma");
+        if (tamano < 0) throw new ECantidadNegativa("El peso en GB del videojuego no puede ser negativo");
+        if (existeProducto(nombre)) throw new EProductoYaExiste(nombre);
+
+        Videojuego nuevoVideojuego = new Videojuego(nombre, descripcion, categoria, tiempoGarantia, precioBase, stock, desarrollador, genero, multijugador, fechaLanzamiento, plataforma, tamano, descuentoActivo);
         this.productos = Arrays.copyOf(this.productos, this.productos.length + 1);
         this.productos[this.productos.length - 1] = nuevoVideojuego;
+        return nuevoVideojuego;
     }
 
     // --- Métodos auxiliares de existencia ---
@@ -251,7 +306,7 @@ public class StoreController {
  * cada identificador con el recibido como parámetro.
  */
     public Orden searchOrden(UUID id) throws EOrdenNoEncontrada, EParametroNulo {
-        if (id == null) throw new EParametroNulo("id");
+        if (id == null) throw new EParametroNulo("ID de la orden");
         int i = 0;
         while (i < ordenes.length) {
             if (ordenes[i].getIdPedido().equals(id)) {
@@ -278,26 +333,11 @@ public class StoreController {
     }
 
     /**
-     * Obtiene un producto del arreglo real por su ID. Usado para decrementar stock correctamente. */
-    public Producto getProductoById(UUID id) throws EProductoNoEncontrado, EParametroNulo {
-        if (id == null) throw new EParametroNulo("id");
-        int i = 0;
-        while (i < productos.length) {
-            Producto p = productos[i];
-            if (p.getId().equals(id)) {
-                return p;
-            }
-            i++;
-        }
-        throw new EProductoNoEncontrado("Producto con ID " + id + " no encontrado");
-    }
-
-    /**
      * Busca un cliente con sus respectivas validaciones
      */
     public Cliente searchCliente(TipoDocumento tipoDoc, String numDoc) throws EClienteNoEncontrado, EParametroNulo {
-        if (tipoDoc == null) throw new EParametroNulo("tipoDoc");
-        if (numDoc == null || numDoc.isBlank()) throw new EParametroNulo("numDoc");
+        if (tipoDoc == null) throw new EParametroNulo("tipo de documento");
+        if (numDoc == null || numDoc.isBlank()) throw new EParametroNulo("número de documento");
         int i = 0;
         while (i < clientes.length) {
             if (clientes[i].getNumDoc().equals(numDoc) && clientes[i].getTipoDoc().equals(tipoDoc)) {
@@ -312,7 +352,7 @@ public class StoreController {
      * Busca un usuario con sus respectivas validaciones
      */
     public Usuario searchUsuario(String username) throws EUsuarioNoEncontrado, EParametroNulo {
-        if (username == null || username.isBlank()) throw new EParametroNulo("username");
+        if (username == null || username.isBlank()) throw new EParametroNulo("nombre de usuario");
         int i = 0;
         while (i < usuarios.length) {
             if (usuarios[i].getUsername().equalsIgnoreCase(username)) {
@@ -329,14 +369,15 @@ public class StoreController {
      * Elimina un producto con sus respectivas validaciones
      */
     public void deleteProducto(String nombre) throws EProductoNoEncontrado, EHistorialOrden, EParametroNulo {
-        if (nombre == null || nombre.isBlank()) throw new EParametroNulo("nombre");
+        if (nombre == null || nombre.isBlank()) throw new EParametroNulo("nombre del producto");
         Producto p = searchProducto(nombre);
+
         int i = 0;
-
-
         while (i < ordenes.length) {
 
             OrdenItem[] items = ordenes[i].getItems();
+
+            //Orden --> items --> productos
 
             int j = 0;
 
@@ -369,8 +410,8 @@ public class StoreController {
      * Elimina un cliente con sus respectivas validaciones
      */
     public void deleteCliente(TipoDocumento tipoDoc, String numDoc) throws EClienteNoEncontrado, EHistorialOrden, EParametroNulo {
-        if (tipoDoc == null) throw new EParametroNulo("tipoDoc");
-        if (numDoc == null || numDoc.isBlank()) throw new EParametroNulo("numDoc");
+        if (tipoDoc == null) throw new EParametroNulo("tipo de documento");
+        if (numDoc == null || numDoc.isBlank()) throw new EParametroNulo("número de documento");
 
         Cliente c = searchCliente(tipoDoc, numDoc);
 
@@ -410,9 +451,9 @@ public class StoreController {
      */
     public void deleteUsuario(String username) throws EUsuarioNoEncontrado, EParametroNulo {
         if (username == null || username.isBlank()) {
-            throw new EParametroNulo("username");
+            throw new EParametroNulo("nombre de usuario");
         }
-
+        //Verificar que el usuario que se va a borrar exista
         Usuario u = searchUsuario(username);
 
         Usuario[] nuevoArreglo = new Usuario[this.usuarios.length - 1];
@@ -444,8 +485,8 @@ public class StoreController {
  * 5. Restaura el stock del producto eliminado.
  */
     public void removeItemOrden(UUID idOrden, String nombre) throws EOrdenNoEncontrada, EProductoNoEncontrado, EParametroNulo, EEstadoOrdenInvalido {
-        if (idOrden == null) throw new EParametroNulo("idOrden");
-        if (nombre == null || nombre.isBlank()) throw new EParametroNulo("nombre");
+        if (idOrden == null) throw new EParametroNulo("ID de la orden");
+        if (nombre == null || nombre.isBlank()) throw new EParametroNulo("nombre del producto");
         Orden orden = searchOrden(idOrden);
         Producto producto = searchProducto(nombre);
         if (orden.getEstado() != Estado.PENDIENTE) {
@@ -457,10 +498,9 @@ public class StoreController {
         }
         int index = -1;
         int i = 0;
-        while (i < items.length) {
+        while (i < items.length && index == -1) {
             if (items[i] != null && items[i].getProducto() != null && items[i].getProducto().getId().equals(producto.getId())) {
                 index = i;
-                break;
             }
             i++;
         }
@@ -472,15 +512,12 @@ public class StoreController {
     }
 
     /**
- * Verifica el pago de una orden y cambia su estado.
- * Si el pago es válido:
- *  La orden pasa al estado APROBADO.
- * Si el pago es rechazado:
- *  La orden pasa a estado RECHAZADO.
- *  Se restaura el stock de todos los productos que estaban en la orden.
- */
-    public void verificarPago(UUID idOrden, double valorPagado) throws EOrdenNoEncontrada, EParametroNulo, EValorNegativo, EProductoNoEncontrado, EEstadoOrdenInvalido, EStockInsuficiente {
-        if (idOrden == null) throw new EParametroNulo("idOrden");
+     * Verifica el pago de una orden y cambia su estado.
+     * Si el pago es válido: la orden pasa al estado APROBADO y se decrementa el stock.
+     * Si el pago es rechazado: la orden pasa a estado RECHAZADO.
+     */
+    public void verificarPago(UUID idOrden, double valorPagado) throws EOrdenNoEncontrada, EParametroNulo, EValorNegativo, EEstadoOrdenInvalido, EStockInsuficiente {
+        if (idOrden == null) throw new EParametroNulo("ID de la orden");
         if (valorPagado < 0) throw new EValorNegativo("El valor pagado no puede ser negativo");
         Orden orden = searchOrden(idOrden);
         if (orden.getEstado() != Estado.PENDIENTE) throw new EEstadoOrdenInvalido("La orden ya fue verificada (estado: " + orden.getEstado() + ")");
@@ -495,17 +532,22 @@ public class StoreController {
     }
 
     /**
-     * Decrementa el stock en el arreglo real de productos para cada item de la orden aprobada. */
-    private void decrementarStockEnProductos(Orden orden) throws EValorNegativo, EProductoNoEncontrado, EParametroNulo, EStockInsuficiente {
+     * Decrementa el stock de cada producto de la orden aprobada.
+     * El producto en la orden es la misma referencia que el del inventario, por lo que
+     * al modificarlo se actualiza el stock real. Recalcula el descuento tras el cambio.
+     */
+    private void decrementarStockEnProductos(Orden orden) throws EValorNegativo, EStockInsuficiente {
         OrdenItem[] items = orden.getItems();
         if (items == null) return;
         for (OrdenItem item : items) {
-            Producto pEnOrden = item.getProducto();
-            Producto pReal = getProductoById(pEnOrden.getId());
-            if (pReal.getStock() < item.getCantidad()) {
-                throw new EStockInsuficiente(pReal);
+            Producto p = item.getProducto();
+            if (p.getStock() < item.getCantidad()) {
+                throw new EStockInsuficiente(p);
             }
-            pReal.setStock(pReal.getStock() - item.getCantidad());
+            p.setStock(p.getStock() - item.getCantidad());
+            if (p.isDescuentoActivo()) {
+                p.asignarDescuento();
+            }
         }
     }
 
@@ -513,8 +555,8 @@ public class StoreController {
      * Modifica la cantidad de un producto en una orden. La orden debe estar en estado PENDIENTE.
      */
     public void modificarCantidadItem(UUID idOrden, String nombreProducto, int cantidad) throws EOrdenNoEncontrada, EProductoNoEncontrado, EEstadoOrdenInvalido, ECantidadNegativa, EStockInsuficiente, EParametroNulo {
-        if (idOrden == null) throw new EParametroNulo("idOrden");
-        if (nombreProducto == null || nombreProducto.isBlank()) throw new EParametroNulo("nombreProducto");
+        if (idOrden == null) throw new EParametroNulo("ID de la orden");
+        if (nombreProducto == null || nombreProducto.isBlank()) throw new EParametroNulo("nombre del producto");
         Orden orden = searchOrden(idOrden);
         if (orden.getEstado() != Estado.PENDIENTE) {
             throw new EEstadoOrdenInvalido("Solo se puede modificar cantidad en órdenes pendientes");
@@ -528,39 +570,63 @@ public class StoreController {
         }
         OrdenItem[] items = orden.getItems();
         if (items == null) {
-            throw new EEstadoOrdenInvalido("La orden no tiene items");
+            throw new EProductoNoEncontrado("La orden no tiene items");
         }
-        for (OrdenItem item : items) {
-            if (item.getProducto().getId().equals(producto.getId())) {
-                item.setCantidad(cantidad);
-                orden.calcularTotal();
-                return;
-            }
+
+        int i = 0;
+        while (i < orden.getItems().length && !items[i].getProducto().getId().equals(producto.getId())) {
+            i++;
         }
-        throw new EProductoNoEncontrado("El producto '" + nombreProducto + "' no está en la orden");
+        if(i == orden.getItems().length){
+            throw new EProductoNoEncontrado("El producto '" + nombreProducto + "' no está en la orden");
+        } else {
+            items[i].setCantidad(cantidad);
+            orden.calcularTotal();
+        }
     }
 
     // --- Metodos de modificacion (Update) ---
 
     /**
      * Actualiza los datos de un cliente existente.
-     * Requiere todos los campos (mismas validaciones que el constructor de Cliente).
+     * tipoDocActual/numDocActual identifican al cliente a actualizar.
+     * tipoDocNuevo/numDocNuevo son los nuevos valores (pueden ser iguales a los actuales).
+     * Si el documento cambia, valida que no exista otro cliente con el nuevo documento.
      */
-    public void actualizarCliente(TipoDocumento tipoDoc, String numDoc, String nombre, String apellido, String email)
-            throws EClienteNoEncontrado, EParametroNulo, EFormatoInvalido {
+    public void actualizarCliente(TipoDocumento tipoDocActual, String numDocActual,
+            TipoDocumento tipoDocNuevo, String numDocNuevo, String nombre, String apellido, String email)
+            throws EClienteNoEncontrado, EParametroNulo, EFormatoInvalido, EClienteYaExiste {
 
-        if (tipoDoc == null) throw new EParametroNulo("tipoDoc");
-        if (numDoc == null || numDoc.isBlank()) throw new EParametroNulo("numDoc", "El número de documento no puede ser null o vacío.");
-        if (nombre == null || nombre.isBlank()) throw new EParametroNulo("nombre", "El nombre no puede ser null o vacío.");
-        if (apellido == null || apellido.isBlank()) throw new EParametroNulo("apellido", "El apellido no puede ser null o vacío.");
-        if (email == null || email.isBlank()) throw new EParametroNulo("email", "El email no puede ser null o vacío.");
-        if (!numDoc.trim().matches("\\d{1,10}")) throw new EFormatoInvalido("El documento debe ser numérico y tener máximo 10 dígitos.");
-        if (!email.contains("@") || !email.contains(".")) throw new EFormatoInvalido("El formato del email es inválido (debe contener @ y .)");
+        if (tipoDocActual == null) throw new EParametroNulo("tipo de documento actual");
+        if (numDocActual == null || numDocActual.isBlank()) throw new EParametroNulo("número de documento actual");
+        if (tipoDocNuevo == null) throw new EParametroNulo("tipo de documento");
+        if (numDocNuevo == null || numDocNuevo.isBlank()) throw new EParametroNulo("número de documento");
+        if (nombre == null || nombre.isBlank()) throw new EParametroNulo("nombre");
+        if (apellido == null || apellido.isBlank()) throw new EParametroNulo("apellido");
+        if (email == null || email.isBlank()) throw new EParametroNulo("email");
+        if (!numDocNuevo.trim().matches("\\d{1,10}")) throw new EFormatoInvalido("El documento debe ser numérico y tener máximo 10 dígitos.");
+        String emailTrimmed = email.trim();
+        if (emailTrimmed.contains(" ") || emailTrimmed.contains("\t")) throw new EFormatoInvalido("El email no puede contener espacios.");
+        if (!emailTrimmed.matches("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$")) throw new EFormatoInvalido("El formato del email es inválido. Debe ser: nombre@dominio.ext (ej: usuario@correo.com)");
 
-        Cliente c = searchCliente(tipoDoc, numDoc.trim());
+        Cliente c = searchCliente(tipoDocActual, numDocActual.trim());
+
+        boolean documentoCambia = !tipoDocNuevo.equals(tipoDocActual) || !numDocNuevo.trim().equals(numDocActual.trim());
+        if (documentoCambia) {
+            int i = 0;
+            while (i < clientes.length) {
+                if (clientes[i] != c && clientes[i].getTipoDoc().equals(tipoDocNuevo) && clientes[i].getNumDoc().equals(numDocNuevo.trim())) {
+                    throw new EClienteYaExiste(tipoDocNuevo, numDocNuevo.trim());
+                }
+                i++;
+            }
+        }
+
+        c.setTipoDoc(tipoDocNuevo);
+        c.setNumDoc(numDocNuevo.trim());
         c.setNombre(nombre.trim());
         c.setApellido(apellido.trim());
-        c.setEmail(email.trim());
+        c.setEmail(emailTrimmed);
     }
     	
     /**
@@ -568,15 +634,15 @@ public class StoreController {
      * Aplica las mismas validaciones que el constructor de Hardware.
      */
     public void actualizarHardware(String nombre, String descripcion, String categoria,
-            int tiempoGarantia, double precioBase, int stock, float consumo, String fabricante)
+            int tiempoGarantia, double precioBase, int stock, float consumo, String fabricante, boolean descuentoActivo)
             throws EProductoNoEncontrado, EParametroNulo, ECantidadNegativa, EValorNegativo {
 
-        if (nombre == null || nombre.isBlank()) throw new EParametroNulo("nombre", "El nombre del producto no puede ser null o vacío.");
-        if (categoria == null || categoria.isBlank()) throw new EParametroNulo("categoria", "La categoría no puede ser null o vacía.");
-        if (precioBase < 0) throw new EValorNegativo("El precio base no puede ser negativo, usted registro: " + precioBase);
-        if (stock < 0) throw new EValorNegativo("El stock no puede ser negativo, el stock registrado fue: " + stock);
-        if (tiempoGarantia < 0) throw new EValorNegativo("El tiempo de garantia no puede ser negativo, el valor registrado del tiempo de garantia es: " + tiempoGarantia);
-        if (consumo < 0) throw new ECantidadNegativa("El consumo debe ser mayor que 0");
+        if (nombre == null || nombre.isBlank()) throw new EParametroNulo("nombre del producto");
+        if (categoria == null || categoria.isBlank()) throw new EParametroNulo("categoría");
+        if (tiempoGarantia < 1) throw new EValorNegativo("El tiempo de garantía debe ser al menos 1 mes. Valor ingresado: " + tiempoGarantia);
+        if (precioBase <= 0) throw new EValorNegativo("El precio base debe ser mayor que 0. Valor ingresado: " + precioBase);
+        if (stock < 0) throw new EValorNegativo("El stock no puede ser negativo. Valor ingresado: " + stock);
+        if (consumo <= 0) throw new ECantidadNegativa("El consumo debe ser un número entero positivo. Valor ingresado: " + consumo);
         if (fabricante == null || fabricante.isBlank()) throw new EParametroNulo("fabricante");
 
         Producto p = searchProducto(nombre);
@@ -590,7 +656,12 @@ public class StoreController {
         hardware.setTiempoGarantia(tiempoGarantia);
         hardware.setConsumo(consumo);
         hardware.setFabricante(fabricante);
-        hardware.asignarDescuento();
+        if (descuentoActivo) {
+            hardware.setDescuentoActivo(true);
+            hardware.asignarDescuento();
+        } else {
+            hardware.desactivarDescuento();
+        }
     }
 
     /**
@@ -598,19 +669,19 @@ public class StoreController {
      * Aplica las mismas validaciones que el constructor de Videojuego.
      */
     public void actualizarVideojuego(String nombre, String descripcion, String categoria,
-            int tiempoGarantia, double precioBase, int stock, String[] desarrolladores, String[] generos,
-            boolean multijugador, Date fechaLanzamiento, String plataforma, double tamano)
+            int tiempoGarantia, double precioBase, int stock, String desarrollador, String genero,
+            boolean multijugador, Date fechaLanzamiento, String plataforma, double tamano, boolean descuentoActivo)
             throws EProductoNoEncontrado, EParametroNulo, ECantidadNegativa, EValorNegativo {
 
-        if (nombre == null || nombre.isBlank()) throw new EParametroNulo("nombre", "El nombre del producto no puede ser null o vacío.");
-        if (categoria == null || categoria.isBlank()) throw new EParametroNulo("categoria", "La categoría no puede ser null o vacía.");
-        if (precioBase < 0) throw new EValorNegativo("El precio base no puede ser negativo, usted registro: " + precioBase);
-        if (stock < 0) throw new EValorNegativo("El stock no puede ser negativo, el stock registrado fue: " + stock);
-        if (tiempoGarantia < 0) throw new EValorNegativo("El tiempo de garantia no puede ser negativo, el valor registrado del tiempo de garantia es: " + tiempoGarantia);
-        if (desarrolladores == null || desarrolladores.length == 0) throw new EParametroNulo("desarrolladores");
-        if (generos == null || generos.length == 0) throw new EParametroNulo("generos");
+        if (nombre == null || nombre.isBlank()) throw new EParametroNulo("nombre del producto");
+        if (categoria == null || categoria.isBlank()) throw new EParametroNulo("categoría");
+        if (tiempoGarantia < 1) throw new EValorNegativo("El tiempo de garantía debe ser al menos 1 mes. Valor ingresado: " + tiempoGarantia);
+        if (precioBase <= 0) throw new EValorNegativo("El precio base debe ser mayor que 0. Valor ingresado: " + precioBase);
+        if (stock < 0) throw new EValorNegativo("El stock no puede ser negativo. Valor ingresado: " + stock);
+        if (desarrollador == null || desarrollador.isBlank()) throw new EParametroNulo("desarrollador");
+        if (genero == null || genero.isBlank()) throw new EParametroNulo("género");
         if (plataforma == null || plataforma.isBlank()) throw new EParametroNulo("plataforma");
-        if (tamano < 0) throw new ECantidadNegativa("El peso en GB del videojuego no puede ser negativo");
+        if (tamano < 0) throw new ECantidadNegativa("El tamaño en GB no puede ser negativo. Valor ingresado: " + tamano);
 
         Producto p = searchProducto(nombre);
         if (!(p instanceof Videojuego videojuego)) {
@@ -621,13 +692,18 @@ public class StoreController {
         videojuego.setPrecioBase(precioBase);
         videojuego.setStock(stock);
         videojuego.setTiempoGarantia(tiempoGarantia);
-        videojuego.setDesarrolladores(desarrolladores);
-        videojuego.setGeneros(generos);
+        videojuego.setDesarrollador(desarrollador);
+        videojuego.setGenero(genero);
         videojuego.setModoMultijugador(multijugador);
         videojuego.setFechaLanzamiento(fechaLanzamiento);
         videojuego.setPlataforma(plataforma);
         videojuego.setTamano(tamano);
-        videojuego.asignarDescuento();
+        if (descuentoActivo) {
+            videojuego.setDescuentoActivo(true);
+            videojuego.asignarDescuento();
+        } else {
+            videojuego.desactivarDescuento();
+        }
     }
 
     // --- Métodos para cargar y guardar los ficheros ---
@@ -651,8 +727,8 @@ public class StoreController {
 
         for (File f : ficheros) {
             if (f.isFile()){
-                String nombreArchivo = f.getName();
-                String extension = getExtension(nombreArchivo);
+                String nombreArchivo = f.getName(); // --> "cliente1.clienteFile"
+                String extension = getExtension(nombreArchivo);// --> "clienteFile"
             try {
                 switch (extension) {
                     case "clienteFile":
@@ -773,7 +849,7 @@ public class StoreController {
     if (filename == null || !filename.contains(".")) {
         return "";
     }
-    return filename.substring(filename.lastIndexOf(".") + 1);
+    return filename.substring(filename.lastIndexOf(".") + 1); //cliente1(.)clienteFile
 }
 
     // --- Métodos auxiliares para organizar información a ser presentada en la interfaz ---
@@ -816,9 +892,9 @@ public class StoreController {
     public String[] getNombresProductos() {
         Producto[] prods = getProductos();
         String[] nombres = new String[0];
-        for (int i = 0; i < prods.length; i++) {
-            if (prods[i] != null) {
-                String n = prods[i].getNombre();
+        for (Producto prod : prods) {
+            if (prod != null) {
+                String n = prod.getNombre();
                 if (n != null && !n.isBlank()) {
                     nombres = Arrays.copyOf(nombres, nombres.length + 1);
                     nombres[nombres.length - 1] = n;
@@ -830,8 +906,8 @@ public class StoreController {
     public String[] getOpcionesProductosDisponibles() {
         Producto[] conStock = getProductosConStockDisponible();
         String[] nombres = new String[0];
-        for (int i = 0; i < conStock.length; i++) {
-            String n = conStock[i] != null ? conStock[i].getNombre() : null;
+        for (Producto producto : conStock) {
+            String n = producto != null ? producto.getNombre() : null;
             if (n != null && !n.isBlank()) {
                 nombres = Arrays.copyOf(nombres, nombres.length + 1);
                 nombres[nombres.length - 1] = n;
@@ -839,6 +915,11 @@ public class StoreController {
         }
         return nombres;
     }
+    /**
+     * Crea opciones únicas para el combo de órdenes pendientes.
+     * Incluye ID de orden para distinguir cuando un cliente tiene varias órdenes el mismo día.
+     * Formato: "Cliente - Fecha (ID: xxxxxxxx)"
+     */
     public String[] getOpcionesOrdenesPendientes() {
         Orden[] pendientes = getOrdenesPendientes();
         String[] opciones = new String[pendientes.length];
@@ -847,12 +928,18 @@ public class StoreController {
             Cliente c = o != null ? o.getCliente() : null;
             String clienteStr = (c != null) ? c.getNombre() + " " + c.getApellido() : "?";
             String fecha = (o != null && o.getFecha() != null) ? o.getFecha() : "";
-            opciones[i] = clienteStr + " - " + fecha;
+            String idCorto = (o != null && o.getIdPedido() != null)
+                    ? o.getIdPedido().toString().substring(0, Math.min(8, o.getIdPedido().toString().length()))
+                    : "?";
+            opciones[i] = clienteStr + " - " + fecha + " (ID: " + idCorto + ")";
         }
         return opciones;
     }
+
+    //Este método sirve para obtener un arreglo de los productos que hay en la orden
+    //Se usa para modificar la cantidad de un producto en la orden o para eliminar un producto en la orden
     public String[] getOpcionesProductosEnOrden(UUID idOrden) throws EParametroNulo, EOrdenNoEncontrada {
-        if (idOrden == null) throw new EParametroNulo("idOrden");
+        if (idOrden == null) throw new EParametroNulo("ID de la orden");
         Orden orden = searchOrden(idOrden);
         OrdenItem[] items = orden.getItems();
         if (items == null) return new String[0];

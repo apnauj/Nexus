@@ -1,4 +1,4 @@
-package com.nexus.GUI;
+package com.nexus.gui;
 
 import com.nexus.controller.StoreController;
 import com.nexus.exceptions.EClienteNoEncontrado;
@@ -15,7 +15,6 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.border.EmptyBorder;
 import java.awt.BorderLayout;
-import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.GridLayout;
@@ -44,16 +43,17 @@ public class EliminarCliente extends JFrame {
         setLocationRelativeTo(null);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         com.nexus.NexusApplication.addGuardarAlCerrar(this, controlador);
-        setBounds(100, 100, 450, 220);
-        setResizable(false);
+        setBounds(100, 100, 500, 300);
+        setResizable(true);
 
-        JPanel contentPane = new JPanel();
-        contentPane.setBorder(new EmptyBorder(15, 15, 15, 15));
-        contentPane.setLayout(new BorderLayout(5, 5));
+        JPanel contentPane = new JPanel(new BorderLayout(UITheme.ESPACIADO, UITheme.ESPACIADO));
+        contentPane.setBackground(UITheme.FONDO_PANEL);
+        contentPane.setBorder(new EmptyBorder(UITheme.MARGEN, UITheme.MARGEN, UITheme.MARGEN, UITheme.MARGEN));
         setContentPane(contentPane);
 
         JPanel panelSuperior = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        JButton btnRegresar = new JButton("Regresar");
+        panelSuperior.setOpaque(false);
+        JButton btnRegresar = UIComponents.crearBotonRegresar();
         btnRegresar.addActionListener(e -> {
             new GestionarClientes().setVisible(true);
             dispose();
@@ -61,29 +61,29 @@ public class EliminarCliente extends JFrame {
         panelSuperior.add(btnRegresar);
         contentPane.add(panelSuperior, BorderLayout.NORTH);
 
-        JPanel panelForm = new JPanel(new GridLayout(0, 1, 0, 10));
+        JPanel panelForm = UIComponents.crearPanelTarjeta();
+        panelForm.setLayout(new GridLayout(0, 1, 0, 10));
         panelForm.setPreferredSize(new Dimension(380, 80));
 
         JPanel row1 = new JPanel(new FlowLayout(FlowLayout.LEFT));
         row1.add(new JLabel("Tipo documento: "));
         cmbTipoDoc = new JComboBox<>(TipoDocumento.values());
-        cmbTipoDoc.setPreferredSize(new Dimension(120, 25));
+        cmbTipoDoc.setPreferredSize(new Dimension(140, 30));
         row1.add(cmbTipoDoc);
         panelForm.add(row1);
 
         JPanel row2 = new JPanel(new FlowLayout(FlowLayout.LEFT));
         row2.add(new JLabel("Número documento: "));
         txtNumDoc = new JTextField(15);
-        txtNumDoc.setForeground(Color.BLACK);
-        txtNumDoc.setBackground(Color.WHITE);
-        txtNumDoc.setCaretColor(Color.BLACK);
+        UIComponents.aplicarBordeCampo(txtNumDoc);
         row2.add(txtNumDoc);
         panelForm.add(row2);
 
         contentPane.add(panelForm, BorderLayout.CENTER);
 
         JPanel panelBotones = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        JButton btnEliminar = new JButton("Eliminar Cliente");
+        panelBotones.setOpaque(false);
+        JButton btnEliminar = UIComponents.crearBotonEliminar("Eliminar Cliente");
         btnEliminar.addActionListener(e -> eliminarCliente());
         panelBotones.add(btnEliminar);
         contentPane.add(panelBotones, BorderLayout.SOUTH);
