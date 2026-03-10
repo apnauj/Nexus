@@ -156,7 +156,7 @@ public class StoreController {
         int i = 0;
         while(i < o.getItems().length){
             if(o.getItems()[i].getProducto().getId().equals(p.getId())){
-                throw new EProductoRepeteido("El producto que intenta agregar ya está en la oren, por favor modifique su cantidad");
+                throw new EProductoRepeteido("El producto que intenta agregar ya está en la orden. Use 'Modificar cantidad' para cambiarlo.");
             }
             i++;
         }
@@ -581,6 +581,7 @@ public class StoreController {
             throw new EProductoNoEncontrado("El producto '" + nombreProducto + "' no está en la orden");
         } else {
             items[i].setCantidad(cantidad);
+            orden.calcularTotal();
         }
     }
 
@@ -588,22 +589,41 @@ public class StoreController {
 
     /**
      * Actualiza los datos de un cliente existente.
-     * Requiere todos los campos (mismas validaciones que el constructor de Cliente).
+     * tipoDocActual/numDocActual identifican al cliente a actualizar.
+     * tipoDocNuevo/numDocNuevo son los nuevos valores (pueden ser iguales a los actuales).
+     * Si el documento cambia, valida que no exista otro cliente con el nuevo documento.
      */
-    public void actualizarCliente(TipoDocumento tipoDoc, String numDoc, String nombre, String apellido, String email)
-            throws EClienteNoEncontrado, EParametroNulo, EFormatoInvalido {
+    public void actualizarCliente(TipoDocumento tipoDocActual, String numDocActual,
+            TipoDocumento tipoDocNuevo, String numDocNuevo, String nombre, String apellido, String email)
+            throws EClienteNoEncontrado, EParametroNulo, EFormatoInvalido, EClienteYaExiste {
 
-        if (tipoDoc == null) throw new EParametroNulo("tipo de documento");
-        if (numDoc == null || numDoc.isBlank()) throw new EParametroNulo("número de documento");
+        if (tipoDocActual == null) throw new EParametroNulo("tipo de documento actual");
+        if (numDocActual == null || numDocActual.isBlank()) throw new EParametroNulo("número de documento actual");
+        if (tipoDocNuevo == null) throw new EParametroNulo("tipo de documento");
+        if (numDocNuevo == null || numDocNuevo.isBlank()) throw new EParametroNulo("número de documento");
         if (nombre == null || nombre.isBlank()) throw new EParametroNulo("nombre");
         if (apellido == null || apellido.isBlank()) throw new EParametroNulo("apellido");
         if (email == null || email.isBlank()) throw new EParametroNulo("email");
-        if (!numDoc.trim().matches("\\d{1,10}")) throw new EFormatoInvalido("El documento debe ser numérico y tener máximo 10 dígitos.");
+        if (!numDocNuevo.trim().matches("\\d{1,10}")) throw new EFormatoInvalido("El documento debe ser numérico y tener máximo 10 dígitos.");
         String emailTrimmed = email.trim();
         if (emailTrimmed.contains(" ") || emailTrimmed.contains("\t")) throw new EFormatoInvalido("El email no puede contener espacios.");
         if (!emailTrimmed.matches("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$")) throw new EFormatoInvalido("El formato del email es inválido. Debe ser: nombre@dominio.ext (ej: usuario@correo.com)");
 
-        Cliente c = searchCliente(tipoDoc, numDoc.trim());
+        Cliente c = searchCliente(tipoDocActual, numDocActual.trim());
+
+        boolean documentoCambia = !tipoDocNuevo.equals(tipoDocActual) || !numDocNuevo.trim().equals(numDocActual.trim());
+        if (documentoCambia) {
+            int i = 0;
+            while (i < clientes.length) {
+                if (clientes[i] != c && clientes[i].getTipoDoc().equals(tipoDocNuevo) && clientes[i].getNumDoc().equals(numDocNuevo.trim())) {
+                    throw new EClienteYaExiste(tipoDocNuevo, numDocNuevo.trim());
+                }
+                i++;
+            }
+        }
+
+        c.setTipoDoc(tipoDocNuevo);
+        c.setNumDoc(numDocNuevo.trim());
         c.setNombre(nombre.trim());
         c.setApellido(apellido.trim());
         c.setEmail(emailTrimmed);
@@ -637,7 +657,10 @@ public class StoreController {
         hardware.setConsumo(consumo);
         hardware.setFabricante(fabricante);
         if (descuentoActivo) {
+            hardware.setDescuentoActivo(true);
             hardware.asignarDescuento();
+        } else {
+            hardware.desactivarDescuento();
         }
     }
 
@@ -676,7 +699,10 @@ public class StoreController {
         videojuego.setPlataforma(plataforma);
         videojuego.setTamano(tamano);
         if (descuentoActivo) {
+            videojuego.setDescuentoActivo(true);
             videojuego.asignarDescuento();
+        } else {
+            videojuego.desactivarDescuento();
         }
     }
 
@@ -889,9 +915,11 @@ public class StoreController {
         }
         return nombres;
     }
-    //Esto sirve para crear una lista en la que se tiene Nombre del cliente - fecha de la orden
-    //Esto se hace para los métodos de agregar un item a una orden, eliminar un item de una orden
-    //O modificar la cantidad de un item de una orden
+    /**
+     * Crea opciones únicas para el combo de órdenes pendientes.
+     * Incluye ID de orden para distinguir cuando un cliente tiene varias órdenes el mismo día.
+     * Formato: "Cliente - Fecha (ID: xxxxxxxx)"
+     */
     public String[] getOpcionesOrdenesPendientes() {
         Orden[] pendientes = getOrdenesPendientes();
         String[] opciones = new String[pendientes.length];
@@ -900,7 +928,10 @@ public class StoreController {
             Cliente c = o != null ? o.getCliente() : null;
             String clienteStr = (c != null) ? c.getNombre() + " " + c.getApellido() : "?";
             String fecha = (o != null && o.getFecha() != null) ? o.getFecha() : "";
-            opciones[i] = clienteStr + " - " + fecha;
+            String idCorto = (o != null && o.getIdPedido() != null)
+                    ? o.getIdPedido().toString().substring(0, Math.min(8, o.getIdPedido().toString().length()))
+                    : "?";
+            opciones[i] = clienteStr + " - " + fecha + " (ID: " + idCorto + ")";
         }
         return opciones;
     }

@@ -139,41 +139,53 @@ public class AgregarVideoJuegos extends JFrame {
     }
 
     private void agregarVideojuego() {
-        String nombre = txtNombre.getText();
-        String descripcion = txtDescripcion.getText();
-        String categoria = txtCategoria.getText();
+        String nombre = txtNombre.getText() != null ? txtNombre.getText().trim() : "";
+        String descripcion = txtDescripcion.getText() != null ? txtDescripcion.getText().trim() : "";
+        String categoria = txtCategoria.getText() != null ? txtCategoria.getText().trim() : "";
         String tiempoStr = txtTiempoGarantia.getText();
         String precioStr = txtPrecioBase.getText();
         String stockStr = txtStock.getText();
-        String desarrollador = txtDesarrollador.getText();
-        String genero = txtGenero.getText();
-        String plataforma = txtPlataforma.getText();
+        String desarrollador = txtDesarrollador.getText() != null ? txtDesarrollador.getText().trim() : "";
+        String genero = txtGenero.getText() != null ? txtGenero.getText().trim() : "";
+        String plataforma = txtPlataforma.getText() != null ? txtPlataforma.getText().trim() : "";
         String fechaStr = txtFechaLanzamiento.getText();
         String tamanoStr = txtTamano.getText();
 
-        if (nombre == null || nombre.isBlank()) {
+        if (nombre.isEmpty()) {
             JOptionPane.showMessageDialog(this, "Ingrese el nombre.", "Campo requerido", JOptionPane.WARNING_MESSAGE);
             return;
         }
-        if (categoria == null || categoria.isBlank()) {
+        if (categoria.isEmpty()) {
             JOptionPane.showMessageDialog(this, "Ingrese la categoría.", "Campo requerido", JOptionPane.WARNING_MESSAGE);
             return;
         }
-        if (plataforma == null || plataforma.isBlank()) {
+        if (plataforma.isEmpty()) {
             JOptionPane.showMessageDialog(this, "Ingrese la plataforma.", "Campo requerido", JOptionPane.WARNING_MESSAGE);
             return;
         }
-        if (desarrollador == null || desarrollador.isBlank()) {
+        if (desarrollador.isEmpty()) {
             JOptionPane.showMessageDialog(this, "Ingrese el desarrollador.", "Campo requerido", JOptionPane.WARNING_MESSAGE);
             return;
         }
-        if (genero == null || genero.isBlank()) {
+        if (genero.isEmpty()) {
             JOptionPane.showMessageDialog(this, "Ingrese el género.", "Campo requerido", JOptionPane.WARNING_MESSAGE);
             return;
         }
-        if (tiempoStr == null || tiempoStr.isBlank() || precioStr == null || precioStr.isBlank()
-                || stockStr == null || stockStr.isBlank() || tamanoStr == null || tamanoStr.isBlank()) {
-            JOptionPane.showMessageDialog(this, "Complete todos los campos numéricos (tiempo garantía, precio base, stock, tamaño).", "Campos requeridos", JOptionPane.WARNING_MESSAGE);
+        // Validación para Tiempo de Garantía
+        if (tiempoStr == null || tiempoStr.isBlank()) {
+            JOptionPane.showMessageDialog(this, "El campo 'Tiempo de Garantía' es obligatorio.", "Campo faltante", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        // Validación para Precio Base
+        if (precioStr == null || precioStr.isBlank()) {
+            JOptionPane.showMessageDialog(this, "El campo 'Precio Base' es obligatorio.", "Campo faltante", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        // Validación para Stock
+        if (stockStr == null || stockStr.isBlank()) {
+            JOptionPane.showMessageDialog(this, "El campo 'Stock' es obligatorio.", "Campo faltante", JOptionPane.WARNING_MESSAGE);
             return;
         }
 
@@ -217,7 +229,7 @@ public class AgregarVideoJuegos extends JFrame {
         try {
             boolean descuentoActivo = chkDescuentoActivo.isSelected();
             Producto producto = controlador.addVideojuego(nombre, descripcion, categoria, tiempoGarantia, precioBase, stock,
-                    desarrollador.trim(), genero.trim(), chkMultijugador.isSelected(), fechaLanzamiento, plataforma, tamano, descuentoActivo);
+                    desarrollador, genero, chkMultijugador.isSelected(), fechaLanzamiento, plataforma, tamano, descuentoActivo);
             String msg = descuentoActivo
                     ? String.format("Videojuego agregado correctamente.%nSe aplicó un descuento del %d%% (según stock y antigüedad).", (int) Math.round(producto.getDescuento() * 100))
                     : "Videojuego agregado correctamente. Sin descuento aplicado.";

@@ -147,13 +147,19 @@ public class EliminarItemOrden extends JFrame {
             return;
         }
 
+        int idxOrden = cmbOrden.getSelectedIndex();
+        if (idxOrden < 0 || idxOrden >= ordenesPendientes.length) {
+            JOptionPane.showMessageDialog(this, "Seleccione una orden válida.", "Sin selección", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
         String nombreProducto = (String) cmbProducto.getSelectedItem();
         if (nombreProducto == null || nombreProducto.isBlank()) {
             JOptionPane.showMessageDialog(this, "Seleccione un producto.", "Campo requerido", JOptionPane.WARNING_MESSAGE);
             return;
         }
+        nombreProducto = nombreProducto.trim();
 
-        int idxOrden = cmbOrden.getSelectedIndex();
         UUID idOrden = ordenesPendientes[idxOrden].getIdPedido();
 
         try {

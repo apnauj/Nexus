@@ -269,25 +269,37 @@ public class ActualizarProducto extends JFrame {
             return;
         }
 
-        String nombre = txtNombre.getText();
-        if (nombre == null || nombre.isBlank()) {
+        String nombre = txtNombre.getText() != null ? txtNombre.getText().trim() : "";
+        if (nombre.isEmpty()) {
             JOptionPane.showMessageDialog(this, "El nombre del producto es obligatorio.", "Campo requerido", JOptionPane.WARNING_MESSAGE);
             return;
         }
 
-        String desc = txtDescripcion.getText();
-        String cat = txtCategoria.getText();
+        String desc = txtDescripcion.getText() != null ? txtDescripcion.getText().trim() : "";
+        String cat = txtCategoria.getText() != null ? txtCategoria.getText().trim() : "";
         String tiempoStr = txtTiempoGarantia.getText();
         String precioStr = txtPrecioBase.getText();
         String stockStr = txtStock.getText();
 
-        if (cat == null || cat.isBlank()) {
+        if (cat.isEmpty()) {
             JOptionPane.showMessageDialog(this, "La categoría es obligatoria.", "Campo requerido", JOptionPane.WARNING_MESSAGE);
             return;
         }
-        if (tiempoStr == null || tiempoStr.isBlank() || precioStr == null || precioStr.isBlank()
-                || stockStr == null || stockStr.isBlank()) {
-            JOptionPane.showMessageDialog(this, "Complete los campos numéricos (tiempo garantía, precio base, stock).", "Campos requeridos", JOptionPane.WARNING_MESSAGE);
+        // Validación para Tiempo de Garantía
+        if (tiempoStr == null || tiempoStr.isBlank()) {
+            JOptionPane.showMessageDialog(this, "El campo 'Tiempo de Garantía' es obligatorio.", "Campo faltante", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        // Validación para Precio Base
+        if (precioStr == null || precioStr.isBlank()) {
+            JOptionPane.showMessageDialog(this, "El campo 'Precio Base' es obligatorio.", "Campo faltante", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        // Validación para Stock
+        if (stockStr == null || stockStr.isBlank()) {
+            JOptionPane.showMessageDialog(this, "El campo 'Stock' es obligatorio.", "Campo faltante", JOptionPane.WARNING_MESSAGE);
             return;
         }
 
@@ -346,8 +358,8 @@ public class ActualizarProducto extends JFrame {
      * @return true si la actualización fue exitosa, false si hubo error de validación o del controlador
      */
     private boolean actualizarHardwareDesdeForm(String nombre, String desc, String cat, int tiempoGarantia, double precioBase, int stock) {
-        String fabricante = txtFabricante.getText();
-        if (fabricante == null || fabricante.isBlank()) {
+        String fabricante = txtFabricante.getText() != null ? txtFabricante.getText().trim() : "";
+        if (fabricante.isEmpty()) {
             JOptionPane.showMessageDialog(this, "El fabricante es obligatorio.", "Campo requerido", JOptionPane.ERROR_MESSAGE);
             return false;
         }
@@ -385,19 +397,18 @@ public class ActualizarProducto extends JFrame {
      * @return true si la actualización fue exitosa, false si hubo error de validación o del controlador
      */
     private boolean actualizarVideojuegoDesdeForm(String nombre, String desc, String cat, int tiempoGarantia, double precioBase, int stock) {
-        String desarrollador = txtDesarrollador.getText();
-        if (desarrollador == null || desarrollador.isBlank()) {
+        String desarrollador = txtDesarrollador.getText() != null ? txtDesarrollador.getText().trim() : "";
+        if (desarrollador.isEmpty()) {
             JOptionPane.showMessageDialog(this, "El desarrollador es obligatorio.", "Campo requerido", JOptionPane.ERROR_MESSAGE);
             return false;
         }
-        String genero = txtGenero.getText();
-        if (genero == null || genero.isBlank()) {
+        String genero = txtGenero.getText() != null ? txtGenero.getText().trim() : "";
+        if (genero.isEmpty()) {
             JOptionPane.showMessageDialog(this, "El género es obligatorio.", "Campo requerido", JOptionPane.ERROR_MESSAGE);
             return false;
         }
-        genero = genero.trim();
-        String plataforma = txtPlataforma.getText();
-        if (plataforma == null || plataforma.isBlank()) {
+        String plataforma = txtPlataforma.getText() != null ? txtPlataforma.getText().trim() : "";
+        if (plataforma.isEmpty()) {
             JOptionPane.showMessageDialog(this, "La plataforma es obligatoria.", "Campo requerido", JOptionPane.ERROR_MESSAGE);
             return false;
         }
@@ -426,7 +437,7 @@ public class ActualizarProducto extends JFrame {
 
         try {
             controlador.actualizarVideojuego(nombre, desc, cat, tiempoGarantia, precioBase, stock,
-                    desarrollador.trim(), genero, chkMultijugador.isSelected(), fechaLanzamiento, plataforma, tamano, chkDescuentoActivo.isSelected());
+                    desarrollador, genero, chkMultijugador.isSelected(), fechaLanzamiento, plataforma, tamano, chkDescuentoActivo.isSelected());
             return true;
         } catch (EProductoNoEncontrado ex) {
             JOptionPane.showMessageDialog(this, ex.getMessage(), "Producto no encontrado", JOptionPane.ERROR_MESSAGE);

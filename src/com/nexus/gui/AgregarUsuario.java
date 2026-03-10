@@ -120,6 +120,12 @@ public class AgregarUsuario extends JFrame {
             txtUsername.requestFocus();
             return;
         }
+
+        if(username.trim().contains(" ")){
+            JOptionPane.showMessageDialog(this, "El nombre de usuario no puede contener espacios", "Nombre invalido", JOptionPane.WARNING_MESSAGE);
+            txtUsername.requestFocus();
+            return;
+        }
         if (password == null || password.isBlank()) {
             JOptionPane.showMessageDialog(this, "Ingrese la contraseña.", "Campo requerido", JOptionPane.WARNING_MESSAGE);
             txtPassword.requestFocus();

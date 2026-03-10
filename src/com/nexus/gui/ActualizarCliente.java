@@ -2,6 +2,7 @@ package com.nexus.gui;
 
 import com.nexus.controller.StoreController;
 import com.nexus.exceptions.EClienteNoEncontrado;
+import com.nexus.exceptions.EClienteYaExiste;
 import com.nexus.exceptions.EFormatoInvalido;
 import com.nexus.exceptions.EParametroNulo;
 import com.nexus.model.entities.Cliente;
@@ -25,7 +26,7 @@ import java.awt.Insets;
 import static com.nexus.NexusApplication.addGuardarAlCerrar;
 
 /**
- * Pantalla para actualizar datos de un cliente existente (nombre, apellido, email).
+ * Pantalla para actualizar datos de un cliente existente (tipo doc, número doc, nombre, apellido, email).
  */
 public class ActualizarCliente extends JFrame {
 
@@ -36,7 +37,8 @@ public class ActualizarCliente extends JFrame {
     private JTextField txtNombre;
     private JTextField txtApellido;
     private JTextField txtEmail;
-
+    private TipoDocumento tipoDocOriginal;
+    private String numDocOriginal;
 
     public ActualizarCliente(TipoDocumento tipoDoc, String numDoc) {
         controlador = StoreController.getInstance();
@@ -107,18 +109,21 @@ public class ActualizarCliente extends JFrame {
         panelForm.add(txtEmail, gbc);
 
         if (tipoDoc != null && numDoc != null && !numDoc.isBlank()) {
+            tipoDocOriginal = tipoDoc;
+            numDocOriginal = numDoc.trim();
             cmbTipoDoc.setSelectedItem(tipoDoc);
-            txtNumDoc.setText(numDoc.trim());
-            txtNumDoc.setEditable(false);
-            cmbTipoDoc.setEnabled(false);
+            txtNumDoc.setText(numDocOriginal);
             try {
-                Cliente cliente = controlador.searchCliente(tipoDoc, numDoc.trim());
+                Cliente cliente = controlador.searchCliente(tipoDoc, numDocOriginal);
                 txtNombre.setText(cliente.getNombre() != null ? cliente.getNombre() : "");
                 txtApellido.setText(cliente.getApellido() != null ? cliente.getApellido() : "");
                 txtEmail.setText(cliente.getEmail() != null ? cliente.getEmail() : "");
             } catch (EClienteNoEncontrado | EParametroNulo e) {
                 // No prellenar si no se encuentra
             }
+        } else {
+            tipoDocOriginal = null;
+            numDocOriginal = null;
         }
 
         contentPane.add(panelForm, BorderLayout.CENTER);
@@ -131,43 +136,36 @@ public class ActualizarCliente extends JFrame {
         contentPane.add(panelBotones, BorderLayout.SOUTH);
     }
 
-    //TODO: ENTENDER ESTE MÉTODO
     private void actualizar() {
-        //Obtiene el texto de número de documento
-        String numDoc = txtNumDoc.getText();
-        //Si esta vacio no hace nada (sale del método) y hace un warning de que el documento es obligatorio. Esto no es una excepción pero es el primer filtro por parte de la interfaz
-        if (numDoc == null || numDoc.isBlank()) {
+        if (tipoDocOriginal == null || numDocOriginal == null || numDocOriginal.isBlank()) {
+            JOptionPane.showMessageDialog(this, "No se pudo identificar el cliente a actualizar.", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        String numDocNuevo = txtNumDoc.getText();
+        if (numDocNuevo == null || numDocNuevo.isBlank()) {
             JOptionPane.showMessageDialog(this, "El número de documento es obligatorio.", "Campo requerido", JOptionPane.WARNING_MESSAGE);
             return;
         }
-        //Le quita los espacios al numero de documento
-        numDoc = numDoc.trim();
-        //Si el número de documento no es un número o tiene más de 10 digitos se hace un warning justo como en el bloque de código anterior.
-        if (!numDoc.matches("\\d{1,10}")) {
+        numDocNuevo = numDocNuevo.trim();
+        if (!numDocNuevo.matches("\\d{1,10}")) {
             JOptionPane.showMessageDialog(this, "El documento debe ser numérico (máximo 10 dígitos).", "Formato inválido", JOptionPane.WARNING_MESSAGE);
             return;
         }
 
-        //Se obtiene el tipo de documento
-        TipoDocumento tipoDoc = (TipoDocumento) cmbTipoDoc.getSelectedItem();
-        //Se obtiene el nombre
+        TipoDocumento tipoDocNuevo = (TipoDocumento) cmbTipoDoc.getSelectedItem();
         String nombre = txtNombre.getText();
-        //Se obtiene el apellido
         String apellido = txtApellido.getText();
-        //Se obtiene el email
         String email = txtEmail.getText();
 
-        // Advierte si el nombre esta vacio, como con el número de documento. No es excepción pero es la primera capa de verificación
         if (nombre == null || nombre.isBlank()) {
             JOptionPane.showMessageDialog(this, "El nombre es obligatorio.", "Campo requerido", JOptionPane.WARNING_MESSAGE);
             return;
         }
-        // Advierte si el apellido esta vacio, como con el número de documento. No es excepción pero es la primera capa de verificación
         if (apellido == null || apellido.isBlank()) {
             JOptionPane.showMessageDialog(this, "El apellido es obligatorio.", "Campo requerido", JOptionPane.WARNING_MESSAGE);
             return;
         }
-        // Advierte si el email esta vacio, como con el número de documento. No es excepción pero es la primera capa de verificación
         if (email == null || email.isBlank()) {
             JOptionPane.showMessageDialog(this, "El email es obligatorio.", "Campo requerido", JOptionPane.WARNING_MESSAGE);
             return;
@@ -183,12 +181,18 @@ public class ActualizarCliente extends JFrame {
         }
 
         try {
-            controlador.actualizarCliente(tipoDoc, numDoc, nombre.trim(), apellido.trim(), emailTrimmed);
+            controlador.actualizarCliente(tipoDocOriginal, numDocOriginal, tipoDocNuevo, numDocNuevo, nombre.trim(), apellido.trim(), emailTrimmed);
             JOptionPane.showMessageDialog(this, "Cliente actualizado correctamente.", "Éxito", JOptionPane.INFORMATION_MESSAGE);
+            new GestionarClientes().setVisible(true);
+            dispose();
         } catch (EClienteNoEncontrado ex) {
             JOptionPane.showMessageDialog(this, ex.getMessage(), "Cliente no encontrado", JOptionPane.ERROR_MESSAGE);
-        } catch (EParametroNulo | EFormatoInvalido ex) {
-            JOptionPane.showMessageDialog(this, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+        } catch (EClienteYaExiste ex) {
+            JOptionPane.showMessageDialog(this, ex.getMessage(), "Documento ya existe", JOptionPane.ERROR_MESSAGE);
+        } catch (EParametroNulo ex) {
+            JOptionPane.showMessageDialog(this, ex.getMessage(), "Parámetro nulo", JOptionPane.ERROR_MESSAGE);
+        } catch (EFormatoInvalido ex) {
+            JOptionPane.showMessageDialog(this, ex.getMessage(), "Formato inválido", JOptionPane.ERROR_MESSAGE);
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(this, "Error: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }

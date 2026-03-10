@@ -2,10 +2,13 @@ package com.nexus.gui;
 
 import com.nexus.controller.StoreController;
 import com.nexus.exceptions.ECantidadNegativa;
+import com.nexus.exceptions.EEstadoOrdenInvalido;
 import com.nexus.exceptions.EOrdenNoEncontrada;
 import com.nexus.exceptions.EParametroNulo;
 import com.nexus.exceptions.EProductoNoEncontrado;
+import com.nexus.exceptions.EProductoRepeteido;
 import com.nexus.exceptions.EStockInsuficiente;
+import com.nexus.exceptions.EValorNegativo;
 import com.nexus.model.entities.Orden;
 import com.nexus.model.entities.Producto;
 
@@ -165,13 +168,24 @@ public class AgregarItemOrden extends JFrame {
         }
 
         int idxOrden = cmbOrden.getSelectedIndex();
+        if (idxOrden < 0 || idxOrden >= ordenesPendientes.length) {
+            JOptionPane.showMessageDialog(this, "Seleccione una orden válida.", "Sin selección", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
         String nombreProducto = (String) cmbProducto.getSelectedItem();
+        if (nombreProducto == null || nombreProducto.isBlank()) {
+            JOptionPane.showMessageDialog(this, "Seleccione un producto.", "Campo requerido", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        nombreProducto = nombreProducto.trim();
+
         UUID idOrden = ordenesPendientes[idxOrden].getIdPedido();
 
         try {
             controlador.addItemToOrden(idOrden, nombreProducto, cantidad);
             Producto p = controlador.searchProducto(nombreProducto);
-            JOptionPane.showMessageDialog(this, "Producto añadido correctamente.\n\n" + cantidad + " x " + nombreProducto + "\nStock restante: " + p.getStock(), "Item añadido", JOptionPane.INFORMATION_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Producto añadido correctamente.\n\n" + cantidad + " x " + nombreProducto + "\nStock restante: " + p.getStock() + "\n\n El producto seguirá como disponible hasta su pago", "Item añadido", JOptionPane.INFORMATION_MESSAGE);
             txtCantidad.setText("");
         } catch (EOrdenNoEncontrada ex) {
             JOptionPane.showMessageDialog(this, ex.getMessage(), "Orden no encontrada", JOptionPane.ERROR_MESSAGE);
@@ -179,8 +193,16 @@ public class AgregarItemOrden extends JFrame {
             JOptionPane.showMessageDialog(this, ex.getMessage(), "Producto no encontrado", JOptionPane.ERROR_MESSAGE);
         } catch (EStockInsuficiente ex) {
             JOptionPane.showMessageDialog(this, ex.getMessage(), "Stock insuficiente", JOptionPane.ERROR_MESSAGE);
-        } catch (ECantidadNegativa | EParametroNulo ex) {
-            JOptionPane.showMessageDialog(this, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+        } catch (EProductoRepeteido ex) {
+            JOptionPane.showMessageDialog(this, ex.getMessage(), "Producto ya en la orden", JOptionPane.WARNING_MESSAGE);
+        } catch (ECantidadNegativa ex) {
+            JOptionPane.showMessageDialog(this, ex.getMessage(), "Cantidad inválida", JOptionPane.ERROR_MESSAGE);
+        } catch (EParametroNulo ex) {
+            JOptionPane.showMessageDialog(this, ex.getMessage(), "Parámetro nulo", JOptionPane.ERROR_MESSAGE);
+        } catch (EEstadoOrdenInvalido ex) {
+            JOptionPane.showMessageDialog(this, ex.getMessage(), "Estado de orden inválido", JOptionPane.ERROR_MESSAGE);
+        } catch (EValorNegativo ex) {
+            JOptionPane.showMessageDialog(this, ex.getMessage(), "Valor inválido", JOptionPane.ERROR_MESSAGE);
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(this, "Error: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }

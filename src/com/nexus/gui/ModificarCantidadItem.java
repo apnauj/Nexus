@@ -186,6 +186,12 @@ public class ModificarCantidadItem extends JFrame {
         }
 
         int idxOrden = cmbOrden.getSelectedIndex();
+        if (idxOrden < 0 || idxOrden >= ordenesPendientes.length) {
+            JOptionPane.showMessageDialog(this, "Seleccione una orden válida.", "Sin selección", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        nombreProducto = nombreProducto.trim();
         UUID idOrden = ordenesPendientes[idxOrden].getIdPedido();
 
         try {

@@ -117,30 +117,42 @@ public class AgregarHardware extends JFrame {
     }
 
     private void agregarHardware() {
-        String nombre = txtNombre.getText();
-        String descripcion = txtDescripcion.getText();
-        String categoria = txtCategoria.getText();
+        String nombre = txtNombre.getText() != null ? txtNombre.getText().trim() : "";
+        String descripcion = txtDescripcion.getText() != null ? txtDescripcion.getText().trim() : "";
+        String categoria = txtCategoria.getText() != null ? txtCategoria.getText().trim() : "";
         String tiempoStr = txtTiempoGarantia.getText();
         String precioStr = txtPrecioBase.getText();
         String stockStr = txtStock.getText();
         String consumoStr = txtConsumo.getText();
-        String fabricante = txtFabricante.getText();
+        String fabricante = txtFabricante.getText() != null ? txtFabricante.getText().trim() : "";
 
-        if (nombre == null || nombre.isBlank()) {
+        if (nombre.isEmpty()) {
             JOptionPane.showMessageDialog(this, "Ingrese el nombre.", "Campo requerido", JOptionPane.WARNING_MESSAGE);
             return;
         }
-        if (categoria == null || categoria.isBlank()) {
+        if (categoria.isEmpty()) {
             JOptionPane.showMessageDialog(this, "Ingrese la categoría.", "Campo requerido", JOptionPane.WARNING_MESSAGE);
             return;
         }
-        if (fabricante == null || fabricante.isBlank()) {
+        if (fabricante.isEmpty()) {
             JOptionPane.showMessageDialog(this, "Ingrese el fabricante.", "Campo requerido", JOptionPane.WARNING_MESSAGE);
             return;
         }
-        if (tiempoStr == null || tiempoStr.isBlank() || precioStr == null || precioStr.isBlank()
-                || stockStr == null || stockStr.isBlank() || consumoStr == null || consumoStr.isBlank()) {
-            JOptionPane.showMessageDialog(this, "Complete todos los campos numéricos (tiempo garantía, precio base, stock, consumo).", "Campos requeridos", JOptionPane.WARNING_MESSAGE);
+        // Validación para Tiempo de Garantía
+        if (tiempoStr == null || tiempoStr.isBlank()) {
+            JOptionPane.showMessageDialog(this, "El campo 'Tiempo de Garantía' es obligatorio.", "Campo faltante", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        // Validación para Precio Base
+        if (precioStr == null || precioStr.isBlank()) {
+            JOptionPane.showMessageDialog(this, "El campo 'Precio Base' es obligatorio.", "Campo faltante", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        // Validación para Stock
+        if (stockStr == null || stockStr.isBlank()) {
+            JOptionPane.showMessageDialog(this, "El campo 'Stock' es obligatorio.", "Campo faltante", JOptionPane.WARNING_MESSAGE);
             return;
         }
 
@@ -174,7 +186,7 @@ public class AgregarHardware extends JFrame {
 
         try {
             boolean descuentoActivo = chkDescuentoActivo.isSelected();
-            Producto producto = controlador.addHardware(nombre, descripcion != null ? descripcion : "", categoria, tiempoGarantia, precioBase, stock, consumo, fabricante, descuentoActivo);
+            Producto producto = controlador.addHardware(nombre, descripcion, categoria, tiempoGarantia, precioBase, stock, consumo, fabricante, descuentoActivo);
             String msg = descuentoActivo
                     ? String.format("Hardware agregado correctamente.%nSe aplicó un descuento del %d%% (según stock y consumo).", (int) Math.round(producto.getDescuento() * 100))
                     : "Hardware agregado correctamente. Sin descuento aplicado.";
